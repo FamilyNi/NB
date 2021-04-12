@@ -39,13 +39,14 @@ void ComputePPFFEATRUE(P_XYZ& ref_p, P_XYZ& p_, P_N& ref_pn, P_N& p_n, PPFFEATRU
 //==================================================================================
 
 //将点对以PPF特征推送到hash表中=====================================================
-void PushPPFToHashMap(hash_map<string, vector<vector<uint>>>& hashMap, PPFFEATRUE& ppfFEATRUE, int ref_i, int i_)
+void PushPPFToHashMap(hash_map<string, vector<PPFCELL>>& hashMap, PPFFEATRUE& ppfFEATRUE, int ref_i, float alpha)
 {
 	string hashKey = std::to_string(ppfFEATRUE.dist) + std::to_string(ppfFEATRUE.ang_N1D)
 		+ std::to_string(ppfFEATRUE.ang_N2D) + std::to_string(ppfFEATRUE.ang_N1N2);
-	vector<uint> index_v(2);
-	index_v[0] = ref_i; index_v[1] = i_;
-	hashMap[hashKey].push_back(index_v);
+	PPFCELL ppfCell;
+	ppfCell.ref_alpha = alpha;
+	ppfCell.ref_i = ref_i;
+	hashMap[hashKey].push_back(ppfCell);
 }
 //==================================================================================
 
@@ -87,8 +88,11 @@ void ExtractPPFNormals(PC_XYZ::Ptr& srcPC, PC_XYZ::Ptr& downSamplepC, PC_N::Ptr&
 //==================================================================================
 
 //算转换矩阵========================================================================
-void ComputeTransMat(P_XYZ& ref_p, P_N& ref_pn, cv::Mat& transMat)
+void ComputeLocTransMat(P_XYZ& ref_p, P_N& ref_pn, cv::Mat& transMat)
 {
+	if (!transMat.empty())
+		transMat.release();
+	transMat = cv::Mat(cv::Size(4, 4), CV_32FC1, cv::Scalar(0));
 	float rotAng = std::acos(ref_pn.normal_x);
 	P_N rotAxis(0.0f, ref_pn.normal_z, -ref_pn.normal_y); //旋转轴垂直于x轴与参考点法向量
 	if (rotAxis.normal_y == 0 && ref_pn.normal_z == 0)
@@ -112,15 +116,14 @@ void ComputeTransMat(P_XYZ& ref_p, P_N& ref_pn, cv::Mat& transMat)
 
 	pTransMat[8] = pRotMat[6]; pTransMat[9] = pRotMat[7]; pTransMat[10] = pRotMat[8];
 	pTransMat[11] = -(pRotMat[6] * ref_p.x + pRotMat[7] * ref_p.y + pRotMat[8] * ref_p.z);
+	pTransMat[15] = 1;
 }
 //==================================================================================
 
 //计算局部坐标系下的alpha===========================================================
-float ComputeLocalAlpha(P_XYZ& ref_p, P_N& ref_pn, P_XYZ& p_)
+float ComputeLocalAlpha(P_XYZ& ref_p, P_N& ref_pn, P_XYZ& p_, cv::Mat& refTransMat)
 {
-	cv::Mat transMat(cv::Size(3, 4), CV_32FC1, cv::Scalar(0));
-	ComputeTransMat(ref_p, ref_pn, transMat);
-	float* pTransMat = transMat.ptr<float>();
+	float* pTransMat = refTransMat.ptr<float>();
 	float y = pTransMat[4] * p_.x + pTransMat[5] * p_.y + pTransMat[6] * p_.x + pTransMat[7];
 	float z = pTransMat[8] * p_.x + pTransMat[9] * p_.y + pTransMat[10] * p_.x + pTransMat[11];
 	float alpha = std::atan2(-z, y);
@@ -148,10 +151,12 @@ void CreatePPFModel(PC_XYZ::Ptr& modelPC, PPFMODEL& ppfModel, float distRatio)
 	ExtractPPFNormals(modelPC, ppfModel.modelPC, normals, ppfModel.distStep);
 
 	size_t p_number = ppfModel.modelPC->points.size();
+	ppfModel.refTransMat.resize(p_number);
 	for (size_t i = 0; i < p_number; ++i)
 	{
 		P_XYZ& ref_p = ppfModel.modelPC->points[i];
 		P_N& ref_pn = normals->points[i];
+		ComputeLocTransMat(ref_p, ref_pn, ppfModel.refTransMat[i]);
 		for (size_t j = 0; j < p_number; ++j)
 		{
 			if (i != j)
@@ -163,6 +168,80 @@ void CreatePPFModel(PC_XYZ::Ptr& modelPC, PPFMODEL& ppfModel, float distRatio)
 				PushPPFToHashMap(ppfModel.hashMap, ppfFEATRUE, i, j);
 			}
 		}
+	}
+}
+//==================================================================================
+
+//计算变换矩阵======================================================================
+void ComputeTransMat(cv::Mat& SToGMat, float alpha, cv::Mat& RToGMat, cv::Mat& transMat)
+{
+	float sinVal = std::sin(alpha);
+	float cosVal = std::cos(alpha);
+	cv::Mat RAlphaMat(cv::Size(4, 4), CV_32FC1, cv::Scalar(1));
+	float* pRAlphaMat = RAlphaMat.ptr<float>();
+	pRAlphaMat[3] = 0;
+	pRAlphaMat[5] = cosVal;	pRAlphaMat[6] = -sinVal; pRAlphaMat[7] = 0;
+	pRAlphaMat[9] = sinVal;	pRAlphaMat[10] = cosVal; pRAlphaMat[11] = 0;
+	pRAlphaMat[12] = 0;	pRAlphaMat[13] = 0; pRAlphaMat[14] = 0;
+	transMat = (SToGMat.inv()) * RAlphaMat * RToGMat;
+}
+//==================================================================================
+
+//查找模板==========================================================================
+void MatchPose(PC_XYZ::Ptr& srcPC, PPFMODEL& ppfModel)
+{
+	PC_XYZ::Ptr downSampplePC(new PC_XYZ);
+	PC_VoxelGrid(srcPC, downSampplePC, ppfModel.distStep);
+	PC_N::Ptr normals(new PC_N);
+	ExtractPPFNormals(srcPC, downSampplePC, normals, ppfModel.distStep);
+
+	size_t numAngles = (int)(floor(2 * M_PI / ppfModel.alphStep));
+	size_t ref_p_num = ppfModel.modelPC->points.size();
+	size_t p_number = downSampplePC->points.size();
+	vector<PPFPose> v_ppfPose(p_number);
+	for (size_t i = 0; i < p_number; ++i)
+	{
+		P_XYZ& ref_p = ppfModel.modelPC->points[i];
+		P_N& ref_pn = normals->points[i];
+		vector<vector<uint>> accumulator(ref_p_num, vector<uint>(numAngles));
+		cv::Mat SToGMat(cv::Size(4, 4), CV_32FC1, cv::Scalar(0));
+		ComputeLocTransMat(ref_p,ref_pn, SToGMat);
+		for (size_t j = 0; j < p_number; ++j)
+		{
+			if (i != j)
+			{
+				P_XYZ& p_ = ppfModel.modelPC->points[j];
+				P_N& p_n = normals->points[j];
+				PPFFEATRUE ppfFEATRUE;
+				ComputePPFFEATRUE(ref_p, p_, ref_pn, p_n, ppfFEATRUE);
+				string hashKey = std::to_string(ppfFEATRUE.dist) + std::to_string(ppfFEATRUE.ang_N1D)
+					+ std::to_string(ppfFEATRUE.ang_N2D) + std::to_string(ppfFEATRUE.ang_N1N2);
+				vector<PPFCELL>& ppfCell_v = ppfModel.hashMap[hashKey];
+				float alpha_ = ComputeLocalAlpha(ref_p, ref_pn, p_, SToGMat);
+				for (size_t k = 0; k < ppfCell_v.size(); ++k)
+				{
+					float alpha_m = 0;
+					int alpha_index = (int)(numAngles * (alpha_ - alpha_m + 2 * M_PI) / (4 * M_PI));
+					accumulator[ppfCell_v[i].ref_i][alpha_index]++;
+				}
+			}
+		}
+		PPFPose pose;
+		pose.votes = accumulator[0][0];
+		for (size_t j = 0; j < p_number; ++j)
+		{
+			for (size_t k = 0; k < numAngles; ++i)
+			{
+				if (pose.votes < accumulator[j][k])
+				{
+					pose.votes = accumulator[j][k];
+					pose.ref_i = j; pose.i_ = k;
+				}
+			}
+		}
+		float alpha = (pose.i_*(4 * M_PI)) / numAngles - 2 * M_PI;
+		ComputeTransMat(SToGMat, alpha, ppfModel.refTransMat[pose.ref_i], pose.transMat);
+		v_ppfPose.push_back(pose);
 	}
 }
 //==================================================================================

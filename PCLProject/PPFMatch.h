@@ -2,6 +2,14 @@
 #include "utils.h"
 #include <hash_map>
 
+typedef struct PPFCELL
+{
+	uint ref_i;
+	float ref_alpha;
+	PPFCELL() :ref_i(0), ref_alpha(0.0f)
+	{}
+}PPFCELL;
+
 typedef struct PPFFEATRUE
 {
 	float dist;
@@ -16,30 +24,50 @@ typedef struct PPFFEATRUE
 typedef struct PPFMODEL
 {
 	PC_XYZ::Ptr modelPC;
+	vector<cv::Mat> refTransMat;
 	float alphStep;
 	float distStep;
-	hash_map<string, vector<vector<uint>>> hashMap;
+	hash_map<string, vector<PPFCELL>> hashMap;
 	PPFMODEL() :alphStep(5.0f), distStep(0.1f), modelPC(new PC_XYZ)
-	{}
+	{
+		refTransMat.resize(0);
+	}
 }PPFMODEL;
 
+typedef struct PPFPose
+{
+	cv::Mat transMat;
+	uint votes;
+	uint ref_i;
+	uint i_;
+	PPFPose() :votes(0), ref_i(0), i_(0),
+		transMat(cv::Size(3, 4), CV_32FC1, cv::Scalar(0))
+	{}
+}PPFPose;
+
 //罗格里德斯公式
-void RodriguesFormula(P_N& normal, P_N& rotAxis, float rotAng);
+void RodriguesFormula(P_N& rotAxis, float rotAng, cv::Mat& rotMat);
 
 //计算PPF特征
 void ComputePPFFEATRUE(P_XYZ& ref_p, P_XYZ& p_, P_N& ref_pn, P_N& p_n, PPFFEATRUE& ppfFEATRUE);
 
 //将点对以PPF特征推送到hash表中
-void PushPPFToHashMap(hash_map<string, vector<vector<uint>>>& hashMap, PPFFEATRUE& ppfFEATRUE, int ref_i, int i_);
+void PushPPFToHashMap(hash_map<string, vector<vector<PPFCELL>>>& hashMap, PPFFEATRUE& ppfFEATRUE, int ref_i, float alpha);
 
 //提取PPF的法向量
 void ExtractPPFNormals(PC_XYZ::Ptr& srcPC, PC_XYZ::Ptr& downSamplepC, PC_N::Ptr& normals, float radius);
 
-//算转换矩阵
-void ComputeTransMat(P_XYZ& ref_p, P_N& ref_pn, cv::Mat& transMat);
+//计算局部转换矩阵
+void ComputeLocTransMat(P_XYZ& ref_p, P_N& ref_pn, cv::Mat& transMat);
 
 //计算局部坐标系下的alpha
-float ComputeLocalAlpha(P_XYZ& ref_p, P_N& ref_pn, P_XYZ& p_);
+float ComputeLocalAlpha(P_XYZ& ref_p, P_N& ref_pn, P_XYZ& p_, cv::Mat& refTransMat);
 
 //创建PPF模板
 void CreatePPFModel(PC_XYZ::Ptr& modelPC, PPFMODEL& ppfModel, float distRatio);
+
+//计算变换矩阵
+void ComputeTransMat(cv::Mat& SToGMat, float alpha, cv::Mat& RToGMat, cv::Mat& transMat);
+
+//查找模板
+void MatchPose(PC_XYZ::Ptr& srcPC, PPFMODEL& ppfModel);
