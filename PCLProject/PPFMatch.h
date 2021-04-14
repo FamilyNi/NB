@@ -69,5 +69,20 @@ void CreatePPFModel(PC_XYZ::Ptr& modelPC, PPFMODEL& ppfModel, float distRatio);
 //计算变换矩阵
 void ComputeTransMat(cv::Mat& SToGMat, float alpha, cv::Mat& RToGMat, cv::Mat& transMat);
 
+//排序
+bool ComparePose(PPFPose& a, PPFPose& b);
+
+//求旋转矩阵的旋转角
+float ComputeRotMatAng(cv::Mat& transMat);
+
+//判定条件
+bool DecisionCondition(PPFPose& a, PPFPose& b, float angThres, float distThres);
+
+//非极大值抑制
+void NonMaxSuppression(vector<PPFPose>& ppfPoses, vector<PPFPose>& resPoses, float angThres, float distThres);
+
 //查找模板
-void MatchPose(PC_XYZ::Ptr& srcPC, PPFMODEL& ppfModel);
+void MatchPose(PC_XYZ::Ptr& srcPC, PPFMODEL& ppfModel, vector<PPFPose>& resPoses, float angThres, float distThres);
+
+//测试程序
+void TestProgram();

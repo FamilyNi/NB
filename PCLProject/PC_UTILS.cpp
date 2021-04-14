@@ -52,7 +52,7 @@ void ComputePCNormal(PC_XYZ::Ptr &srcPC, PC_N::Ptr &normals, float radius)
 	if (srcPC->empty())
 		return;
 	//º∆À„∑®œﬂ
-	pcl::NormalEstimationOMP<P_XYZ, pcl::Normal> normal_est;
+	pcl::NormalEstimation<P_XYZ, pcl::Normal> normal_est;
 	normal_est.setInputCloud(srcPC);
 	normal_est.setRadiusSearch(radius);
 	pcl::search::KdTree<P_XYZ>::Ptr kdtree(new pcl::search::KdTree<P_XYZ>);

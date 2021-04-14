@@ -108,13 +108,9 @@ void ComputeLocTransMat(P_XYZ& ref_p, P_N& ref_pn, cv::Mat& transMat)
 	RodriguesFormula(rotAxis, rotAng, rotMat);
 	float* pRotMat = rotMat.ptr<float>();
 	float* pTransMat = transMat.ptr<float>();
-	pTransMat[0] = pRotMat[0]; pTransMat[1] = pRotMat[1]; pTransMat[2] = pRotMat[2];
-	pTransMat[0] = -(pRotMat[0] * ref_p.x + pRotMat[1] * ref_p.y + pRotMat[2] * ref_p.z);
-
-	pTransMat[4] = pRotMat[3]; pTransMat[5] = pRotMat[4]; pTransMat[6] = pRotMat[5];
+	rotMat.copyTo(transMat(cv::Rect(0, 0, 3, 3)));
+	pTransMat[3] = -(pRotMat[0] * ref_p.x + pRotMat[1] * ref_p.y + pRotMat[2] * ref_p.z);
 	pTransMat[7] = -(pRotMat[3] * ref_p.x + pRotMat[4] * ref_p.y + pRotMat[5] * ref_p.z);
-
-	pTransMat[8] = pRotMat[6]; pTransMat[9] = pRotMat[7]; pTransMat[10] = pRotMat[8];
 	pTransMat[11] = -(pRotMat[6] * ref_p.x + pRotMat[7] * ref_p.y + pRotMat[8] * ref_p.z);
 	pTransMat[15] = 1;
 }
@@ -187,8 +183,76 @@ void ComputeTransMat(cv::Mat& SToGMat, float alpha, cv::Mat& RToGMat, cv::Mat& t
 }
 //==================================================================================
 
+//排序==============================================================================
+bool ComparePose(PPFPose& a, PPFPose& b)
+{
+	return a.votes > b.votes;
+}
+//==================================================================================
+
+//求旋转矩阵的旋转角================================================================
+float ComputeRotMatAng(cv::Mat& transMat)
+{
+	float* pTransMat = transMat.ptr<float>();
+	float trace = pTransMat[0] + pTransMat[5] + pTransMat[10];
+	if (fabs(trace - 3) <= EPS)
+		return 0.0f;
+	else
+	{
+		if (fabs(trace + 1) <= EPS)
+			return 3.1415926f;
+		else
+			return (acos((trace - 1) / 2));
+	}
+}
+//==================================================================================
+
+//判定条件==========================================================================
+bool DecisionCondition(PPFPose& a, PPFPose& b, float angThres, float distThres)
+{
+	float angle_a = ComputeRotMatAng(a.transMat);
+	float angle_b = ComputeRotMatAng(b.transMat);
+
+	float* pATransMat = a.transMat.ptr<float>();
+	float* pBTransMat = a.transMat.ptr<float>();
+	float diff_x = pATransMat[3] - pBTransMat[3];
+	float diff_y = pATransMat[7] - pBTransMat[7];
+	float diff_z = pATransMat[11] - pBTransMat[11];
+	
+	return (abs(angle_a - angle_b) < angThres && (diff_x * diff_x + diff_y * diff_y + diff_z * diff_z) < distThres);
+}
+//==================================================================================
+
+//非极大值抑制======================================================================
+void NonMaxSuppression(vector<PPFPose>& ppfPoses, vector<PPFPose>& resPoses, float angThres, float distThres)
+{
+	std::sort(ppfPoses.begin(), ppfPoses.end(), ComparePose);
+	size_t pose_num = ppfPoses.size();
+	vector<bool> isLabel(pose_num, false);
+	for (size_t i = 0; i < pose_num; ++i)
+	{
+		if (isLabel[i])
+			continue;
+		PPFPose& ref_pose = ppfPoses[i];
+		resPoses.push_back(ref_pose);
+		isLabel[i] = true;
+		for (size_t j = i; j < pose_num; ++j)
+		{
+			if (!isLabel[j])
+			{
+				PPFPose& pose_ = ppfPoses[i];
+				if (DecisionCondition(ref_pose, pose_, angThres, distThres))
+				{
+					isLabel[j] = true;
+				}
+			}
+		}
+	}
+}
+//==================================================================================
+
 //查找模板==========================================================================
-void MatchPose(PC_XYZ::Ptr& srcPC, PPFMODEL& ppfModel)
+void MatchPose(PC_XYZ::Ptr& srcPC, PPFMODEL& ppfModel, vector<PPFPose>& resPoses, float angThres, float distThres)
 {
 	PC_XYZ::Ptr downSampplePC(new PC_XYZ);
 	PC_VoxelGrid(srcPC, downSampplePC, ppfModel.distStep);
@@ -222,7 +286,7 @@ void MatchPose(PC_XYZ::Ptr& srcPC, PPFMODEL& ppfModel)
 				{
 					float alpha_m = 0;
 					int alpha_index = (int)(numAngles * (alpha_ - alpha_m + 2 * M_PI) / (4 * M_PI));
-					accumulator[ppfCell_v[i].ref_i][alpha_index]++;
+					accumulator[ppfCell_v[k].ref_i][alpha_index]++;
 				}
 			}
 		}
@@ -230,7 +294,7 @@ void MatchPose(PC_XYZ::Ptr& srcPC, PPFMODEL& ppfModel)
 		pose.votes = accumulator[0][0];
 		for (size_t j = 0; j < p_number; ++j)
 		{
-			for (size_t k = 0; k < numAngles; ++i)
+			for (size_t k = 0; k < numAngles; ++k)
 			{
 				if (pose.votes < accumulator[j][k])
 				{
@@ -241,7 +305,26 @@ void MatchPose(PC_XYZ::Ptr& srcPC, PPFMODEL& ppfModel)
 		}
 		float alpha = (pose.i_*(4 * M_PI)) / numAngles - 2 * M_PI;
 		ComputeTransMat(SToGMat, alpha, ppfModel.refTransMat[pose.ref_i], pose.transMat);
-		v_ppfPose.push_back(pose);
+		if (pose.votes != 0)
+			v_ppfPose.push_back(pose);
 	}
+	NonMaxSuppression(v_ppfPose, resPoses, angThres, distThres);
+}
+//==================================================================================
+
+//测试程序==========================================================================
+void TestProgram()
+{
+	PC_XYZ::Ptr modelPC(new PC_XYZ());
+	string path = "H:/Point-Cloud-Processing-example-master/第十一章/6 template_alignment/source/data/object_template_0.pcd";
+	pcl::io::loadPCDFile(path,*modelPC);
+	
+	PPFMODEL ppfModel;
+	float distRatio = 0.1;
+	ppfModel.alphStep = 5.0f;
+	CreatePPFModel(modelPC, ppfModel, distRatio);
+
+	vector<PPFPose> resPoses;
+	MatchPose(modelPC, ppfModel, resPoses, 0.0f, 0.0f);
 }
 //==================================================================================

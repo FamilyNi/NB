@@ -6,9 +6,10 @@
 #include "FitModel.h"
 #include "PC_Seg.h"
 #include "JC_Calibrate.h"
+#include "PPFMatch.h"
 
 int main()
-{	
-	std::cout << "hello world" << endl;
+{
+	TestProgram();
 	return(0);
 }
