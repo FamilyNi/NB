@@ -27,8 +27,11 @@ typedef struct PPFMODEL
 	vector<cv::Mat> refTransMat;
 	float alphStep;
 	float distStep;
+	float angThres;
+	float distThres;
 	hash_map<string, vector<PPFCELL>> hashMap;
-	PPFMODEL() :alphStep(5.0f), distStep(0.1f), modelPC(new PC_XYZ)
+	PPFMODEL() :alphStep(5.0f), distStep(0.1f), 
+		angThres(0.0f), distThres(0.0f), modelPC(new PC_XYZ)
 	{
 		refTransMat.resize(0);
 	}
@@ -52,7 +55,8 @@ void RodriguesFormula(P_N& rotAxis, float rotAng, cv::Mat& rotMat);
 void ComputePPFFEATRUE(P_XYZ& ref_p, P_XYZ& p_, P_N& ref_pn, P_N& p_n, PPFFEATRUE& ppfFEATRUE);
 
 //将点对以PPF特征推送到hash表中
-void PushPPFToHashMap(hash_map<string, vector<vector<PPFCELL>>>& hashMap, PPFFEATRUE& ppfFEATRUE, int ref_i, float alpha);
+void PushPPFToHashMap(hash_map<string, vector<PPFCELL>>& hashMap, PPFFEATRUE& ppfFEATRUE,
+	float distStep, float stepAng, int ref_i, float alpha);
 
 //提取PPF的法向量
 void ExtractPPFNormals(PC_XYZ::Ptr& srcPC, PC_XYZ::Ptr& downSamplepC, PC_N::Ptr& normals, float radius);
@@ -82,7 +86,7 @@ bool DecisionCondition(PPFPose& a, PPFPose& b, float angThres, float distThres);
 void NonMaxSuppression(vector<PPFPose>& ppfPoses, vector<PPFPose>& resPoses, float angThres, float distThres);
 
 //查找模板
-void MatchPose(PC_XYZ::Ptr& srcPC, PPFMODEL& ppfModel, vector<PPFPose>& resPoses, float angThres, float distThres);
+void MatchPose(PC_XYZ::Ptr& srcPC, PPFMODEL& ppfModel, vector<PPFPose>& resPoses);
 
 //测试程序
 void TestProgram();

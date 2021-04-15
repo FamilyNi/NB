@@ -39,10 +39,14 @@ void ComputePPFFEATRUE(P_XYZ& ref_p, P_XYZ& p_, P_N& ref_pn, P_N& p_n, PPFFEATRU
 //==================================================================================
 
 //将点对以PPF特征推送到hash表中=====================================================
-void PushPPFToHashMap(hash_map<string, vector<PPFCELL>>& hashMap, PPFFEATRUE& ppfFEATRUE, int ref_i, float alpha)
+void PushPPFToHashMap(hash_map<string, vector<PPFCELL>>& hashMap, PPFFEATRUE& ppfFEATRUE,
+	float distStep, float stepAng, int ref_i, float alpha)
 {
-	string hashKey = std::to_string(ppfFEATRUE.dist) + std::to_string(ppfFEATRUE.ang_N1D)
-		+ std::to_string(ppfFEATRUE.ang_N2D) + std::to_string(ppfFEATRUE.ang_N1N2);
+	int dist = ppfFEATRUE.dist / distStep;
+	int ang_N1D = ppfFEATRUE.ang_N1D / stepAng;
+	int ang_N2D = ppfFEATRUE.ang_N2D / stepAng;
+	int ang_N1N2 = ppfFEATRUE.ang_N1N2 / stepAng;
+	string hashKey = std::to_string(dist) + std::to_string(ang_N1D)	+ std::to_string(ang_N2D) + std::to_string(ang_N1N2);
 	PPFCELL ppfCell;
 	ppfCell.ref_alpha = alpha;
 	ppfCell.ref_i = ref_i;
@@ -141,6 +145,8 @@ void CreatePPFModel(PC_XYZ::Ptr& modelPC, PPFMODEL& ppfModel, float distRatio)
 	float diff_z = max_p.z - min_p.z;
 	float dist = std::sqrt(diff_x * diff_x + diff_y * diff_y + diff_z * diff_z);
 	ppfModel.distStep = distRatio * dist;
+	ppfModel.angThres = ((360 / ppfModel.alphStep) / 180.0 * M_PI);
+	ppfModel.distThres = ppfModel.distStep;
 
 	PC_VoxelGrid(modelPC, ppfModel.modelPC, ppfModel.distStep);
 	PC_N::Ptr normals(new PC_N);
@@ -161,7 +167,7 @@ void CreatePPFModel(PC_XYZ::Ptr& modelPC, PPFMODEL& ppfModel, float distRatio)
 				P_N& p_n = normals->points[j];
 				PPFFEATRUE ppfFEATRUE;
 				ComputePPFFEATRUE(ref_p, p_, ref_pn, p_n, ppfFEATRUE);
-				PushPPFToHashMap(ppfModel.hashMap, ppfFEATRUE, i, j);
+				PushPPFToHashMap(ppfModel.hashMap, ppfFEATRUE, ppfModel.distStep, ppfModel.alphStep, i, j);
 			}
 		}
 	}
@@ -173,12 +179,11 @@ void ComputeTransMat(cv::Mat& SToGMat, float alpha, cv::Mat& RToGMat, cv::Mat& t
 {
 	float sinVal = std::sin(alpha);
 	float cosVal = std::cos(alpha);
-	cv::Mat RAlphaMat(cv::Size(4, 4), CV_32FC1, cv::Scalar(1));
+	cv::Mat RAlphaMat(cv::Size(4, 4), CV_32FC1, cv::Scalar(0));
 	float* pRAlphaMat = RAlphaMat.ptr<float>();
-	pRAlphaMat[3] = 0;
-	pRAlphaMat[5] = cosVal;	pRAlphaMat[6] = -sinVal; pRAlphaMat[7] = 0;
-	pRAlphaMat[9] = sinVal;	pRAlphaMat[10] = cosVal; pRAlphaMat[11] = 0;
-	pRAlphaMat[12] = 0;	pRAlphaMat[13] = 0; pRAlphaMat[14] = 0;
+	pRAlphaMat[5] = cosVal;	pRAlphaMat[6] = -sinVal;
+	pRAlphaMat[9] = sinVal;	pRAlphaMat[10] = cosVal;
+	pRAlphaMat[0] = 1; pRAlphaMat[15] = 1;
 	transMat = (SToGMat.inv()) * RAlphaMat * RToGMat;
 }
 //==================================================================================
@@ -252,7 +257,7 @@ void NonMaxSuppression(vector<PPFPose>& ppfPoses, vector<PPFPose>& resPoses, flo
 //==================================================================================
 
 //查找模板==========================================================================
-void MatchPose(PC_XYZ::Ptr& srcPC, PPFMODEL& ppfModel, vector<PPFPose>& resPoses, float angThres, float distThres)
+void MatchPose(PC_XYZ::Ptr& srcPC, PPFMODEL& ppfModel, vector<PPFPose>& resPoses)
 {
 	PC_XYZ::Ptr downSampplePC(new PC_XYZ);
 	PC_VoxelGrid(srcPC, downSampplePC, ppfModel.distStep);
@@ -262,7 +267,7 @@ void MatchPose(PC_XYZ::Ptr& srcPC, PPFMODEL& ppfModel, vector<PPFPose>& resPoses
 	size_t numAngles = (int)(floor(2 * M_PI / ppfModel.alphStep));
 	size_t ref_p_num = ppfModel.modelPC->points.size();
 	size_t p_number = downSampplePC->points.size();
-	vector<PPFPose> v_ppfPose(p_number);
+	vector<PPFPose> v_ppfPose(0);
 	for (size_t i = 0; i < p_number; ++i)
 	{
 		P_XYZ& ref_p = ppfModel.modelPC->points[i];
@@ -278,8 +283,13 @@ void MatchPose(PC_XYZ::Ptr& srcPC, PPFMODEL& ppfModel, vector<PPFPose>& resPoses
 				P_N& p_n = normals->points[j];
 				PPFFEATRUE ppfFEATRUE;
 				ComputePPFFEATRUE(ref_p, p_, ref_pn, p_n, ppfFEATRUE);
-				string hashKey = std::to_string(ppfFEATRUE.dist) + std::to_string(ppfFEATRUE.ang_N1D)
-					+ std::to_string(ppfFEATRUE.ang_N2D) + std::to_string(ppfFEATRUE.ang_N1N2);
+
+				int dist = ppfFEATRUE.dist / ppfModel.distStep;
+				int ang_N1D = ppfFEATRUE.ang_N1D / ppfModel.alphStep;
+				int ang_N2D = ppfFEATRUE.ang_N2D / ppfModel.alphStep;
+				int ang_N1N2 = ppfFEATRUE.ang_N1N2 / ppfModel.alphStep;
+
+				string hashKey = std::to_string(dist) + std::to_string(ang_N1D) + std::to_string(ang_N2D) + std::to_string(ang_N1N2);
 				vector<PPFCELL>& ppfCell_v = ppfModel.hashMap[hashKey];
 				float alpha_ = ComputeLocalAlpha(ref_p, ref_pn, p_, SToGMat);
 				for (size_t k = 0; k < ppfCell_v.size(); ++k)
@@ -308,7 +318,9 @@ void MatchPose(PC_XYZ::Ptr& srcPC, PPFMODEL& ppfModel, vector<PPFPose>& resPoses
 		if (pose.votes != 0)
 			v_ppfPose.push_back(pose);
 	}
-	NonMaxSuppression(v_ppfPose, resPoses, angThres, distThres);
+	NonMaxSuppression(v_ppfPose, resPoses, ppfModel.angThres, ppfModel.distThres);
+	cv::Mat t = resPoses[0].transMat;
+	cv::Mat t1 = t.clone();
 }
 //==================================================================================
 
@@ -325,6 +337,6 @@ void TestProgram()
 	CreatePPFModel(modelPC, ppfModel, distRatio);
 
 	vector<PPFPose> resPoses;
-	MatchPose(modelPC, ppfModel, resPoses, 0.0f, 0.0f);
+	MatchPose(modelPC, ppfModel, resPoses);
 }
 //==================================================================================
