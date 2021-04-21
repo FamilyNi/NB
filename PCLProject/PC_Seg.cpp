@@ -50,24 +50,24 @@ void PC_RegionGrowing(PC_XYZ::Ptr &srcPC, std::vector<vector<uint>> &indexs, flo
 		}
 		indexs.push_back(cluster);
 
-		//PC_XYZ::Ptr dstPC(new PC_XYZ);
-		//dstPC->points.resize(cluster.size());
-		//for (int m = 0; m < cluster.size(); ++m)
-		//{
-		//	dstPC->points[m] = srcPC->points[cluster[m]];
-		//}
-		//pcl::visualization::PCLVisualizer viewer;
-		////显示轨迹
-		//pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> white(dstPC, 255, 255, 255); //设置点云颜色
-		//viewer.addPointCloud(dstPC, white, "dstPC");
-		//viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "dstPC");
-		//pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> red(srcPC, 255, 0, 0); //设置点云颜色
-		//viewer.addPointCloud(srcPC, red, "srcPC");
-		//viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "srcPC");
-		//while (!viewer.wasStopped())
-		//{
-		//	viewer.spinOnce();
-		//}
+		PC_XYZ::Ptr dstPC(new PC_XYZ);
+		dstPC->points.resize(cluster.size());
+		for (int m = 0; m < cluster.size(); ++m)
+		{
+			dstPC->points[m] = srcPC->points[cluster[m]];
+		}
+		pcl::visualization::PCLVisualizer viewer;
+		//显示轨迹
+		pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> white(dstPC, 255, 255, 255); //设置点云颜色
+		viewer.addPointCloud(dstPC, white, "dstPC");
+		viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "dstPC");
+		pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> red(srcPC, 255, 0, 0); //设置点云颜色
+		viewer.addPointCloud(srcPC, red, "srcPC");
+		viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "srcPC");
+		while (!viewer.wasStopped())
+		{
+			viewer.spinOnce();
+		}
 	}
 	uint sum_ = 0;
 	for (size_t i = 0; i < indexs.size(); ++i)

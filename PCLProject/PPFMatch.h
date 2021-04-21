@@ -88,5 +88,8 @@ void NonMaxSuppression(vector<PPFPose>& ppfPoses, vector<PPFPose>& resPoses, flo
 //查找模板
 void MatchPose(PC_XYZ::Ptr& srcPC, PPFMODEL& ppfModel, vector<PPFPose>& resPoses);
 
+//点云转换
+void TransPointCloud(PC_XYZ::Ptr& srcPC, PC_XYZ::Ptr& dstPC, const cv::Mat& transMat);
+
 //测试程序
 void TestProgram();

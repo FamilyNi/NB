@@ -324,6 +324,26 @@ void MatchPose(PC_XYZ::Ptr& srcPC, PPFMODEL& ppfModel, vector<PPFPose>& resPoses
 }
 //==================================================================================
 
+//点云转换==========================================================================
+void TransPointCloud(PC_XYZ::Ptr& srcPC, PC_XYZ::Ptr& dstPC, const cv::Mat& transMat)
+{
+	size_t length = srcPC->points.size();
+	dstPC->points.resize(length);
+	const float* pTransMat = transMat.ptr<float>();
+	for (size_t i = 0; i < length; ++i)
+	{
+		P_XYZ& src_p = srcPC->points[i];
+		P_XYZ& dst_p = dstPC->points[i];
+		dst_p.x = src_p.x * pTransMat[0] + src_p.y * pTransMat[1]
+			+ src_p.z * pTransMat[2] + pTransMat[3];
+		dst_p.y = src_p.x * pTransMat[4] + src_p.y * pTransMat[5]
+			+ src_p.z * pTransMat[6] + pTransMat[7];
+		dst_p.z = src_p.x * pTransMat[8] + src_p.y * pTransMat[9]
+			+ src_p.z * pTransMat[10] + pTransMat[11];
+	}
+}
+//==================================================================================
+
 //测试程序==========================================================================
 void TestProgram()
 {
@@ -336,7 +356,32 @@ void TestProgram()
 	ppfModel.alphStep = 5.0f;
 	CreatePPFModel(modelPC, ppfModel, distRatio);
 
+	string path1 = "H:/Point-Cloud-Processing-example-master/第十一章/6 template_alignment/source/data/object_template_5.pcd";
+	PC_XYZ::Ptr testPC(new PC_XYZ);
+	pcl::io::loadPCDFile(path1, *testPC);
 	vector<PPFPose> resPoses;
-	MatchPose(modelPC, ppfModel, resPoses);
+	MatchPose(testPC, ppfModel, resPoses);
+
+	PC_XYZ::Ptr dstPC(new PC_XYZ);
+	cv::Mat transMat = resPoses[0].transMat.inv();
+	TransPointCloud(testPC, dstPC, transMat);
+
+	pcl::visualization::PCLVisualizer viewer;
+	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> white(modelPC, 255, 255, 255); //设置点云颜色
+	viewer.addPointCloud(modelPC, white, "modelPC");
+	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "modelPC");
+
+	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> red(testPC, 255, 0, 0);
+	viewer.addPointCloud(testPC, red, "testPC");
+	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "testPC");
+
+	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> green(dstPC, 0, 255, 0);
+	viewer.addPointCloud(dstPC, green, "dstPC");
+	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "dstPC");
+
+	while (!viewer.wasStopped())
+	{
+		viewer.spinOnce();
+	}
 }
 //==================================================================================
