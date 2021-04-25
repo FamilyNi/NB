@@ -1,6 +1,6 @@
 #include "PC_Seg.h"
 
-//区域生长实现点云胡分割==============================================================
+//区域生长实现点云分割==============================================================
 void PC_RegionGrowing(PC_XYZ::Ptr &srcPC, std::vector<vector<uint>> &indexs, float radius)
 {
 	size_t length = srcPC->points.size();

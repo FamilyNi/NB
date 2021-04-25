@@ -23,16 +23,18 @@ typedef struct PPFFEATRUE
 
 typedef struct PPFMODEL
 {
-	PC_XYZ::Ptr modelPC;
 	vector<cv::Mat> refTransMat;
+	uint numAng;
 	float alphStep;
 	float distStep;
 	float angThres;
 	float distThres;
 	hash_map<string, vector<PPFCELL>> hashMap;
-	PPFMODEL() :alphStep(5.0f), distStep(0.1f), 
-		angThres(0.0f), distThres(0.0f), modelPC(new PC_XYZ)
+	PPFMODEL() :numAng(5.0f), distStep(0.1f),
+		angThres(0.0f), distThres(0.0f)
 	{
+		alphStep = (float)CV_2PI / numAng;
+		angThres = (float)CV_2PI / alphStep;
 		refTransMat.resize(0);
 	}
 }PPFMODEL;
@@ -43,8 +45,7 @@ typedef struct PPFPose
 	uint votes;
 	uint ref_i;
 	uint i_;
-	PPFPose() :votes(0), ref_i(0), i_(0),
-		transMat(cv::Size(3, 4), CV_32FC1, cv::Scalar(0))
+	PPFPose() :votes(0), ref_i(0), i_(0)
 	{}
 }PPFPose;
 
