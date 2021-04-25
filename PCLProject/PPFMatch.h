@@ -71,6 +71,9 @@ float ComputeLocalAlpha(P_XYZ& ref_p, P_N& ref_pn, P_XYZ& p_, cv::Mat& refTransM
 //创建PPF模板
 void CreatePPFModel(PC_XYZ::Ptr& modelPC, PPFMODEL& ppfModel, float distRatio);
 
+//重置投票器
+void ResetAccumulator(vector<vector<uint>>& accumulator);
+
 //计算变换矩阵
 void ComputeTransMat(cv::Mat& SToGMat, float alpha, cv::Mat& RToGMat, cv::Mat& transMat);
 

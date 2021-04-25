@@ -29,12 +29,12 @@ void ComputePPFFEATRUE(P_XYZ& ref_p, P_XYZ& p_, P_N& ref_pn, P_N& p_n, PPFFEATRU
 {
 	P_XYZ p_v(ref_p.x - p_.x, ref_p.y - p_.y, ref_p.z - p_.z);
 	ppfFEATRUE.dist = std::sqrt(p_v.x * p_v.x + p_v.y * p_v.y + p_v.z * p_v.z);
-	float normal_ = std::max(ppfFEATRUE.dist, EPS);
-	p_v.x /= normal_; p_v.y /= normal_; p_v.z /= normal_;
+	float normal_ = 1.0f / std::max(ppfFEATRUE.dist, EPS);
+	p_v.x *= normal_; p_v.y *= normal_; p_v.z *= normal_;
 
-	ppfFEATRUE.ang_N1N2 = ref_pn.normal_x * p_n.normal_x + ref_pn.normal_y * p_n.normal_y + ref_pn.normal_z * p_n.normal_z;
-	ppfFEATRUE.ang_N1D = ref_pn.normal_x * p_v.x + ref_pn.normal_y * p_v.y + ref_pn.normal_z * p_v.z;
-	ppfFEATRUE.ang_N2D = p_n.normal_x * p_v.x + p_n.normal_y * p_v.y + p_n.normal_z * p_v.z;
+	ppfFEATRUE.ang_N1N2 = acosf(ref_pn.normal_x * p_n.normal_x + ref_pn.normal_y * p_n.normal_y + ref_pn.normal_z * p_n.normal_z);
+	ppfFEATRUE.ang_N1D = acosf(ref_pn.normal_x * p_v.x + ref_pn.normal_y * p_v.y + ref_pn.normal_z * p_v.z);
+	ppfFEATRUE.ang_N2D = acosf(p_n.normal_x * p_v.x + p_n.normal_y * p_v.y + p_n.normal_z * p_v.z);
 }
 //==================================================================================
 
@@ -111,7 +111,7 @@ void ComputeLocTransMat(P_XYZ& ref_p, P_N& ref_pn, cv::Mat& transMat)
 	}
 	cv::Mat rotMat(cv::Size(3, 3), CV_32FC1, cv::Scalar(0));
 	RodriguesFormula(rotAxis, rotAng, rotMat);
-	float* pTransMat = transMat.ptr<float>();
+	float* pTransMat = transMat.ptr<float>(0);
 	rotMat.copyTo(transMat(cv::Rect(0, 0, 3, 3)));
 	pTransMat[3] = -(pTransMat[0] * ref_p.x + pTransMat[1] * ref_p.y + pTransMat[2] * ref_p.z);
 	pTransMat[7] = -(pTransMat[4] * ref_p.x + pTransMat[5] * ref_p.y + pTransMat[6] * ref_p.z);
@@ -177,6 +177,19 @@ void CreatePPFModel(PC_XYZ::Ptr& modelPC, PPFMODEL& ppfModel, float distRatio)
 }
 //==================================================================================
 
+//重置投票器========================================================================
+void ResetAccumulator(vector<vector<uint>>& accumulator)
+{
+	for (size_t i = 0; i < accumulator.size(); ++i)
+	{
+		for (size_t j = 0; j < accumulator[i].size(); ++j)
+		{
+			accumulator[i][j] = 0;
+		}
+	}
+}
+//==================================================================================
+
 //计算变换矩阵======================================================================
 void ComputeTransMat(cv::Mat& SToGMat, float alpha, cv::Mat& RToGMat, cv::Mat& transMat)
 {
@@ -210,7 +223,7 @@ float ComputeRotMatAng(cv::Mat& transMat)
 		if (fabs(trace + 1) <= EPS)
 			return 3.1415926f;
 		else
-			return (acos((trace - 1) / 2));
+			return (acosf((trace - 1) / 2));
 	}
 }
 //==================================================================================
@@ -273,12 +286,13 @@ void MatchPose(PC_XYZ::Ptr& srcPC, PPFMODEL& ppfModel, vector<PPFPose>& resPoses
 	size_t ref_p_num = ppfModel.refTransMat.size();
 	size_t p_number = downSampplePC->points.size();
 
+	vector<vector<uint>> accumulator(ref_p_num, vector<uint>(numAngles));
 	vector<PPFPose> v_ppfPose(0);
 	for (size_t i = 0; i < p_number; ++i)
 	{
+		ResetAccumulator(accumulator);
 		P_XYZ& ref_p = downSampplePC->points[i];
 		P_N& ref_pn = normals->points[i];
-		vector<vector<uint>> accumulator(ref_p_num, vector<uint>(numAngles));
 		cv::Mat SToGMat;
 		ComputeLocTransMat(ref_p, ref_pn, SToGMat);
 		for (size_t j = 0; j < p_number; ++j)
@@ -301,7 +315,8 @@ void MatchPose(PC_XYZ::Ptr& srcPC, PPFMODEL& ppfModel, vector<PPFPose>& resPoses
 				for (size_t k = 0; k < ppfCell_v.size(); ++k)
 				{
 					float alpha_m = ppfCell_v[k].ref_alpha;
-					int alpha_index = (int)(numAngles * (alpha_ - alpha_m + 2 * M_PI) / (4 * M_PI));
+					//这样处理的原因防止出现负的索引，只是一个简单的转换而已没啥
+					int alpha_index = (int)(numAngles * (alpha_ - alpha_m + CV_2PI) / (4 * M_PI));
 					accumulator[ppfCell_v[k].ref_i][alpha_index]++;
 				}
 			}
@@ -319,7 +334,7 @@ void MatchPose(PC_XYZ::Ptr& srcPC, PPFMODEL& ppfModel, vector<PPFPose>& resPoses
 				}
 			}
 		}
-		float alpha = (pose.i_*(4 * M_PI)) / numAngles - 2 * M_PI;
+		float alpha = (pose.i_*(4 * M_PI)) / numAngles - CV_2PI;
 		ComputeTransMat(SToGMat, alpha, ppfModel.refTransMat[pose.ref_i], pose.transMat);
 		if (pose.votes != 0)
 			v_ppfPose.push_back(pose);
@@ -352,16 +367,16 @@ void TransPointCloud(PC_XYZ::Ptr& srcPC, PC_XYZ::Ptr& dstPC, const cv::Mat& tran
 void TestProgram()
 {
 	PC_XYZ::Ptr modelPC(new PC_XYZ());
-	string path = "H:/Point-Cloud-Processing-example-master/第十一章/6 template_alignment/source/data/object_template_2.pcd";
+	string path = "H:/Point-Cloud-Processing-example-master/第十一章/6 template_alignment/source/data/object_template_0.pcd";
 	pcl::io::loadPCDFile(path,*modelPC);
 	
 	PPFMODEL ppfModel;
 	float distRatio = 0.1;
-	ppfModel.numAng = 5;
+	ppfModel.numAng = 10;
 	CreatePPFModel(modelPC, ppfModel, distRatio);
 
 	PC_XYZ::Ptr testPC(new PC_XYZ());
-	string path1 = "H:/Point-Cloud-Processing-example-master/第十一章/6 template_alignment/source/data/object_template_0.pcd";
+	string path1 = "H:/Point-Cloud-Processing-example-master/第十一章/6 template_alignment/source/data/object_template_1.pcd";
 	pcl::io::loadPCDFile(path1, *testPC);
 	vector<PPFPose> resPoses;
 	MatchPose(testPC, ppfModel, resPoses);
@@ -381,13 +396,13 @@ void TestProgram()
 	viewer.addPointCloud(modelPC, white, "modelPC");
 	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "modelPC");
 
-	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> red(dstPC_, 255, 0, 0);
-	viewer.addPointCloud(dstPC_, red, "dstPC_");
-	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "dstPC_");
+	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> red(dstPC, 255, 0, 0);
+	viewer.addPointCloud(dstPC, red, "testPC");
+	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "testPC");
 
-	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> green(dstPC, 0, 255, 0);
-	viewer.addPointCloud(dstPC, green, "dstPC");
-	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "dstPC");
+	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> green(dstPC_, 0, 255, 0);
+	viewer.addPointCloud(dstPC_, green, "dstPC_");
+	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "dstPC_");
 
 	while (!viewer.wasStopped())
 	{
