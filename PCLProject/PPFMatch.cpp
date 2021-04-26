@@ -91,13 +91,13 @@ void ExtractPPFNormals(PC_XYZ::Ptr& srcPC, PC_XYZ::Ptr& downSamplepC, PC_N::Ptr&
 }
 //==================================================================================
 
-//算转换矩阵========================================================================
+//计算局部转换矩阵==================================================================
 void ComputeLocTransMat(P_XYZ& ref_p, P_N& ref_pn, cv::Mat& transMat)
 {
 	if (!transMat.empty())
 		transMat.release();
 	transMat = cv::Mat(cv::Size(4, 4), CV_32FC1, cv::Scalar(0));
-	float rotAng = std::acos(ref_pn.normal_x);
+	float rotAng = std::acosf(ref_pn.normal_x);
 	P_N rotAxis(0.0f, ref_pn.normal_z, -ref_pn.normal_y); //旋转轴垂直于x轴与参考点法向量
 	if (abs(rotAxis.normal_y) < EPS && abs(ref_pn.normal_z) < EPS)
 	{
@@ -124,8 +124,8 @@ void ComputeLocTransMat(P_XYZ& ref_p, P_N& ref_pn, cv::Mat& transMat)
 float ComputeLocalAlpha(P_XYZ& ref_p, P_N& ref_pn, P_XYZ& p_, cv::Mat& refTransMat)
 {
 	float* pTransMat = refTransMat.ptr<float>();
-	float y = pTransMat[4] * p_.x + pTransMat[5] * p_.y + pTransMat[6] * p_.x + pTransMat[7];
-	float z = pTransMat[8] * p_.x + pTransMat[9] * p_.y + pTransMat[10] * p_.x + pTransMat[11];
+	float y = pTransMat[4] * p_.x + pTransMat[5] * p_.y + pTransMat[6] * p_.z + pTransMat[7];
+	float z = pTransMat[8] * p_.x + pTransMat[9] * p_.y + pTransMat[10] * p_.z + pTransMat[11];
 	float alpha = std::atan2(-z, y);
 	if (sin(alpha) * z < EPS)
 	{
@@ -148,6 +148,7 @@ void CreatePPFModel(PC_XYZ::Ptr& modelPC, PPFMODEL& ppfModel, float distRatio)
 	ppfModel.alphStep = (float)CV_2PI / ppfModel.numAng;
 	ppfModel.angThres = (float)CV_2PI / ppfModel.alphStep;
 	ppfModel.distThres = ppfModel.distStep;
+	//ppfModel.numAng = (int)std::floor((float)CV_2PI / ppfModel.alphStep);
 
 	PC_XYZ::Ptr downSampplePC(new PC_XYZ);
 	PC_VoxelGrid(modelPC, downSampplePC, ppfModel.distStep);
@@ -191,7 +192,7 @@ void ResetAccumulator(vector<vector<uint>>& accumulator)
 //==================================================================================
 
 //计算变换矩阵======================================================================
-void ComputeTransMat(cv::Mat& SToGMat, float alpha, cv::Mat& RToGMat, cv::Mat& transMat)
+void ComputeTransMat(cv::Mat& SToGMat, float alpha, const cv::Mat& RToGMat, cv::Mat& transMat)
 {
 	float sinVal = std::sin(alpha);
 	float cosVal = std::cos(alpha);
@@ -200,7 +201,13 @@ void ComputeTransMat(cv::Mat& SToGMat, float alpha, cv::Mat& RToGMat, cv::Mat& t
 	pRAlphaMat[5] = cosVal;	pRAlphaMat[6] = -sinVal;
 	pRAlphaMat[9] = sinVal;	pRAlphaMat[10] = cosVal;
 	pRAlphaMat[0] = 1.0f; pRAlphaMat[15] = 1.0f;
-	transMat = (SToGMat.inv()) * RAlphaMat * RToGMat;
+
+	cv::Mat SToGMatInv(cv::Size(4, 4), CV_32FC1, cv::Scalar(0));
+	SToGMatInv = SToGMat.inv();
+	//SToGMatInv(cv::Rect(0, 0, 3, 3)) = (SToGMat(cv::Rect(0, 0, 3, 3))).inv();
+	//SToGMatInv(cv::Rect(3, 0, 1, 4)) = -SToGMat(cv::Rect(3, 0, 1, 4));
+	//SToGMatInv.at<float>(3, 3) = 1.0f;
+	transMat = SToGMatInv * RAlphaMat * RToGMat;
 }
 //==================================================================================
 
@@ -314,9 +321,8 @@ void MatchPose(PC_XYZ::Ptr& srcPC, PPFMODEL& ppfModel, vector<PPFPose>& resPoses
 				float alpha_ = ComputeLocalAlpha(ref_p, ref_pn, p_, SToGMat);
 				for (size_t k = 0; k < ppfCell_v.size(); ++k)
 				{
-					float alpha_m = ppfCell_v[k].ref_alpha;
 					//这样处理的原因防止出现负的索引，只是一个简单的转换而已没啥
-					int alpha_index = (int)(numAngles * (alpha_ - alpha_m + CV_2PI) / (4 * M_PI));
+					int alpha_index = (int)(numAngles * (ppfCell_v[k].ref_alpha - alpha_ + CV_2PI) / (4 * M_PI));
 					accumulator[ppfCell_v[k].ref_i][alpha_index]++;
 				}
 			}
@@ -367,16 +373,16 @@ void TransPointCloud(PC_XYZ::Ptr& srcPC, PC_XYZ::Ptr& dstPC, const cv::Mat& tran
 void TestProgram()
 {
 	PC_XYZ::Ptr modelPC(new PC_XYZ());
-	string path = "H:/Point-Cloud-Processing-example-master/第十一章/6 template_alignment/source/data/object_template_0.pcd";
+	string path = "H:/Point-Cloud-Processing-example-master/第十一章/6 template_alignment/source/data/object_template_1.pcd";
 	pcl::io::loadPCDFile(path,*modelPC);
 	
 	PPFMODEL ppfModel;
 	float distRatio = 0.1;
-	ppfModel.numAng = 10;
+	ppfModel.numAng = 30;
 	CreatePPFModel(modelPC, ppfModel, distRatio);
 
 	PC_XYZ::Ptr testPC(new PC_XYZ());
-	string path1 = "H:/Point-Cloud-Processing-example-master/第十一章/6 template_alignment/source/data/object_template_1.pcd";
+	string path1 = "H:/Point-Cloud-Processing-example-master/第十一章/6 template_alignment/source/data/object_template_0.pcd";
 	pcl::io::loadPCDFile(path1, *testPC);
 	vector<PPFPose> resPoses;
 	MatchPose(testPC, ppfModel, resPoses);
@@ -387,7 +393,7 @@ void TestProgram()
 	
 	MatchPose(dstPC, ppfModel, resPoses);
 	PC_XYZ::Ptr dstPC_(new PC_XYZ);
-	cv::Mat transMatInv = resPoses[0].transMat.inv();
+	cv::Mat transMatInv = resPoses[0].transMat;
 	cv::Mat I = transMatInv * transMat;
 	TransPointCloud(dstPC, dstPC_, transMatInv);
 
@@ -398,7 +404,7 @@ void TestProgram()
 
 	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> red(dstPC, 255, 0, 0);
 	viewer.addPointCloud(dstPC, red, "testPC");
-	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "testPC");
+	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "testPC");
 
 	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> green(dstPC_, 0, 255, 0);
 	viewer.addPointCloud(dstPC_, green, "dstPC_");

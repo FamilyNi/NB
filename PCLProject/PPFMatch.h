@@ -75,7 +75,7 @@ void CreatePPFModel(PC_XYZ::Ptr& modelPC, PPFMODEL& ppfModel, float distRatio);
 void ResetAccumulator(vector<vector<uint>>& accumulator);
 
 //º∆À„±‰ªªæÿ’Û
-void ComputeTransMat(cv::Mat& SToGMat, float alpha, cv::Mat& RToGMat, cv::Mat& transMat);
+void ComputeTransMat(cv::Mat& SToGMat, float alpha, const cv::Mat& RToGMat, cv::Mat& transMat);
 
 //≈≈–Ú
 bool ComparePose(PPFPose& a, PPFPose& b);
