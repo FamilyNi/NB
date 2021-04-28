@@ -36,6 +36,9 @@
     <ClCompile Include="PPFMatch.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="GrayCode.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PC_Filter.h">
@@ -57,6 +60,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="PPFMatch.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="GrayCode.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
