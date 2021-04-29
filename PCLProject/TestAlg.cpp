@@ -11,7 +11,18 @@
 
 int main()
 {
-	GenGatingImg();
+	vector<cv::Mat> grayCodeImg;
+	GenGrayCodeImg(grayCodeImg);
+
+	vector<cv::Mat> phaseImgs;
+	GenGatingImg(phaseImgs);
+
+	cv::Mat phasePriVal;
+	ComputePhasePriVal(phaseImgs, phasePriVal);
+
+	cv::Mat warpPhaseImg;
+	GrayCodeWarpPhase(grayCodeImg, phasePriVal, warpPhaseImg);
+
 	int dec_num = 13;
 	vector<bool> bin(4, 0);
 	DecToBin(dec_num, bin);
