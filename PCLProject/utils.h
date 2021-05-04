@@ -109,3 +109,28 @@ inline void GrayCodeToBin(const vector<bool>& grayCode, vector<bool>& bin)
 		bin[i] = grayCode[i] ^ bin[i + 1];
 	}
 }
+
+//float Matתuchar Mat
+inline void FloatMatToUcharMat(const cv::Mat& floatMat, cv::Mat& ucharMat)
+{
+	if (!ucharMat.empty())
+		ucharMat.release();
+	int r = floatMat.rows;
+	int c = floatMat.cols;
+	ucharMat = cv::Mat(r, c, CV_8UC1, cv::Scalar(0));
+	const float* pFloatMat = floatMat.ptr<float>();
+	uchar* const pUcharMat = ucharMat.ptr<uchar>();
+	double minVal = 0.0;
+	double maxVal = 0.0;
+	cv::minMaxLoc(floatMat, &minVal, &maxVal, 0, 0);
+	float scale = 255 / (maxVal - minVal);
+	int offset = 0;
+	for (int y = 0; y < r; ++y)
+	{
+		for (int x = 0; x < c; ++x)
+		{
+			pUcharMat[offset] = (pFloatMat[offset] - minVal) * scale;
+			++offset;
+		}
+	}
+}

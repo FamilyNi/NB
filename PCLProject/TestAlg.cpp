@@ -20,8 +20,10 @@ int main()
 	cv::Mat phasePriVal;
 	ComputePhasePriVal(phaseImgs, phasePriVal);
 
-	cv::Mat warpPhaseImg;
-	GrayCodeWarpPhase(grayCodeImg, phasePriVal, warpPhaseImg);
+	cv::Mat warpPhaseImg, ucharMat;
+ 	GrayCodeWarpPhase(grayCodeImg, phasePriVal, warpPhaseImg);
+
+	FloatMatToUcharMat(warpPhaseImg, ucharMat);
 
 	int dec_num = 13;
 	vector<bool> bin(4, 0);
