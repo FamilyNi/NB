@@ -16,5 +16,8 @@ void PC_RegionGrowing(PC_XYZ::Ptr &srcPC, std::vector<vector<uint>> &indexs, flo
 //DBSCAN分割
 void DBSCANSeg(PC_XYZ::Ptr &srcPC, vector<vector<uint>> &indexs, float radius, uint p_number);
 
+//Different Of Normal分割
+void DONSeg(PC_XYZ::Ptr &srcPC, float large_r, float small_r, float thresVal);
+
 /*点云分割测试程序*/
 void PC_SegTest();

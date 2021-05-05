@@ -8,21 +8,16 @@
 #include <pcl/io/ply_io.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/visualization/cloud_viewer.h>
-#include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/sample_consensus/ransac.h>
 #include <pcl/kdtree/kdtree_flann.h>  
-#include <pcl/kdtree/flann.h>  
-#include <pcl/kdtree/kdtree.h>
-#include <pcl/search/flann_search.h>  
 #include <pcl/search/kdtree.h>
 #include <pcl/filters/extract_indices.h>
 #include <pcl/features/normal_3d.h>
-#include <pcl/features/normal_3d_omp.h>
 #include <pcl/sample_consensus/sac_model_plane.h>
-#include <pcl/console/time.h>
 #include <pcl/common/transforms.h>
 #include <pcl/common/common.h>  
 #include <pcl/sample_consensus/model_types.h>
+#include <pcl/range_image/range_image.h>
 
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"

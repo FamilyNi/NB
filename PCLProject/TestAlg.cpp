@@ -11,48 +11,6 @@
 
 int main()
 {
-	vector<cv::Mat> grayCodeImg;
-	GenGrayCodeImg(grayCodeImg);
-
-	vector<cv::Mat> phaseImgs;
-	GenGatingImg(phaseImgs);
-
-	cv::Mat phasePriVal;
-	ComputePhasePriVal(phaseImgs, phasePriVal);
-
-	cv::Mat warpPhaseImg, ucharMat;
- 	GrayCodeWarpPhase(grayCodeImg, phasePriVal, warpPhaseImg);
-
-	FloatMatToUcharMat(warpPhaseImg, ucharMat);
-
-	int dec_num = 13;
-	vector<bool> bin(4, 0);
-	DecToBin(dec_num, bin);
-	vector<bool> grayCode(4, 0);
-	BinToGrayCode(bin, grayCode);
-	int dec_num_ = 0;
-	BinToDec(bin, dec_num_);
-
-	vector<bool> bin_;
-	GrayCodeToBin(grayCode, bin_);
-
-	bitset<4> t;
-	bitset<4> t1;
-	int shijinzhi = 15;
-	int a = shijinzhi;
-	int index = 0;
-	while (a != 0)
-	{
-		t[index] = a % 2;
-		a /= 2;
-		index++;
-	}
-
-	for (int i = 0; i < t.size() - 1; ++i)
-	{
-		t1[i] = t[i] ^ t[i + 1];
-	}
-	t1[3] = t[3];
-	TestProgram();
+	PC_SegTest();
 	return(0);
 }

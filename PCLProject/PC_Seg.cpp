@@ -1,4 +1,5 @@
 #include "PC_Seg.h"
+#include "PC_Filter.h"
 
 //区域生长实现点云分割==============================================================
 void PC_RegionGrowing(PC_XYZ::Ptr &srcPC, std::vector<vector<uint>> &indexs, float radius)
@@ -163,7 +164,65 @@ void DBSCANSeg(PC_XYZ::Ptr &srcPC, vector<vector<uint>> &indexs, float radius, u
 }
 //===================================================================================
 
+//Different Of Normal分割============================================================
+void DONSeg(PC_XYZ::Ptr &srcPC, float large_r, float small_r, float thresVal)
+{
+	size_t length = srcPC->points.size();
+	pcl::search::Search<P_XYZ>::Ptr tree;
+	pcl::NormalEstimation<P_XYZ, P_N> ne;
+	ne.setInputCloud(srcPC);
+	ne.setSearchMethod(tree);
+	ne.setRadiusSearch(small_r);
+	PC_N::Ptr normals_small_scale(new PC_N);
+	ne.compute(*normals_small_scale);
+
+	PC_N::Ptr normals_large_scale(new PC_N);
+	ne.setRadiusSearch(large_r);
+	ne.compute(*normals_large_scale);
+
+	PC_XYZ::Ptr dstPC(new PC_XYZ);
+	for (size_t i = 0; i < length; ++i)
+	{
+		P_N l_pn = normals_large_scale->points[i];
+		P_N s_pn = normals_small_scale->points[i];
+		//float diff_x = std::fabs(abs(l_pn.normal_x) - abs(s_pn.normal_x)) * 0.5;
+		//float diff_y = std::fabs(abs(l_pn.normal_y) - abs(s_pn.normal_y)) * 0.5;
+		//float diff_z = std::fabs(abs(l_pn.normal_z) - abs(s_pn.normal_z)) * 0.5;
+		//if (diff_x > thresVal || diff_y > thresVal || diff_z > thresVal)
+		//{
+		//	dstPC->points.push_back(srcPC->points[i]);
+		//}
+		if (std::fabs(l_pn.normal_x * s_pn.normal_x + l_pn.normal_y
+			* s_pn.normal_y + l_pn.normal_z * s_pn.normal_z) < thresVal)
+		{
+			dstPC->points.push_back(srcPC->points[i]);
+		}
+	}
+	pcl::visualization::PCLVisualizer viewer;
+	//显示轨迹
+	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> white(srcPC, 255, 255, 255);
+	viewer.addPointCloud(srcPC, white, "srcPC");
+	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "srcPC");
+	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> red(dstPC, 255, 0, 0);
+	viewer.addPointCloud(dstPC, red, "dstPC");
+	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "dstPC");
+	while (!viewer.wasStopped())
+	{
+		viewer.spinOnce();
+	}
+}
+//===================================================================================
+
 /*点云分割测试程序*/
 void PC_SegTest()
 {
+	PC_XYZ::Ptr srcPC(new PC_XYZ);
+	string path = "G:/JC_Config/整体点云/样品2/PC.ply";
+	ReadPointCloud(path, srcPC);
+	PC_XYZ::Ptr v_srcPC(new PC_XYZ);
+	PC_VoxelGrid(srcPC, v_srcPC, 1.6f);
+	float large_r = 20.0f;
+	float small_r = 2.0f;
+	float thresVal = 0.86f;
+	DONSeg(v_srcPC, large_r, small_r, thresVal);
 }

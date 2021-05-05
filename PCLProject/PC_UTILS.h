@@ -12,3 +12,6 @@ void ComputePCNormal(PC_XYZ::Ptr &srcPC, PC_N::Ptr &normals, float radius);
 
 //计算协方差矩阵
 void ComputeCovMat(PC_XYZ::Ptr &pc, cv::Mat &covMat, P_XYZ &gravity);
+
+//计算点云的深度图
+void ComputePCRangeImg();
