@@ -8,9 +8,10 @@
 #include "JC_Calibrate.h"
 #include "PPFMatch.h"
 #include "GrayCode.h"
+#include "WaveLet.h"
 
 int main()
 {
-	PC_SegTest();
+	WaveLetTest();
 	return(0);
 }

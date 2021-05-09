@@ -171,6 +171,7 @@
     <ClCompile Include="TestAlg.cpp" />
     <ClCompile Include="PC_Filter.cpp" />
     <ClCompile Include="PC_Seg.cpp" />
+    <ClCompile Include="WaveLet.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="FitModel.h" />
@@ -181,6 +182,7 @@
     <ClInclude Include="PC_UTILS.h" />
     <ClInclude Include="PPFMatch.h" />
     <ClInclude Include="utils.h" />
+    <ClInclude Include="WaveLet.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
