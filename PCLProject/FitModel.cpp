@@ -72,29 +72,8 @@ void FitPlaneBaseOnWeight(PC_XYZ::Ptr &srcPC, P_N &normal, uint iter_k)
 	normal.normal_z = (float)eigenVec.ptr<double>(2)[2];
 }
 
-
 /*测试程序*/
 void PC_FitPlaneTest()
 {
-	PointCloud<P_XYZ>::Ptr srcPC(new PointCloud<P_XYZ>);
-	string fileName = "D:/点云数据/ori_pc.ply";
-	ReadPointCloud(fileName, srcPC);
-	vector<int> inliers;
-	PC_RandomFitPlane(srcPC, inliers, 1);
-	PC_XYZ::Ptr rescloud(new PC_XYZ);
-	pcl::copyPointCloud<pcl::PointXYZ>(*srcPC, inliers, *rescloud);
-	//Plane3D plane;
-	//PC_OLSFitPlane(*srcPC, plane);
-	boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer(new pcl::visualization::PCLVisualizer("3D viewer"));
-	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> fildColorSrc(srcPC, 0, 255, 0);
-	viewer->addPointCloud<pcl::PointXYZ>(srcPC, fildColorSrc, "srcCloud");
-	viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "srcCloud");
-
-	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> red(rescloud, 255, 0, 0);
-	viewer->addPointCloud<P_XYZ>(rescloud, red, "dstCloud");
-	viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "dstCloud");
-
-	while (!viewer->wasStopped()) {
-		viewer->spinOnce(100);
-	}
+	int ttt = 0;
 }
