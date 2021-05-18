@@ -20,6 +20,19 @@ public:
 	//设置小波重构滤波器
 	void Set_I_Filter(const string& name);
 
+	//行分解
+	void R_Decompose(const cv::Mat& src, cv::Mat& dst_R_L, cv::Mat& dst_R_H);
+
+	//列分解
+	void C_Decompose(cv::Mat& dst_R_L, cv::Mat& dst_R_H, cv::Mat& CMat1,
+		cv::Mat& CMat2, cv::Mat& CMat3, cv::Mat& CMat4);
+
+	//小波行重建
+	void R_Recontrcution(cv::Mat& src_C_L, cv::Mat& src_C_H, cv::Mat& dst_R, int r, int c);
+
+	//小波列重建
+	void C_Reconstruction(cv::Mat& src, cv::Mat& dst_C_L, cv::Mat& dst_C_H, int r, int c);
+
 	//获取偶数行
 	void GetOddR(const cv::Mat& srcImg, cv::Mat& oddRImg);
 
@@ -41,8 +54,14 @@ public:
 private:
 	cv::Mat m_LowFilter;
 	cv::Mat m_HighFilter;
+	cv::Mat m_LowFilter_T;
+	cv::Mat m_HighFilter_T;
+
 	cv::Mat m_Low_I_Filter;
 	cv::Mat m_High_I_Filter;
+	cv::Mat m_Low_I_Filter_T;
+	cv::Mat m_High_I_Filter_T;
+
 	cv::Mat m_Decompose;
 	uint m_Level;
 	string m_Name;
