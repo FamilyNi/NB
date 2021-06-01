@@ -10,8 +10,8 @@
 #include "GrayCode.h"
 #include "WaveLet.h"
 
-int main()
+int main(int argc,
+	char *argv[])
 {
-	WaveLetTest();
-	return(0);
+	return (0);
 }

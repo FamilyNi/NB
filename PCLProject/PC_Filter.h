@@ -11,6 +11,7 @@
 #include <pcl/filters/convolution_3d.h>
 #include <pcl/filters/morphological_filter.h>
 #include <pcl/filters/model_outlier_removal.h>
+#include <pcl/filters/project_inliers.h>
 #include <pcl/surface/mls.h>
 
 /*约定：
@@ -26,6 +27,9 @@ void PC_PassFilter(PC_XYZ::Ptr &srcPC, PC_XYZ::Ptr &dstPC, const string mode, do
 
 //邻域密度约束的动态标准差阈值离群点检测模型
 void NeighbourMove(PC_XYZ::Ptr &srcPC, vector<uint> &index_p, uint k, float outcoef, float incoef);
+
+//平面投影滤波
+void PC_ProjectFilter(PC_XYZ::Ptr &srcPC, PC_XYZ::Ptr &dstPC, float v_x, float v_y, float v_z);
 
 //测试程序
 void PC_FitlerTest();

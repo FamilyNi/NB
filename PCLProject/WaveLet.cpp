@@ -213,9 +213,6 @@ void WaveLetTransformer::WaveletDT(const cv::Mat& srcImg)
 		CMat4.copyTo(m_Decompose(cv::Rect(c, r, c, r)));
 		src = CMat1;		
 	}
-	cv::Mat t;
-
-	m_Decompose.convertTo(t, CV_8UC1);
 }
 
 //列方向插值
@@ -252,7 +249,7 @@ void WaveLetTransformer::IWaveletDT(cv::Mat& outMatImg)
 	{
 		r *= 2;
 		cv::Mat dst_C_L, dst_C_H;
-		C_Reconstruction(m_Decompose, dst_C_L,dst_C_H, r, c);
+		C_Reconstruction(m_Decompose, dst_C_L, dst_C_H, r, c);
 
 		//行重建
 		c *= 2;
