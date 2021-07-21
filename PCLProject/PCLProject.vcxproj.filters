@@ -42,6 +42,18 @@
     <ClCompile Include="WaveLet.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="ContourOpr.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="LocalDeforableModel.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ShapeMatch.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ShapeModelBase.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PC_Filter.h">
@@ -69,6 +81,21 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="WaveLet.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ContourOpr.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="LocalDeforableModel.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ShapeMatch.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ShapeModelBase.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="OPENCV_UTILS.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -163,24 +163,33 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ContourOpr.cpp" />
     <ClCompile Include="FitModel.cpp" />
     <ClCompile Include="GrayCode.cpp" />
     <ClCompile Include="JC_Calibrate.cpp" />
+    <ClCompile Include="LocalDeforableModel.cpp" />
     <ClCompile Include="PC_UTILS.cpp" />
     <ClCompile Include="PPFMatch.cpp" />
+    <ClCompile Include="ShapeMatch.cpp" />
+    <ClCompile Include="ShapeModelBase.cpp" />
     <ClCompile Include="TestAlg.cpp" />
     <ClCompile Include="PC_Filter.cpp" />
     <ClCompile Include="PC_Seg.cpp" />
     <ClCompile Include="WaveLet.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ContourOpr.h" />
     <ClInclude Include="FitModel.h" />
     <ClInclude Include="GrayCode.h" />
     <ClInclude Include="JC_Calibrate.h" />
+    <ClInclude Include="LocalDeforableModel.h" />
+    <ClInclude Include="OPENCV_UTILS.h" />
     <ClInclude Include="PC_Filter.h" />
     <ClInclude Include="PC_Seg.h" />
     <ClInclude Include="PC_UTILS.h" />
     <ClInclude Include="PPFMatch.h" />
+    <ClInclude Include="ShapeMatch.h" />
+    <ClInclude Include="ShapeModelBase.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="WaveLet.h" />
   </ItemGroup>
