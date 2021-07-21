@@ -9,9 +9,10 @@
 #include "PPFMatch.h"
 #include "GrayCode.h"
 #include "WaveLet.h"
+#include "LocalDeforableModel.h"
 
-int main(int argc,
-	char *argv[])
+int main(int argc, char *argv[])
 {
+	LocalDeforModelTest();
 	return (0);
 }
