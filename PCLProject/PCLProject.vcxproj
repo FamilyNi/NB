@@ -164,6 +164,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ContourOpr.cpp" />
+    <ClCompile Include="FileOperator.cpp" />
     <ClCompile Include="FitModel.cpp" />
     <ClCompile Include="GrayCode.cpp" />
     <ClCompile Include="JC_Calibrate.cpp" />
@@ -179,6 +180,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ContourOpr.h" />
+    <ClInclude Include="FileOperator.h" />
     <ClInclude Include="FitModel.h" />
     <ClInclude Include="GrayCode.h" />
     <ClInclude Include="JC_Calibrate.h" />

@@ -17,7 +17,7 @@
 #include <pcl/common/transforms.h>
 #include <pcl/common/common.h>  
 #include <pcl/sample_consensus/model_types.h>
-#include <pcl/range_image/range_image.h>
+#include <pcl/registration/icp.h>
 
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"

@@ -13,6 +13,7 @@
 
 int main(int argc, char *argv[])
 {
+	CalibTest();
 	LocalDeforModelTest();
 	return (0);
 }

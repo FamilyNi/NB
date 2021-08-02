@@ -100,31 +100,12 @@ void GetKNearestPoint(vector<Point2f> &contours, vector<Point2f> &grads, LocalDe
 void ComputeSegContGravity(LocalDeforModelInfo &localDeforModelInfo)
 {
 	size_t len = localDeforModelInfo.coord.size();
-	//localDeforModelInfo.gravity.resize(len);
 	GetContourGraviry(localDeforModelInfo.coord, localDeforModelInfo.gravity);
 	for (size_t i = 0; i < len; ++i)
 	{
 		localDeforModelInfo.coord[i].x -= localDeforModelInfo.gravity.x;
 		localDeforModelInfo.coord[i].y -= localDeforModelInfo.gravity.y;
 	}
-
-	//for (size_t i = 0; i < len; ++i)
-	//{
-	//	vector<uint>& index = localDeforModelInfo.segContIdx[i];
-	//	size_t len_ = index.size();
-	//	float sum_x = 0.0f, sum_y = 0.0f;
-	//	for (size_t j = 0; j < len_; ++j)
-	//	{
-	//		sum_x += localDeforModelInfo.coord[index[j]].x;
-	//		sum_y += localDeforModelInfo.coord[index[j]].y;
-	//	}
-	//	localDeforModelInfo.gravity[i] = Point2f(sum_x / (float)len_, sum_y / (float)len_);
-	//	for (size_t j = 0; j < len_; ++j)
-	//	{
-	//		localDeforModelInfo.coord[index[j]].x -= localDeforModelInfo.gravity[i].x;
-	//		localDeforModelInfo.coord[index[j]].y -= localDeforModelInfo.gravity[i].y;
-	//	}
-	//}
 }
 //========================================================================================
 
