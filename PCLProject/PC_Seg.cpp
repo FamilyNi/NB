@@ -1,6 +1,53 @@
 #include "PC_Seg.h"
 #include "PC_Filter.h"
 
+//随机采样一致性的点云分割==========================================================
+void PC_RANSACSeg(PC_XYZ::Ptr &srcPC, PC_XYZ::Ptr &dstPC, int mode, float thresVal)
+{
+	if (mode > 16)
+		return;
+	if (srcPC->empty())
+		return;
+
+	pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients);
+
+	pcl::SACSegmentation<P_XYZ> seg;
+
+	pcl::PointIndices::Ptr inliers(new pcl::PointIndices());
+
+	seg.setOptimizeCoefficients(true);
+	seg.setModelType(mode);
+	seg.setMethodType(pcl::SAC_RANSAC);
+	seg.setMaxIterations(1000);
+	seg.setDistanceThreshold(thresVal);
+	seg.setInputCloud(srcPC);
+	seg.segment(*inliers, *coefficients);
+
+	pcl::ExtractIndices<P_XYZ> extract;
+	extract.setInputCloud(srcPC);
+	extract.setIndices(inliers);
+	extract.setNegative(false);
+	extract.filter(*dstPC);
+}
+//==================================================================================
+
+//基于欧式距离分割方法==============================================================
+void PC_EuclideanSeg(PC_XYZ::Ptr &srcPC, std::vector<P_IDX> clusters, float distThresVal)
+{
+	if (srcPC->empty())
+		return;
+	pcl::search::KdTree<P_XYZ>::Ptr kdtree(new pcl::search::KdTree<P_XYZ>);
+	kdtree->setInputCloud(srcPC);
+	pcl::EuclideanClusterExtraction<P_XYZ> clustering;
+	clustering.setClusterTolerance(distThresVal);
+	clustering.setMinClusterSize(1);
+	clustering.setMaxClusterSize(10000000);
+	clustering.setSearchMethod(kdtree);
+	clustering.setInputCloud(srcPC);
+	clustering.extract(clusters);
+}
+//==================================================================================
+
 //区域生长实现点云分割==============================================================
 void PC_RegionGrowing(PC_XYZ::Ptr &srcPC, std::vector<vector<uint>> &indexs, float radius)
 {
@@ -57,18 +104,6 @@ void PC_RegionGrowing(PC_XYZ::Ptr &srcPC, std::vector<vector<uint>> &indexs, flo
 		{
 			dstPC->points[m] = srcPC->points[cluster[m]];
 		}
-		pcl::visualization::PCLVisualizer viewer;
-		//显示轨迹
-		pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> white(dstPC, 255, 255, 255); //设置点云颜色
-		viewer.addPointCloud(dstPC, white, "dstPC");
-		viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "dstPC");
-		pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> red(srcPC, 255, 0, 0); //设置点云颜色
-		viewer.addPointCloud(srcPC, red, "srcPC");
-		viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "srcPC");
-		while (!viewer.wasStopped())
-		{
-			viewer.spinOnce();
-		}
 	}
 	uint sum_ = 0;
 	for (size_t i = 0; i < indexs.size(); ++i)
@@ -79,7 +114,7 @@ void PC_RegionGrowing(PC_XYZ::Ptr &srcPC, std::vector<vector<uint>> &indexs, flo
 //====================================================================================
 
 //DBSCAN分割==========================================================================
-void DBSCANSeg(PC_XYZ::Ptr &srcPC, vector<vector<uint>> &indexs, float radius, uint p_number)
+void DBSCANSeg(PC_XYZ::Ptr &srcPC, vector<vector<uint>> &indexs, float radius, int p_number)
 {
 	size_t length = srcPC->points.size();
 	vector<bool> isCore(length, false);
@@ -218,7 +253,7 @@ void PC_SegTest()
 {
 	PC_XYZ::Ptr srcPC(new PC_XYZ);
 	string path = "G:/JC_Config/整体点云/样品2/PC.ply";
-	ReadPointCloud(path, srcPC);
+	pcl::io::loadPLYFile(path, *srcPC);
 	PC_XYZ::Ptr v_srcPC(new PC_XYZ);
 	PC_VoxelGrid(srcPC, v_srcPC, 1.6f);
 	float large_r = 20.0f;

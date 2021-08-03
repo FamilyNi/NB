@@ -1,7 +1,7 @@
 #include "FitModel.h"
-#include "PC_UTILS.h"
+#include "PointCloudOpr.h"
 
-/*RANSAC拟合平面*/
+//RANSAC拟合平面=================================================================
 void PC_RandomFitPlane(PC_XYZ::Ptr &srcPC, vector<int> &inliers, double thresValue)
 {
 	if (srcPC->points.size() == 0)
@@ -14,13 +14,14 @@ void PC_RandomFitPlane(PC_XYZ::Ptr &srcPC, vector<int> &inliers, double thresVal
 	ransac.computeModel();
 	ransac.getInliers(inliers);
 }
+//===============================================================================
 
-/*最小二乘法拟合平面*/
-void PC_OLSFitPlane(PC_XYZ::Ptr &srcPC, Plane3D &plane)
+//最小二乘法拟合平面=============================================================
+void PC_OLSFitPlane(PC_XYZ::Ptr& srcPC, Plane3D &plane)
 {
-	cv::Mat covMat = cv::Mat(cv::Size(3, 3), CV_64FC1, cv::Scalar(0));
+	cv::Mat covMat = cv::Mat(cv::Size(3, 3), CV_32FC1, cv::Scalar(0));
 	P_XYZ gravity{ 0.0f, 0.0f, 0.0f };
-	ComputeCovMat(srcPC, covMat, gravity);
+	PC_ComputeCovMat(srcPC, covMat, gravity);
 
 	cv::Mat eigenVal, eigenVec;
 	cv::eigen(covMat, eigenVal, eigenVec);
@@ -39,8 +40,9 @@ void PC_OLSFitPlane(PC_XYZ::Ptr &srcPC, Plane3D &plane)
 	plane.c = eigenVec.ptr<double>(index)[2];
 	plane.d = plane.a * gravity.x + plane.b * gravity.y + plane.c * gravity.z;
 }
+//===============================================================================
 
-//基于权重的平面拟合
+//基于权重的平面拟合=============================================================
 void FitPlaneBaseOnWeight(PC_XYZ::Ptr &srcPC, P_N &normal, uint iter_k)
 {
 	size_t length = srcPC->points.size();
@@ -50,14 +52,14 @@ void FitPlaneBaseOnWeight(PC_XYZ::Ptr &srcPC, P_N &normal, uint iter_k)
 	{
 		w_srcPC->points[i] = srcPC->points[i];
 	}
-	cv::Mat covMat(cv::Size(3, 3), CV_64FC1, cv::Scalar(0));
+	cv::Mat covMat(cv::Size(3, 3), CV_32FC1, cv::Scalar(0));
 	cv::Mat eigenVal, eigenVec;
 	P_XYZ gravity{ 0.0f, 0.0f, 0.0f };
 	for (uint i = 0; i < iter_k; ++i)
 	{
-		ComputeCovMat(w_srcPC, covMat, gravity);
+		PC_ComputeCovMat(w_srcPC, covMat, gravity);
 		cv::eigen(covMat, eigenVal, eigenVec);
-		double* pEigenVal = eigenVec.ptr<double>(2);
+		float* pEigenVal = eigenVec.ptr<float>(2);
 		float d = -(pEigenVal[0] * gravity.x + pEigenVal[1] * gravity.y + pEigenVal[2] * gravity.z);
 		for (size_t j = 0; j < length; ++j)
 		{
@@ -67,10 +69,11 @@ void FitPlaneBaseOnWeight(PC_XYZ::Ptr &srcPC, P_N &normal, uint iter_k)
 			w_p.x = w_ * p_.x; w_p.y = w_ * p_.y; w_p.z = w_ * p_.z;
 		}
 	}
-	normal.normal_x = (float)eigenVec.ptr<double>(2)[0];
-	normal.normal_y = (float)eigenVec.ptr<double>(2)[1];
-	normal.normal_z = (float)eigenVec.ptr<double>(2)[2];
+	normal.normal_x = eigenVec.ptr<float>(2)[0];
+	normal.normal_y = eigenVec.ptr<float>(2)[1];
+	normal.normal_z = eigenVec.ptr<float>(2)[2];
 }
+//===============================================================================
 
 /*测试程序*/
 void PC_FitPlaneTest()

@@ -1,6 +1,6 @@
 #include "ContourOpr.h"
 
-/*提取轮廓*/
+//提取轮廓======================================================================
 void ExtractContour(Mat &srcImg, vector<vector<Point>> &contours, float lowVal, float highVal, int mode)
 {
 	Mat dstImg = Mat(srcImg.size(), srcImg.type(), Scalar(0));
@@ -13,8 +13,9 @@ void ExtractContour(Mat &srcImg, vector<vector<Point>> &contours, float lowVal, 
 	contours.resize(0);
 	findContours(dstImg, contours, RETR_LIST, CHAIN_APPROX_NONE);
 }
+//==============================================================================
 
-/*计算轮廓的重心*/
+//计算轮廓的重心================================================================
 void GetContourGraviry(vector<Point2f> &contour, Point2f &gravity)
 {
 	int len = contour.size();
@@ -29,8 +30,9 @@ void GetContourGraviry(vector<Point2f> &contour, Point2f &gravity)
 	gravity.x = sum_x / len;
 	gravity.y = sum_y / len;
 }
+//==============================================================================
 
-/*平移轮廓*/
+//平移轮廓======================================================================
 void TranContour(vector<Point2f> &contour, Point2f &gravity)
 {
 	for (int i = 0; i < contour.size(); ++i)
@@ -39,8 +41,9 @@ void TranContour(vector<Point2f> &contour, Point2f &gravity)
 		contour[i].y -= gravity.y;
 	}
 }
+//==============================================================================
 
-/*获得最长轮廓*/
+//获得最长轮廓==================================================================
 void GetMaxLenContuor(vector<vector<Point>> &contours, int &maxLenIndex)
 {
 	int len = contours.size();
@@ -56,8 +59,9 @@ void GetMaxLenContuor(vector<vector<Point>> &contours, int &maxLenIndex)
 		}
 	}
 }
+//==============================================================================
 
-/*获得最短轮廓*/
+//获得最短轮廓==================================================================
 void GetMinLenContuor(vector<vector<Point>> &contours, int &minLenIndex)
 {
 	int len = contours.size();
@@ -73,8 +77,9 @@ void GetMinLenContuor(vector<vector<Point>> &contours, int &minLenIndex)
 		}
 	}
 }
+//==============================================================================
 
-/*根据长度选择轮廓*/
+//根据长度选择轮廓==============================================================
 void SelContourLen(vector<vector<Point>> &contours, vector<vector<Point>> &selContours, int minLen, int maxLen)
 {
 	selContours.resize(0);
@@ -86,8 +91,9 @@ void SelContourLen(vector<vector<Point>> &contours, vector<vector<Point>> &selCo
 			selContours.push_back(contours[i]);
 	}
 }
+//==============================================================================
 
-/*选择包围面积最大的轮廓*/
+//选择包围面积最大的轮廓========================================================
 void GetMaxAreaContour(vector<vector<Point>> &contours, int &maxIndex)
 {
 	int len = contours.size();
@@ -104,8 +110,9 @@ void GetMaxAreaContour(vector<vector<Point>> &contours, int &maxIndex)
 		}
 	}
 }
+//==============================================================================
 
-/*选择包围面积最小的轮廓*/
+//选择包围面积最小的轮廓========================================================
 void GetMinAreaContour(vector<vector<Point>> &contours, int &minIndex)
 {
 	int len = contours.size();
@@ -122,8 +129,9 @@ void GetMinAreaContour(vector<vector<Point>> &contours, int &minIndex)
 		}
 	}
 }
+//==============================================================================
 
-/*根据面积选择轮廓*/
+//根据面积选择轮廓==============================================================
 void SelContourArea(vector<vector<Point>> &contours, vector<vector<Point>> &selContours, int minArea, int maxArea)
 {
 	selContours.resize(0);
@@ -136,16 +144,18 @@ void SelContourArea(vector<vector<Point>> &contours, vector<vector<Point>> &selC
 			selContours.push_back(contours[i]);
 	}
 }
+//==============================================================================
 
-/*填充轮廓*/
+//填充轮廓======================================================================
 void FillContour(Mat &srcImg, vector<Point> &contour, Scalar color)
 {
 	if (srcImg.empty() || contour.size() == 0)
 		return;
 	fillPoly(srcImg, contour, color);
 }
+//==============================================================================
 
-/*多边形近似轮廓*/
+//多边形近似轮廓================================================================
 void PolyFitContour(vector<Point> &contour, vector<Point> &poly, double distThres)
 {
 	poly.resize(0);
@@ -153,8 +163,9 @@ void PolyFitContour(vector<Point> &contour, vector<Point> &poly, double distThre
 		return;
 	approxPolyDP(contour, poly, distThres, false);
 }
+//==============================================================================
 
-/*合并轮廓*/
+//合并轮廓======================================================================
 void MergeContour(vector<vector<Point>> &contours, vector<Point> &contour)
 {
 	contour.resize(0);
@@ -165,3 +176,4 @@ void MergeContour(vector<vector<Point>> &contours, vector<Point> &contour)
 		contour.insert(contour.end(), contours[i].begin(), contours[i].end());
 	}
 }
+//==============================================================================

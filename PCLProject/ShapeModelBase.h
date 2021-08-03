@@ -1,5 +1,5 @@
 #pragma once
-#include "OPENCV_UTILS.h"
+#include "utils.h"
 
 //模板信息
 struct ShapeInfo
@@ -13,6 +13,23 @@ struct ShapeInfo
 		x_.release();
 		y_.release();
 	}
+};
+
+struct SPAPLEMODELINFO
+{
+	int pyrNumber;       // 金子塔层数
+	int minContourLen;   //轮廓的最小长度
+	int maxContourLen;  //轮廓的最大长度
+	int lowVal;    //轮廓提取低阈值
+	int highVal;   //轮廓提取高阈值
+	int extContouMode;  //轮廓提取模式
+	int step;   //选点步长
+	float startAng;
+	float endAng;
+	float angStep;
+	SPAPLEMODELINFO() :pyrNumber(1), minContourLen(0), maxContourLen(1e9),
+		lowVal(15), highVal(30), step(3), extContouMode(0)
+	{}
 };
 
 //输出结果

@@ -1,12 +1,14 @@
 #include "GrayCode.h"
+#include "MathOpr.h"
 
-void GenGrayCodeImg(vector<cv::Mat>& grayCodeImgs)
+//产生格雷码图像====================================================
+void GenGrayCodeImg(vector<Mat>& grayCodeImgs)
 {
 	grayCodeImgs.resize(4);
 	int imgW = 912;
 	int imgH = 1040;
 	for (int i = 0; i < grayCodeImgs.size(); ++i)
-		grayCodeImgs[i] = cv::Mat(cv::Size(imgW, imgH), CV_8UC1, cv::Scalar(0));
+		grayCodeImgs[i] = Mat(Size(imgW, imgH), CV_8UC1, Scalar(0));
 	int step = imgW / 16;
 	for (int i = 0; i < 16; ++i)
 	{
@@ -21,8 +23,10 @@ void GenGrayCodeImg(vector<cv::Mat>& grayCodeImgs)
 		}
 	}
 }
+//==================================================================
 
-void GenGatingImg(vector<cv::Mat>& phaseImgs)
+//产生光栅图像======================================================
+void GenGatingImg(vector<Mat>& phaseImgs)
 {
 	if (phaseImgs.size() != 0)
 		phaseImgs.resize(0);
@@ -33,13 +37,13 @@ void GenGatingImg(vector<cv::Mat>& phaseImgs)
 	float lamda = imgW / feq;
 	for (int i = 0; i < phaseImgs.size(); ++i)
 	{
-		phaseImgs[i] = cv::Mat(cv::Size(imgW, imgH), CV_8UC1, cv::Scalar(0));
+		phaseImgs[i] = Mat(Size(imgW, imgH), CV_8UC1, Scalar(0));
 		if (phaseImgs[i].empty())
 			return;
 	}
 	for (int i = 0; i < phaseImgs.size(); ++i)
 	{
-		cv::Mat& phaseImg = phaseImgs[i];
+		Mat& phaseImg = phaseImgs[i];
 		float phaseOff = i * CV_2PI / 3 - CV_PI / 2.0f;
 		for (int i = 0; i < imgW; ++i)
 		{
@@ -47,8 +51,10 @@ void GenGatingImg(vector<cv::Mat>& phaseImgs)
 		}
 	}
 }
+//==================================================================
 
-void ComputePhasePriVal(vector<cv::Mat>& phaseImgs, cv::Mat& phasePriVal)
+//计算相位主值======================================================
+void ComputePhasePriVal(vector<Mat>& phaseImgs, Mat& phasePriVal)
 {
 	if (phaseImgs.size() != 3)
 		return;
@@ -59,7 +65,7 @@ void ComputePhasePriVal(vector<cv::Mat>& phaseImgs, cv::Mat& phasePriVal)
 		if (phaseImgs[i].cols != c || phaseImgs[i].rows != r)
 			return;
 	}
-	phasePriVal = cv::Mat(r, c, CV_32FC1, cv::Scalar(0));
+	phasePriVal = Mat(r, c, CV_32FC1, Scalar(0));
 	vector<uchar*> vp_PhaseImg(phaseImgs.size(), NULL);
 	for (int i = 0; i < phaseImgs.size(); ++i)
 	{
@@ -86,8 +92,10 @@ void ComputePhasePriVal(vector<cv::Mat>& phaseImgs, cv::Mat& phasePriVal)
 		}
 	}
 }
+//==================================================================
 
-void GrayCodeWarpPhase(vector<cv::Mat>& grayCodeImg, cv::Mat& phaseImg, cv::Mat& warpPhaseImg)
+//解包裹相位========================================================
+void GrayCodeWarpPhase(vector<Mat>& grayCodeImg, Mat& phaseImg, Mat& warpPhaseImg)
 {
 	if (grayCodeImg.size() != 4)
 		return;
@@ -98,7 +106,7 @@ void GrayCodeWarpPhase(vector<cv::Mat>& grayCodeImg, cv::Mat& phaseImg, cv::Mat&
 		if (grayCodeImg[i].cols != c || grayCodeImg[i].rows != r)
 			return;
 	}
-	warpPhaseImg = cv::Mat(cv::Size(c, r), CV_32FC1, cv::Scalar(0));
+	warpPhaseImg = Mat(cv::Size(c, r), CV_32FC1, Scalar(0));
 	vector<uchar*> vp_GrayCode(grayCodeImg.size(), NULL);
 	for (int i = 0; i < grayCodeImg.size(); ++i)
 	{
@@ -130,3 +138,4 @@ void GrayCodeWarpPhase(vector<cv::Mat>& grayCodeImg, cv::Mat& phaseImg, cv::Mat&
 		}
 	}
 }
+//==================================================================

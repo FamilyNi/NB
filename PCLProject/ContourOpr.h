@@ -1,5 +1,5 @@
 #pragma once
-#include "OPENCV_UTILS.h"
+#include "utils.h"
 
 /*ÌáÈ¡ÂÖÀª*/
 void ExtractContour(Mat &srcImg, vector<vector<Point>> &contours, float lowVal, float highVal, int mode);

@@ -1,5 +1,5 @@
 #pragma once
-#include "OPENCV_UTILS.h"
+#include "utils.h"
 #include "ContourOpr.h"
 #include "ShapeModelBase.h"
 #include <map>

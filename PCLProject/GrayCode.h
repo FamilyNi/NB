@@ -1,10 +1,14 @@
 #pragma once
 #include "utils.h"
 
-void GenGrayCodeImg(vector<cv::Mat>& grayCodeImgs);
+//产生格雷码图像
+void GenGrayCodeImg(vector<Mat>& grayCodeImgs);
 
-void GenGatingImg(vector<cv::Mat>& phaseImgs);
+//产生光栅图像
+void GenGatingImg(vector<Mat>& phaseImgs);
 
-void ComputePhasePriVal(vector<cv::Mat>& phaseImgs, cv::Mat& phasePriVal);
+//计算相位主值
+void ComputePhasePriVal(vector<Mat>& phaseImgs, Mat& phasePriVal);
 
-void GrayCodeWarpPhase(vector<cv::Mat>& grayCodeImgs, cv::Mat& phaseImg, cv::Mat& warpPhaseImg);
+//解包裹相位
+void GrayCodeWarpPhase(vector<Mat>& grayCodeImgs, Mat& phaseImg, Mat& warpPhaseImg);

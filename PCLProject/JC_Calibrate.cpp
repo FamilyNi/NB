@@ -3,7 +3,7 @@
 #include "FitModel.h"
 #include "PC_Seg.h"
 #include <pcl/segmentation/region_growing.h>
-#include "FileOperator.h"
+#include "FileOpr.h"
 
 //读取世界坐标========================================================================
 void ReadWorldCoord(const string& filename, vector<vector<cv::Point3f>>& worldPts)

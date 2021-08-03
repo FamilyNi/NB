@@ -1,6 +1,7 @@
 #include "PPFMatch.h"
 #include "PC_Filter.h"
-#include "PC_UTILS.h"
+#include "utils.h"
+#include "PointCloudOpr.h"
 
 //罗格里德斯公式====================================================================
 void RodriguesFormula(P_N& rotAxis, float rotAng, cv::Mat& rotMat)
@@ -58,7 +59,7 @@ void PushPPFToHashMap(hash_map<string, vector<PPFCELL>>& hashMap, PPFFEATRUE& pp
 void ExtractPPFNormals(PC_XYZ::Ptr& srcPC, PC_XYZ::Ptr& downSamplepC, PC_N::Ptr& normals, float radius)
 {
 	PC_N::Ptr model_pcn(new PC_N);
-	ComputePCNormal(srcPC, model_pcn, radius);
+	PC_ComputePCNormal(srcPC, model_pcn, radius);
 	size_t length = downSamplepC->size();
 	normals->points.resize(length);
 	pcl::KdTreeFLANN<P_XYZ> kdtree;
