@@ -13,16 +13,16 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="头文件\ShapeMatchFile">
-      <UniqueIdentifier>{d5e04d3d-658c-4955-be83-d79f8eee00e2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="头文件\PointCloudFile">
       <UniqueIdentifier>{c4a3a534-d724-47c9-aa23-932f2ce40780}</UniqueIdentifier>
     </Filter>
     <Filter Include="源文件\PointCloudFile">
       <UniqueIdentifier>{1f1b5245-acc3-4957-a13d-bd4604c6cd5f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="源文件\ShapeMatchFile">
+    <Filter Include="头文件\MatchFile">
+      <UniqueIdentifier>{d5e04d3d-658c-4955-be83-d79f8eee00e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\MatchFile">
       <UniqueIdentifier>{53075bf6-c05d-4c9e-a239-70e8fbdf43ae}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -61,16 +61,22 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ContourOpr.cpp">
-      <Filter>源文件\ShapeMatchFile</Filter>
+      <Filter>源文件\MatchFile</Filter>
     </ClCompile>
     <ClCompile Include="LocalDeforableModel.cpp">
-      <Filter>源文件\ShapeMatchFile</Filter>
+      <Filter>源文件\MatchFile</Filter>
     </ClCompile>
     <ClCompile Include="ShapeMatch.cpp">
-      <Filter>源文件\ShapeMatchFile</Filter>
+      <Filter>源文件\MatchFile</Filter>
     </ClCompile>
     <ClCompile Include="ShapeModelBase.cpp">
-      <Filter>源文件\ShapeMatchFile</Filter>
+      <Filter>源文件\MatchFile</Filter>
+    </ClCompile>
+    <ClCompile Include="DrawShape.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SiftMatch.cpp">
+      <Filter>源文件\MatchFile</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -108,16 +114,22 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="LocalDeforableModel.h">
-      <Filter>头文件\ShapeMatchFile</Filter>
+      <Filter>头文件\MatchFile</Filter>
     </ClInclude>
     <ClInclude Include="ShapeMatch.h">
-      <Filter>头文件\ShapeMatchFile</Filter>
+      <Filter>头文件\MatchFile</Filter>
     </ClInclude>
     <ClInclude Include="ShapeModelBase.h">
-      <Filter>头文件\ShapeMatchFile</Filter>
+      <Filter>头文件\MatchFile</Filter>
     </ClInclude>
     <ClInclude Include="ContourOpr.h">
-      <Filter>头文件\ShapeMatchFile</Filter>
+      <Filter>头文件\MatchFile</Filter>
+    </ClInclude>
+    <ClInclude Include="DrawShape.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SiftMatch.h">
+      <Filter>头文件\MatchFile</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

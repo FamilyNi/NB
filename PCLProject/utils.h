@@ -13,7 +13,10 @@
 #include <pcl/search/kdtree.h>
 #include <pcl/filters/extract_indices.h>
 #include <pcl/features/normal_3d.h>
+
 #include <pcl/sample_consensus/sac_model_plane.h>
+#include <pcl/sample_consensus/sac_model_sphere.h>
+
 #include <pcl/common/transforms.h>
 #include <pcl/common/common.h>  
 #include <pcl/sample_consensus/model_types.h>
@@ -32,6 +35,15 @@ typedef struct
 	double c;
 	double d;
 }Plane3D;
+
+typedef struct
+{
+	double c_x;
+	double c_y;
+	double c_z;
+	double r;
+}Sphere;
+
 
 using namespace std;
 using namespace pcl;

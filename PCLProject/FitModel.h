@@ -16,14 +16,18 @@ void PC_RandomFitPlane(PC_XYZ::Ptr &srcPC, vector<int> &inliers, double thresVal
 /*最小二乘法拟合平面*/
 void PC_OLSFitPlane(PC_XYZ::Ptr &srcPC, Plane3D &plane);
 
-/*两步拟合平面：
-	第一步：采用RANSAC进行粗拟合
-	第二步：采用最小二乘法进行精确拟合
-*/
-void PC_FitPlane(PC_XYZ::Ptr &srcPC, Plane3D &plane, float thresVal);
-
 //基于权重的平面拟合
 void FitPlaneBaseOnWeight(PC_XYZ::Ptr &srcPC, P_N &normal, uint iter_k);
+
+//拟合球
+void PC_RandomFitSphere(PC_XYZ::Ptr &srcPC, double thresValue);
+
+//四点计算球
+void ComputeSphere(vector<P_XYZ>& pts, double* pSphere);
+
+//最小二乘法拟合球
+void PC_OLSFitSphere(PC_XYZ::Ptr& srcPC, Sphere& sphere);
+void PC_OLSFitSphere_(PC_XYZ::Ptr& srcPC, Sphere& sphere);
 
 //平面拟合测试程序
 void PC_FitPlaneTest();

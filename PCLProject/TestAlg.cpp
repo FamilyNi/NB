@@ -10,10 +10,17 @@
 #include "GrayCode.h"
 #include "WaveLet.h"
 #include "LocalDeforableModel.h"
+#include "DrawShape.h"
+#include "MathOpr.h"
 
 int main(int argc, char *argv[])
 {
-	CalibTest();
+	PC_XYZ::Ptr sphere(new PC_XYZ);
+	P_XYZ center = { 100.69, 3000.2,150.69 };
+	DrawSphere(sphere, center, 20.63, 0.1);
+	Sphere sphere_param;
+	PC_OLSFitSphere(sphere, sphere_param);
+
 	LocalDeforModelTest();
 	return (0);
 }
