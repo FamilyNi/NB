@@ -21,3 +21,6 @@ void GrayCodeToBin(const vector<bool>& grayCode, vector<bool>& bin);
 	返回为pt1、pt2距离的平方
 */
 float SpaceLineNearestPt(Vec6f& line1, Vec6f& line2, P_XYZ& pt1, P_XYZ& pt2);
+
+//四点计算球
+void ComputeSphere(vector<P_XYZ>& pts, double* pSphere);;

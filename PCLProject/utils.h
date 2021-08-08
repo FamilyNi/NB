@@ -1,4 +1,9 @@
 #pragma once
+
+/*OpenCV°æ±¾£º4.5.3
+  PCL°æ±¾£º1.9.1
+*/
+
 #include <iostream>
 #include <string>
 #include <conio.h>

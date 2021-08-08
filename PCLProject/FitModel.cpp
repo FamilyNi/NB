@@ -75,39 +75,6 @@ void FitPlaneBaseOnWeight(PC_XYZ::Ptr &srcPC, P_N &normal, uint iter_k)
 }
 //===============================================================================
 
-//四点计算球=====================================================================
-void ComputeSphere(vector<P_XYZ>& pts, double* pSphere)
-{
-	if (pts.size() < 4)
-		return;
-	cv::Mat XYZ(cv::Size(3, 3), CV_64FC1, cv::Scalar(0));
-	double* pXYZ = XYZ.ptr<double>();
-	cv::Mat m(cv::Size(1, 3), CV_64FC1, cv::Scalar(0));
-	double* pM = m.ptr<double>();
-	for (int i = 0; i < pts.size() - 1; ++i)
-	{
-		int idx = 3 * i;
-		pXYZ[idx] = pts[i].x - pts[i+1].x;
-		pXYZ[idx + 1] = pts[i].y - pts[i + 1].y;
-		pXYZ[idx + 2] = pts[i].z - pts[i + 1].z;
-
-		double pt0_d = pts[i].x * pts[i].x + pts[i].y * pts[i].y + pts[i].z * pts[i].z;
-		double pt1_d = pts[i+1].x * pts[i+1].x + pts[i+1].y * pts[i+1].y + pts[i+1].z * pts[i+1].z;
-		pM[i] = (pt0_d - pt1_d) / 2.0;
-	}
-
-	cv::Mat center = (XYZ.inv()) * m;
-	pSphere[0] = center.ptr<double>(0)[0];
-	pSphere[1] = center.ptr<double>(0)[1];
-	pSphere[2] = center.ptr<double>(0)[2];
-	double diff_x = pts[0].x - pSphere[0];
-	double diff_y = pts[0].y - pSphere[1];
-	double diff_z = pts[0].z - pSphere[2];
-	pSphere[3] = std::sqrt(diff_x * diff_x + diff_y * diff_y + diff_z * diff_z);
-	return;
-}
-//===============================================================================
-
 //RANSAC拟合球===================================================================
 void PC_RandomFitSphere(PC_XYZ::Ptr &srcPC, double thresValue)
 {
@@ -123,7 +90,7 @@ void PC_RandomFitSphere(PC_XYZ::Ptr &srcPC, double thresValue)
 //===============================================================================
 
 //最小二乘法拟合球===============================================================
-void PC_OLSFitSphere_(PC_XYZ::Ptr& srcPC, Sphere& sphere)
+void PC_OLSFitSphere(PC_XYZ::Ptr& srcPC, Sphere& sphere)
 {
 	if (srcPC->empty())
 		return;

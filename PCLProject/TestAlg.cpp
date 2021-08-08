@@ -12,14 +12,16 @@
 #include "LocalDeforableModel.h"
 #include "DrawShape.h"
 #include "MathOpr.h"
+#include "SiftMatch.h"
 
 int main(int argc, char *argv[])
 {
-	PC_XYZ::Ptr sphere(new PC_XYZ);
-	P_XYZ center = { 100.69, 3000.2,150.69 };
-	DrawSphere(sphere, center, 20.63, 0.1);
-	Sphere sphere_param;
-	PC_OLSFitSphere(sphere, sphere_param);
+	//Mat rotMat = getRotationMatrix2D(cv::Point2f(700, 450), 69, 1);
+	//Mat srcImg = imread("1.jpg", IMREAD_GRAYSCALE);
+	//Mat t_img;
+	//warpAffine(srcImg, t_img, rotMat, srcImg.size());
+	//cv::imwrite("1_t.png", t_img);
+	SiftPtTest();
 
 	LocalDeforModelTest();
 	return (0);

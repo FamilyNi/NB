@@ -22,12 +22,8 @@ void FitPlaneBaseOnWeight(PC_XYZ::Ptr &srcPC, P_N &normal, uint iter_k);
 //拟合球
 void PC_RandomFitSphere(PC_XYZ::Ptr &srcPC, double thresValue);
 
-//四点计算球
-void ComputeSphere(vector<P_XYZ>& pts, double* pSphere);
-
 //最小二乘法拟合球
 void PC_OLSFitSphere(PC_XYZ::Ptr& srcPC, Sphere& sphere);
-void PC_OLSFitSphere_(PC_XYZ::Ptr& srcPC, Sphere& sphere);
 
 //平面拟合测试程序
 void PC_FitPlaneTest();
