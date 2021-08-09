@@ -19,7 +19,7 @@ void PtDecentration(vector<cv::Point3f>& srcPts, vector<cv::Point3f>& dstPts);
 //计算标定误差
 float CalError(vector<cv::Point3f>& worldPts, vector<cv::Point3f>& camPts, vector<double>& calibMat);
 
-//最小二乘法求解变换矩阵
+//最小二乘法求解变换矩阵：AX = B
 void LSMCalTransMat(vector<cv::Point3f> &worldPts, vector<cv::Point3f> &camPts, vector<double> &transMat);
 
 //拉格朗日方法求解总体最小二乘法

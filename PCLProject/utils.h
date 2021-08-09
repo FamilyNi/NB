@@ -33,21 +33,25 @@
 
 const float EPS = 1e-8f;
 
-typedef struct
+struct Plane3D
 {
 	double a;
 	double b;
 	double c;
 	double d;
-}Plane3D;
+	Plane3D() :a(0), b(0), c(0), d(0)
+	{}
+};
 
-typedef struct
+struct Sphere
 {
 	double c_x;
 	double c_y;
 	double c_z;
 	double r;
-}Sphere;
+	Sphere() :c_x(0), c_y(0), c_z(0), r(0)
+	{}
+};
 
 
 using namespace std;

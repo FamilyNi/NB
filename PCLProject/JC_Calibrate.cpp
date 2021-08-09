@@ -61,7 +61,7 @@ float CablibCam_1(vector<vector<cv::Point3f>>& worldPts, vector<cv::Point3f>& ca
 	//获取相机1坐标对应的世界坐标
 	size_t pt_num = camPts.size();
 	if (worldPts.size() != pt_num)
-		return NAN;
+		return -1;
 	if (transMat.size() != 12)
 		transMat.resize(12);
 	vector<cv::Point3f> cam1_worldPts(pt_num);
@@ -69,7 +69,6 @@ float CablibCam_1(vector<vector<cv::Point3f>>& worldPts, vector<cv::Point3f>& ca
 	{
 		cam1_worldPts[i] = worldPts[i][1];
 	}
-	/*LSMCalTransMat(cam1_worldPts, camPts, transMat);*/
 	LagrangeSolveTLS(cam1_worldPts, camPts, transMat, 0.001);
 
 	//计算误差
@@ -129,7 +128,7 @@ void PtDecentration(vector<cv::Point3f>& srcPts, vector<cv::Point3f>& dstPts)
 float CalError(vector<cv::Point3f>& worldPts, vector<cv::Point3f>& camPts, vector<double>& calibMat)
 {
 	if (camPts.size() != worldPts.size() || calibMat.size() != 12)
-		return NAN;
+		return -1;
 	float error = 0.0f;
 	for (size_t i = 0; i < camPts.size(); ++i)
 	{
@@ -146,7 +145,7 @@ float CalError(vector<cv::Point3f>& worldPts, vector<cv::Point3f>& camPts, vecto
 }
 //==================================================================================
 
-//==================================================================================
+//最小二乘法求解变换矩阵============================================================
 void LSMCalTransMat(vector<cv::Point3f> &worldPts, vector<cv::Point3f> &camPts, vector<double> &transMat)
 {
 	if (worldPts.empty() || worldPts.size() != camPts.size())
@@ -271,7 +270,6 @@ void LagrangeSolveTLS(vector<cv::Point3f> &worldPts, vector<cv::Point3f> &camPts
 	}
 }
 //==================================================================================
-
 
 //标定测试程序
 void CalibTest()

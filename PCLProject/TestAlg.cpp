@@ -16,13 +16,17 @@
 
 int main(int argc, char *argv[])
 {
-	//Mat rotMat = getRotationMatrix2D(cv::Point2f(700, 450), 69, 1);
-	//Mat srcImg = imread("1.jpg", IMREAD_GRAYSCALE);
-	//Mat t_img;
-	//warpAffine(srcImg, t_img, rotMat, srcImg.size());
-	//cv::imwrite("1_t.png", t_img);
-	SiftPtTest();
+	PC_XYZ::Ptr ellipsoid(new PC_XYZ);
+	P_XYZ center(0, 0, 0);
+	DrawEllipsoid(ellipsoid, center, 20, 50, 10, 0.1);
 
-	LocalDeforModelTest();
+	pcl::visualization::PCLVisualizer viewer;
+	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> red(ellipsoid, 255, 0, 0);
+	viewer.addPointCloud(ellipsoid, red, "ellipsoid");
+	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "ellipsoid");
+	while (!viewer.wasStopped())
+	{
+		viewer.spinOnce();
+	}
 	return (0);
 }
