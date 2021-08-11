@@ -41,6 +41,13 @@ struct MatchRes
 	float score;
 	MatchRes() :c_x(0), c_y(0), angle(0.0f), score(0.0f)
 	{ }
+	void init()
+	{
+		this->c_x = 0;
+		this->c_y = 0;
+		this->angle = 0.0f;
+		this->score = 0.0f;
+	}
 };
 
 //计算非极大值抑制的长宽

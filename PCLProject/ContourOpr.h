@@ -5,7 +5,7 @@
 void ExtractContour(Mat &srcImg, vector<vector<Point>> &contours, float lowVal, float highVal, int mode);
 
 /*计算轮廓的重心*/
-void GetContourGraviry(vector<Point2f> &contour, Point2f &gravity);
+void GetContourGravity(vector<Point2f> &contour, Point2f &gravity);
 
 /*平移轮廓*/
 void TranContour(vector<Point2f> &contour, Point2f &gravity);

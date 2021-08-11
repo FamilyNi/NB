@@ -65,6 +65,12 @@ void TranslationContour(const vector<Point2f>& contour, const vector<uint>& cont
 void TopMatch(const Mat &s_x, const Mat &s_y, const vector<Point2f>& r_coord, const vector<Point2f>& r_grad, const vector<vector<uint>>& segIdx,
 	const vector<Point2f>& contNormals, float minScore, float angle, MatchRes& reses, vector<int>& v_TransLen);
 
+//匹配
+void Match(const Mat &s_x, const Mat &s_y, const vector<Point2f>& r_coord, const vector<Point2f>& r_grad, const vector<vector<uint>>& segIdx,
+	const vector<Point2f>& contNormals, cv::Point center, float minScore, float angle, MatchRes& reses, vector<int>& transLen_down, vector<int>& out_transLen);
+
+//根据中心点位置索引
+void GetIndex(LocalDeforModelInfo& up_, LocalDeforModelInfo& down_, vector<int>& transLen_up, vector<vector<int>>& pair_down);
 
 //匹配
 void LocalDeforModelMatch(Mat &modImg, LocalDeforModel* &model);

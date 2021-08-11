@@ -28,7 +28,7 @@ bool CreateShapeModel(Mat &modImg, ShapeModel* &model, SPAPLEMODELINFO &shapeMod
 		ReduceMatchPoint(v_Coord, v_GradX, v_GradY, v_Amplitude, v_RedCoord, v_RedGradX, v_RedGradY, shapeModelInfo.step);
 		//º∆À„÷ÿ–ƒ
 		Point2f gravity;
-		GetContourGraviry(v_RedCoord, gravity);
+		GetContourGravity(v_RedCoord, gravity);
 		TranContour(v_RedCoord, gravity);
 		v_Gravity.push_back(gravity);
 		vv_Coord.push_back(v_RedCoord);
