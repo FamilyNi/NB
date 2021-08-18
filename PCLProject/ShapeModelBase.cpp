@@ -46,23 +46,25 @@ void ExtractModelContour(Mat &srcImg, SPAPLEMODELINFO &shapeModelInfo, vector<Po
 //=========================================================================================
 
 //获取模板梯度============================================================================
-void ExtractModelInfo(Mat &srcImg, vector<Point> &contour, vector<Point2f> &v_Coord,
-	vector<float> &v_GradX, vector<float> &v_GradY, vector<float> &v_Amplitude)
+void ExtractModelInfo(Mat &srcImg, vector<Point> &contour, vector<Point2f> &v_Coord, vector<Point2f> &v_Grad, vector<float> &v_Amplitude)
 {
 	Mat sobel_x, sobel_y;
 	Sobel(srcImg, sobel_x, CV_32FC1, 1, 0, 3);
 	Sobel(srcImg, sobel_y, CV_32FC1, 0, 1, 3);
-	for (int i = 0; i < contour.size(); i++)
+	v_Coord.reserve(contour.size());
+	v_Grad.reserve(contour.size());
+	v_Amplitude.reserve(contour.size());
+	for (size_t i = 0; i < contour.size(); ++i)
 	{
 		float grad_x = sobel_x.at<float>(contour[i]);
 		float grad_y = sobel_y.at<float>(contour[i]);
 		if (abs(grad_x) > 10 || abs(grad_y) > 10)
 		{
+
 			v_Coord.push_back((Point2f)contour[i]);
-			float norm = sqrt(grad_x*grad_x + grad_y * grad_y);
+			float norm = sqrt(grad_x * grad_x + grad_y * grad_y);
 			v_Amplitude.push_back(norm);
-			v_GradX.push_back(grad_x / norm);
-			v_GradY.push_back(grad_y / norm);
+			v_Grad.push_back(Point2f(grad_x / norm, grad_y / norm));
 		}
 	}
 }
@@ -185,14 +187,13 @@ void draw_contours(Mat &srcImg, vector<Point2f> &contours, vector<uint> &index, 
 //====================================================================================================
 
 //减少匹配点个数==========================================================================
-void ReduceMatchPoint(vector<Point2f> &v_Coord, vector<float> &v_GradX, vector<float> &v_GradY, vector<float> &v_Amplitude,
-	vector<Point2f> &v_RedCoord, vector<float> &v_RedGradX, vector<float> &v_RedGradY, int step)
+void ReduceMatchPoint(vector<Point2f> &v_Coord, vector<Point2f> &v_Grad, vector<float> &v_Amplitude,
+	vector<Point2f> &v_RedCoord, vector<Point2f> &v_RedGrad, int step)
 {
 	if (v_Coord.size() < 10 * step)
 	{
 		v_RedCoord = v_Coord;
-		v_RedGradX = v_GradX;
-		v_RedGradY = v_GradY;
+		v_RedGrad = v_Grad;
 		return;
 	}
 	int step_ = step;
@@ -211,8 +212,7 @@ void ReduceMatchPoint(vector<Point2f> &v_Coord, vector<float> &v_GradX, vector<f
 			}
 		}
 		v_RedCoord.push_back(v_Coord[c_g.rbegin()->second]);
-		v_RedGradX.push_back(v_GradX[c_g.rbegin()->second]);
-		v_RedGradY.push_back(v_GradY[c_g.rbegin()->second]);
+		v_RedGrad.push_back(v_Grad[c_g.rbegin()->second]);
 	}
 }
 //========================================================================================

@@ -19,21 +19,21 @@ void CreateLocalDeforableModel(Mat &modImg, LocalDeforModel* &model, SPAPLEMODEL
 	vector<Mat> imgPry;
 	get_pyr_image(modImg, imgPry, shapeModelInfo.pyrNumber);
 
-	vector<Point2f> v_Gravity;
-	vector<vector<float>> vv_GradX, vv_GradY;
-	
 	for (int i = 0; i < imgPry.size(); i++)
 	{
-		vector<Point> v_Coord;
-		ExtractModelContour(imgPry[i], shapeModelInfo, v_Coord);
-		if (v_Coord.size() < 1)
+		vector<Point> v_Coord_;
+		ExtractModelContour(imgPry[i], shapeModelInfo, v_Coord_);
+		if (v_Coord_.size() < 1)
 			break;
-		vector<Point2f> v_Coord_, v_Grad_;
+		vector<Point2f> v_Coord, v_Grad;
 		vector<float> v_Amplitude;
-		ExtractModelInfo(imgPry[i], v_Coord, v_Coord_, v_Grad_, v_Amplitude);		
+		ExtractModelInfo(imgPry[i], v_Coord_, v_Coord, v_Grad, v_Amplitude);	
+
+		vector<Point2f> v_RedCoord, v_RedGrad;
+		ReduceMatchPoint(v_Coord, v_Grad, v_Amplitude, v_RedCoord, v_RedGrad, shapeModelInfo.step);
 		//聚类
 		LocalDeforModelInfo localDeforModelInfo;
-		GetKNearestPoint(v_Coord_, v_Grad_, localDeforModelInfo);
+		GetKNearestPoint(v_RedCoord, v_RedGrad, localDeforModelInfo);
 		//对模板打标签
 		LabelContour(localDeforModelInfo);
 		//计算重心
@@ -47,31 +47,6 @@ void CreateLocalDeforableModel(Mat &modImg, LocalDeforModel* &model, SPAPLEMODEL
 		//}
 		draw_contours(colorImg, localDeforModelInfo.coord, localDeforModelInfo.gravity);
 		model->pyrNumber++;
-	}
-}
-//========================================================================================
-
-//获取模板梯度============================================================================
-void ExtractModelInfo(Mat &srcImg, vector<Point> &contour, vector<Point2f> &v_Coord, vector<Point2f> &v_Grad, vector<float> &v_Amplitude)
-{
-	Mat sobel_x, sobel_y;
-	Sobel(srcImg, sobel_x, CV_32FC1, 1, 0, 3);
-	Sobel(srcImg, sobel_y, CV_32FC1, 0, 1, 3);
-	v_Coord.reserve(contour.size());
-	v_Grad.reserve(contour.size());
-	v_Amplitude.reserve(contour.size());
-	for (size_t i = 0; i < contour.size(); ++i)
-	{
-		float grad_x = sobel_x.at<float>(contour[i]);
-		float grad_y = sobel_y.at<float>(contour[i]);
-		if (abs(grad_x) > 1e-8 || abs(grad_y) > 1e-8)
-		{
-			
-			v_Coord.push_back((Point2f)contour[i]);
-			float norm = sqrt(grad_x * grad_x + grad_y * grad_y);
-			v_Amplitude.push_back(norm);
-			v_Grad.push_back(Point2f(grad_x / norm, grad_y / norm));
-		}
 	}
 }
 //========================================================================================
@@ -149,12 +124,12 @@ void ComputeContourNormal(const vector<Point2f>& contour, const vector<vector<ui
 			fitLinePoint[i] = contour[segCont[i]];
 		}
 		Vec4f line_;
-		fitLine(fitLinePoint, line_, DIST_L1, 0, 0.1, 0.01);
+		fitLine(fitLinePoint, line_, DIST_L2, 0, 0.1, 0.01);
 		normals[i].x = -line_[1];
 		normals[i].y = line_[0];
 		cv::Point2f ref_p = fitLinePoint[0];
 		float cosVal = ref_p.x * normals[i].x + ref_p.y * normals[i].y;
-		if (cosVal < 0)
+		if (cosVal > 0)
 		{
 			normals[i].x = -normals[i].x;
 			normals[i].y = -normals[i].y;
@@ -197,7 +172,7 @@ void TopMatch(const Mat &s_x, const Mat &s_y, const vector<Point2f>& r_coord, co
 				int sum_i = index + 1;
 				float segContScore = 0.0f;
 				//平移部分==================
-				for (int transLen = -5; transLen <= 5; transLen += 1)
+				for (int transLen = -30; transLen <= 30; transLen += 2)
 				{
 					float segContScore_t = 0.0f;
 					vector<Point2f> tranContour;
@@ -211,7 +186,7 @@ void TopMatch(const Mat &s_x, const Mat &s_y, const vector<Point2f>& r_coord, co
 							continue;
 						short gx = s_x.at<short>(cur_y, cur_x);
 						short gy = s_y.at<short>(cur_y, cur_x);
-						if (abs(gx) > 0 || abs(gy) > 0)
+						if (abs(gx) > 10 || abs(gy) > 10)
 						{
 							float grad_x = 0.0f, grad_y = 0.0f;
 							NormalGrad((int)gx, (int)gy, grad_x, grad_y);
@@ -225,7 +200,6 @@ void TopMatch(const Mat &s_x, const Mat &s_y, const vector<Point2f>& r_coord, co
 					}
 				}
 				//===============================
-
 				//for (int i = 0; i < segIdx[index].size(); ++i)
 				//{
 				//	uint idx = segIdx[index][i];
@@ -285,7 +259,7 @@ void Match(const Mat &s_x, const Mat &s_y, const vector<Point2f>& r_coord, const
 				int sum_i = index + 1;
 				float segContScore = 0.0f;
 				//平移部分==================
-				for (int transLen = -2; transLen <= 2; transLen += 1)
+				for (int transLen = -5; transLen <= 5; transLen += 1)
 				{
 					float segContScore_t = 0.0f;
 					vector<Point2f> tranContour;
@@ -299,7 +273,7 @@ void Match(const Mat &s_x, const Mat &s_y, const vector<Point2f>& r_coord, const
 							continue;
 						short gx = s_x.at<short>(cur_y, cur_x);
 						short gy = s_y.at<short>(cur_y, cur_x);
-						if (abs(gx) > 0 || abs(gy) > 0)
+						if (abs(gx) > 10 || abs(gy) > 10)
 						{
 							float grad_x = 0.0f, grad_y = 0.0f;
 							NormalGrad((int)gx, (int)gy, grad_x, grad_y);
@@ -365,8 +339,8 @@ void GetIndex(LocalDeforModelInfo& up_, LocalDeforModelInfo& down_, vector<int>&
 			sum_x += (up_.coord[up_.segContIdx[i][j]].x);
 			sum_y += (up_.coord[up_.segContIdx[i][j]].y);
 		}
-		gravitys[i].x = sum_x / up_.segContIdx[i].size();
-		gravitys[i].y = sum_y / up_.segContIdx[i].size();
+		gravitys[i].x = 2.0f * sum_x / up_.segContIdx[i].size();
+		gravitys[i].y = 2.0f * sum_y / up_.segContIdx[i].size();
 	}
 	int cont_num = down_.segContIdx.size();
 	transLen_down.resize(cont_num);
@@ -381,16 +355,13 @@ void GetIndex(LocalDeforModelInfo& up_, LocalDeforModelInfo& down_, vector<int>&
 			sum_y += (down_.coord[down_.segContIdx[i][j]].y);
 		}
 		/**KD树knn查询**/
-		vector<float> vecQuery(2);//存放 查询点 的容器（本例都是vector类型）
-		vecQuery[0] = 0.5 * sum_x / down_.segContIdx[i].size(); //查询点x坐标
-		vecQuery[1] = 0.5 * sum_y / down_.segContIdx[i].size(); //查询点y坐标
-
-		//Point2f gravity_(sum_x / down_.segContIdx[i].size(), sum_y / down_.segContIdx[i].size());
+		vector<float> vecQuery(2);//存放查询点
+		vecQuery[0] = sum_x / down_.segContIdx[i].size(); //查询点x坐标
+		vecQuery[1] = sum_y / down_.segContIdx[i].size(); //查询点y坐标
 
 		cv::flann::KDTreeIndexParams indexParams(2);
-		cv::flann::Index kdtree(source, indexParams); //此部分建立kd-tree索引同上例，故不做详细叙述
+		cv::flann::Index kdtree(source, indexParams);
 
-		/**预设knnSearch所需参数及容器**/
 		vector<int> vecIndex(1);//存放返回的点索引
 		vector<float> vecDist(1);//存放距离
 		cv::flann::SearchParams params(32);//设置knnSearch搜索参数
@@ -508,18 +479,18 @@ void LocalDeforModelTest()
 
 	SPAPLEMODELINFO shapeModelInfo;
 	shapeModelInfo.pyrNumber = 5;
-	shapeModelInfo.lowVal = 100;
+	shapeModelInfo.lowVal = 30;
 	shapeModelInfo.highVal = 200;
 	shapeModelInfo.step = 1;
 	shapeModelInfo.angStep = 1;
-	shapeModelInfo.endAng = 30;
-	shapeModelInfo.startAng = -30;
+	shapeModelInfo.startAng = -180;
+	shapeModelInfo.endAng = 180;
 	CreateLocalDeforableModel(modImg, model, shapeModelInfo);
 
 	Mat resizeImg;
-	cv::resize(modImg, resizeImg, cv::Size(modImg.cols * 0.9, modImg.rows*0.7));
+	cv::resize(modImg, resizeImg, cv::Size(modImg.cols * 0.6, modImg.rows * 0.6));
 
-	Mat rotMat = getRotationMatrix2D(Point2f(resizeImg.cols * 0.5, resizeImg.rows*0.5), 163, 1);
+	Mat rotMat = getRotationMatrix2D(Point2f(resizeImg.cols * 0.45, resizeImg.rows * 0.45), 163, 1);
 	Mat rotImg;
 	cv::warpAffine(resizeImg, rotImg, rotMat, resizeImg.size());
 

@@ -60,8 +60,7 @@ void get_pyr_image(Mat &srcImg, vector<Mat> &pyrImg, int pyrNumber);
 void ExtractModelContour(Mat &srcImg, SPAPLEMODELINFO &shapeModelInfo, vector<Point> &contour);
 
 //提取模板 信息
-void ExtractModelInfo(Mat &srcImg, vector<Point> &contour, vector<Point2f> &v_Coord,
-	vector<float> &v_GradX, vector<float> &v_GradY, vector<float> &v_Amplitude);
+void ExtractModelInfo(Mat &srcImg, vector<Point> &contour, vector<Point2f> &v_Coord, vector<Point2f> &v_Grad, vector<float> &v_Amplitude);
 
 //归一化梯度
 void NormalGrad(int grad_x, int grad_y, float &grad_xn, float &grad_yn);
@@ -88,5 +87,5 @@ void draw_contours(Mat &srcImg, vector<Point2f> &v_Coord, Point2f offset);
 void draw_contours(Mat &srcImg, vector<Point2f> &contours, vector<uint> &index, Point2f offset);
 
 //减少匹配点个数
-void ReduceMatchPoint(vector<Point2f> &v_Coord, vector<float> &v_GradX, vector<float> &v_GradY, vector<float> &v_Amplitude,
-	vector<Point2f> &v_RedCoord, vector<float> &v_RedGradX, vector<float> &v_RedGradY, int step = 3);
+void ReduceMatchPoint(vector<Point2f> &v_Coord, vector<Point2f> &v_Grad, vector<float> &v_Amplitude,
+	vector<Point2f> &v_RedCoord, vector<Point2f> &v_RedGrad, int step = 3);

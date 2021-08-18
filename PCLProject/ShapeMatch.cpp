@@ -14,29 +14,29 @@ bool CreateShapeModel(Mat &modImg, ShapeModel* &model, SPAPLEMODELINFO &shapeMod
 	vector<vector<float>> vv_GradX, vv_GradY;
 	for (int i = 0; i < imgPry.size(); i++)
 	{
-		vector<Point2f> v_Coord, v_RedCoord;
-		vector<float> v_GradX, v_GradY, v_RedGradX, v_RedGradY, v_Amplitude;
-		vector<Point> contour(0);
-		ExtractModelContour(imgPry[i], shapeModelInfo, contour);
-		if (contour.size() < 20)
-			break;
-		//提取模板信息
-		ExtractModelInfo(imgPry[i], contour, v_Coord, v_GradX, v_GradY, v_Amplitude);
-		if (v_Coord.size() != v_GradX.size() || v_GradX.size() != v_GradY.size() || v_Amplitude.size() != v_GradY.size())
-			break;
-		//减少点的个数
-		ReduceMatchPoint(v_Coord, v_GradX, v_GradY, v_Amplitude, v_RedCoord, v_RedGradX, v_RedGradY, shapeModelInfo.step);
-		//计算重心
-		Point2f gravity;
-		GetContourGravity(v_RedCoord, gravity);
-		TranContour(v_RedCoord, gravity);
-		v_Gravity.push_back(gravity);
-		vv_Coord.push_back(v_RedCoord);
-		vv_GradX.push_back(v_RedGradX);
-		vv_GradY.push_back(v_RedGradY);
-		Mat colorImg;
-		cvtColor(imgPry[i], colorImg, COLOR_GRAY2BGR);
-		draw_contours(colorImg, v_RedCoord, gravity);
+		//vector<Point2f> v_Coord, v_RedCoord;
+		//vector<float> v_GradX, v_GradY, v_RedGradX, v_RedGradY, v_Amplitude;
+		//vector<Point> contour(0);
+		//ExtractModelContour(imgPry[i], shapeModelInfo, contour);
+		//if (contour.size() < 20)
+		//	break;
+		////提取模板信息
+		//ExtractModelInfo(imgPry[i], contour, v_Coord, v_GradX, v_GradY, v_Amplitude);
+		//if (v_Coord.size() != v_GradX.size() || v_GradX.size() != v_GradY.size() || v_Amplitude.size() != v_GradY.size())
+		//	break;
+		////减少点的个数
+		//ReduceMatchPoint(v_Coord, v_GradX, v_GradY, v_Amplitude, v_RedCoord, v_RedGradX, v_RedGradY, shapeModelInfo.step);
+		////计算重心
+		//Point2f gravity;
+		//GetContourGravity(v_RedCoord, gravity);
+		//TranContour(v_RedCoord, gravity);
+		//v_Gravity.push_back(gravity);
+		//vv_Coord.push_back(v_RedCoord);
+		//vv_GradX.push_back(v_RedGradX);
+		//vv_GradY.push_back(v_RedGradY);
+		//Mat colorImg;
+		//cvtColor(imgPry[i], colorImg, COLOR_GRAY2BGR);
+		//draw_contours(colorImg, v_RedCoord, gravity);
 		model->pyr_n++;
 	}
 	if (vv_Coord.size() != vv_GradX.size() || vv_GradX.size() != vv_GradY.size()

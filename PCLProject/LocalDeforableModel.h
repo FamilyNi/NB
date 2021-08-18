@@ -42,9 +42,6 @@ void CreateLocalDeforableModel(Mat &modImg, LocalDeforModel* &model, SPAPLEMODEL
 //提取轮廓
 void ExtractModelContour(Mat &srcImg, SPAPLEMODELINFO &shapeModelInfo, vector<vector<Point>> &contours);
 
-//提取模板梯度
-void ExtractModelInfo(Mat &srcImg, vector<Point> &contour, vector<Point2f> &v_Coord, vector<Point2f> &v_Grad, vector<float> &v_Amplitude);
-
 //模板点聚类
 void GetKNearestPoint(vector<Point2f> &contours, vector<Point2f> &grads, LocalDeforModelInfo &localDeforModelInfo);
 
