@@ -41,7 +41,11 @@ struct MatchRes
 	float score;
 	MatchRes() :c_x(0), c_y(0), angle(0.0f), score(0.0f)
 	{ }
-	void init()
+	bool operator<(const MatchRes& res)
+	{
+		return this->score > res.score;
+	}
+	void reset()
 	{
 		this->c_x = 0;
 		this->c_y = 0;

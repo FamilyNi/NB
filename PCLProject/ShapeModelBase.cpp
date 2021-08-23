@@ -58,7 +58,7 @@ void ExtractModelInfo(Mat &srcImg, vector<Point> &contour, vector<Point2f> &v_Co
 	{
 		float grad_x = sobel_x.at<float>(contour[i]);
 		float grad_y = sobel_y.at<float>(contour[i]);
-		if (abs(grad_x) > 10 || abs(grad_y) > 10)
+		if (abs(grad_x) > 0 || abs(grad_y) > 0)
 		{
 
 			v_Coord.push_back((Point2f)contour[i]);
