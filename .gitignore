@@ -260,3 +260,17 @@ paket-files/
 __pycache__/
 *.pyc
 1.jpg
+image/a.bmp
+image/b.bmp
+image/c.bmp
+image/d.bmp
+image/e.bmp
+image/f.bmp
+image/h.bmp
+image/i.bmp
+image/j.bmp
+image/k.bmp
+image/l.bmp
+image/model1.bmp
+image/model2.bmp
+image/model3.bmp

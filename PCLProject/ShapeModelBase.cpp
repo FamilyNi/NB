@@ -2,17 +2,17 @@
 #include "ContourOpr.h"
 #include <map>
 
-//计算非极大值抑制的长宽=======================================================
+//计算非极大值抑制的长宽==============================================================
 void  ComputeNMSRange(vector<Point2f>& contour, int& min_x, int& min_y)
 {
 	Rect rect = boundingRect(contour);
 	min_x = rect.width / 2.0f + 0.5f;
 	min_y = rect.height / 2.0f + 0.5f;
 }
-//============================================================================
+//====================================================================================
 
-//构建图像金字塔======================================================================================
-void get_pyr_image(Mat &srcImg, vector<Mat> &pyrImg, int pyrNumber)
+//构建图像金字塔======================================================================
+void GetPyrImg(Mat &srcImg, vector<Mat> &pyrImg, int pyrNumber)
 {
 	if (pyrImg.size() != 0) {
 		pyrImg.clear();
@@ -32,9 +32,9 @@ void get_pyr_image(Mat &srcImg, vector<Mat> &pyrImg, int pyrNumber)
 		}
 	}
 }
-//====================================================================================================
+//====================================================================================
 
-//获得模板信息============================================================================
+//获得模板信息========================================================================
 void ExtractModelContour(Mat &srcImg, SPAPLEMODELINFO &shapeModelInfo, vector<Point> &contour)
 {
 	vector<vector<Point>> contours;
@@ -43,9 +43,9 @@ void ExtractModelContour(Mat &srcImg, SPAPLEMODELINFO &shapeModelInfo, vector<Po
 	//SelContourLen(contours, selContours, shapeModelInfo.minContourLen, shapeModelInfo.maxContourLen);
 	MergeContour(contours, contour);
 }
-//=========================================================================================
+//====================================================================================
 
-//获取模板梯度============================================================================
+//获取模板梯度========================================================================
 void ExtractModelInfo(Mat &srcImg, vector<Point> &contour, vector<Point2f> &v_Coord, vector<Point2f> &v_Grad, vector<float> &v_Amplitude)
 {
 	Mat sobel_x, sobel_y;
@@ -68,48 +68,54 @@ void ExtractModelInfo(Mat &srcImg, vector<Point> &contour, vector<Point2f> &v_Co
 		}
 	}
 }
-//========================================================================================
+//====================================================================================
 
-//归一化梯度==========================================================================================
+//归一化梯度==========================================================================
 void NormalGrad(int grad_x, int grad_y, float &grad_xn, float &grad_yn)
 {
 	float norm = 1.0f / sqrtf((float)(grad_x * grad_x + grad_y * grad_y));
 	grad_xn = (float)grad_x * norm;
 	grad_yn = (float)grad_y * norm;
 }
-//====================================================================================================
+//====================================================================================
 
-//比较分数大小=======================================================================================
-bool CompareSore(MatchRes& a, MatchRes& b)
+//非极大值抑制========================================================================
+void ShapeNMS(vector<vector<MatchRes>> &MatchReses, vector<MatchRes> &nmsRes, int x_min, int y_min, int matchNum)
 {
-	return (a.score > b.score);
-}
-//===================================================================================================
+	vector<MatchRes> totalNum;
+	for (int i = 0; i < MatchReses.size(); ++i)
+	{
+		totalNum.insert(totalNum.end(), MatchReses[i].begin(), MatchReses[i].end());
+	}
 
-//非极大值抑制========================================================================================
-void NMS(vector<MatchRes> &MatchReses, vector<MatchRes> &nmsRes, int x_min, int y_min)
-{
-	std::sort(MatchReses.begin(), MatchReses.end(), CompareSore);
-	size_t res_num = MatchReses.size();
+	std::stable_sort(totalNum.begin(), totalNum.end());
+	size_t res_num = totalNum.size();
 	vector<bool>  isLabel(res_num, false);
+	vector<MatchRes> nmsRes_;
 	for (size_t i = 0; i < res_num; ++i)
 	{
 		if (isLabel[i])
 			continue;
-		MatchRes& ref_res = MatchReses[i];
-		nmsRes.push_back(ref_res);
+		MatchRes& ref_res = totalNum[i];
+		nmsRes_.push_back(ref_res);
 		isLabel[i] = true;
 		for (size_t j = 0; j < res_num; ++j)
 		{
-			MatchRes& res_ = MatchReses[j];
+			MatchRes& res_ = totalNum[j];
 			if (abs(ref_res.c_x - res_.c_x) < x_min && abs(ref_res.c_y - res_.c_y) < y_min)
 				isLabel[j] = true;
 		}
 	}
+	int res_n = std::min((int)nmsRes_.size(), matchNum);
+	nmsRes.resize(res_n);
+	for (size_t i = 0; i < res_n; ++i)
+	{
+		nmsRes[i] = nmsRes_[i];
+	}
 }
-//====================================================================================================
+//====================================================================================
 
-//计算梯度============================================================================================
+//计算梯度============================================================================
 void ComputeGrad(const Mat &srcImg, int idx_x, int idx_y, int& grad_x, int& grad_y)
 {
 	//注意这里默认是srcImg在内存中的存储是连续的
@@ -125,18 +131,10 @@ void ComputeGrad(const Mat &srcImg, int idx_x, int idx_y, int& grad_x, int& grad
 	grad_y = (int)pDownImg[idx_xr] + 2 * (int)pDownImg[idx_x] + (int)pDownImg[idx_xl] -
 		((int)pUpImg[idx_xr] + 2 * (int)pUpImg[idx_x] + (int)pUpImg[idx_xl]);
 }
-//====================================================================================================
+//====================================================================================
 
-//梯度以及坐标旋转====================================================================================
-void RotateCoordGrad(const Mat &x_, const Mat &y_, Mat &r_x, Mat &r_y, float rotAng)
-{
-	float rotRad = rotAng / 180 * CV_PI;
-	float sinVal = sin(rotRad);
-	float cosVal = cos(rotRad);
-	r_x = x_ * cosVal - y_ * sinVal;
-	r_y = y_ * cosVal + x_ * sinVal;
-}
-void RotateCoordGrad(const vector<Point2f> &coord, const vector<Point2f> &grad, 
+//梯度以及坐标旋转====================================================================
+void RotateCoordGrad(const vector<Point2f> &coord, const vector<Point2f> &grad,
 	vector<Point2f> &r_coord, vector<Point2f> &r_grad, float rotAng)
 {
 	float rotRad = rotAng / 180 * CV_PI;
@@ -153,10 +151,10 @@ void RotateCoordGrad(const vector<Point2f> &coord, const vector<Point2f> &grad,
 		r_grad[i].y = grad[i].y * cosVal + grad[i].x * sinVal;
 	}
 }
-//====================================================================================================
+//====================================================================================
 
-//绘制轮廓============================================================================================
-void draw_contours(Mat &srcImg, vector<Point2f> &contours, Point2f offset)
+//绘制轮廓============================================================================
+void DrawContours(Mat &srcImg, vector<Point2f> &contours, Point2f offset)
 {
 	if (srcImg.empty() || contours.size() == 0) return;
 	for (int i = 0; i < contours.size(); i++)
@@ -165,28 +163,9 @@ void draw_contours(Mat &srcImg, vector<Point2f> &contours, Point2f offset)
 		line(srcImg, drawPoint, drawPoint, Scalar(0, 0, 255), 1);
 	}
 }
-void draw_contours(Mat &srcImg, float *pCoord_x, float *pCoord_y, Point offset, int length)
-{
-	if (srcImg.empty() || pCoord_x == NULL || pCoord_y == NULL)
-		return;
-	for (int i = 0; i < length; i++)
-	{
-		Point drawPoint = Point(pCoord_x[i], pCoord_y[i]) + offset;
-		line(srcImg, drawPoint, drawPoint, Scalar(0, 0, 255));
-	}
-}
-void draw_contours(Mat &srcImg, vector<Point2f> &contours, vector<uint> &index, Point2f offset)
-{
-	if (srcImg.empty() || index.size() == 0) return;
-	for (int i = 0; i < index.size(); i++)
-	{
-		Point2f drawPoint = contours[index[i]] + offset + Point2f(0.5, 0.5);
-		line(srcImg, drawPoint, drawPoint, Scalar(0, 0, 255), 3);
-	}
-}
-//====================================================================================================
+//====================================================================================
 
-//减少匹配点个数==========================================================================
+//减少匹配点个数======================================================================
 void ReduceMatchPoint(vector<Point2f> &v_Coord, vector<Point2f> &v_Grad, vector<float> &v_Amplitude,
 	vector<Point2f> &v_RedCoord, vector<Point2f> &v_RedGrad, int step)
 {
@@ -215,4 +194,4 @@ void ReduceMatchPoint(vector<Point2f> &v_Coord, vector<Point2f> &v_Grad, vector<
 		v_RedGrad.push_back(v_Grad[c_g.rbegin()->second]);
 	}
 }
-//========================================================================================
+//====================================================================================

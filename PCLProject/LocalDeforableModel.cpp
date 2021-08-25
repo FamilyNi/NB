@@ -15,35 +15,39 @@ void CreateLocalDeforableModel(Mat &modImg, LocalDeforModel* &model, SPAPLEMODEL
 	model->endAng = shapeModelInfo.endAng;
 
 	vector<Mat> imgPry;
-	get_pyr_image(modImg, imgPry, shapeModelInfo.pyrNumber);
+	GetPyrImg(modImg, imgPry, shapeModelInfo.pyrNumber);
 
 	for (int i = 0; i < imgPry.size(); i++)
 	{
+		//提取轮廓
 		vector<Point> v_Coord_;
 		ExtractModelContour(imgPry[i], shapeModelInfo, v_Coord_);
 		if (v_Coord_.size() < 1)
 			break;
+		//提取模板梯度信息
 		vector<Point2f> v_Coord, v_Grad;
 		vector<float> v_Amplitude;
-		ExtractModelInfo(imgPry[i], v_Coord_, v_Coord, v_Grad, v_Amplitude);	
-
+		ExtractModelInfo(imgPry[i], v_Coord_, v_Coord, v_Grad, v_Amplitude);
+		if (v_Coord.size() < 10)
+			break;
+		//减少轮廓点个数
 		vector<Point2f> v_RedCoord, v_RedGrad;
 		ReduceMatchPoint(v_Coord, v_Grad, v_Amplitude, v_RedCoord, v_RedGrad, shapeModelInfo.step);
 		//聚类
-		LocalDeforModelInfo localDeforModelInfo;
-		GetKNearestPoint(v_RedCoord, v_RedGrad, localDeforModelInfo);
+		LocalDeforModelInfo models;
+		GetKNearestPoint(v_RedCoord, v_RedGrad, models);
 		//对模板打标签
-		LabelContour(localDeforModelInfo);
+		LabelContour(models);
 		//计算重心
-		ComputeSegContGravity(localDeforModelInfo);
-		model->models.push_back(localDeforModelInfo);
+		GetContourGravity(models.coord, models.gravity);
+		//中心化轮廓
+		Point2f gravity = Point2f(-models.gravity.x, -models.gravity.y);
+		TranContour(models.coord, gravity);
+
+		model->models.push_back(models);
 		Mat colorImg;
 		cvtColor(imgPry[i], colorImg, COLOR_GRAY2BGR);
-		//for (int i = 0; i < localDeforModelInfo.segContIdx.size(); ++i)
-		//{
-		//	draw_contours(colorImg, localDeforModelInfo.coord, localDeforModelInfo.segContIdx[i], localDeforModelInfo.gravity);
-		//}
-		draw_contours(colorImg, localDeforModelInfo.coord, localDeforModelInfo.gravity);
+		DrawContours(colorImg, models.coord, models.gravity);
 		model->pyrNum++;
 	}
 	//轮廓从上层到下层的映射索引
@@ -162,19 +166,6 @@ void GetMapIndex(LocalDeforModel& localDeforModel)
 }
 //========================================================================================
 
-//求取每个子轮廓的重心====================================================================
-void ComputeSegContGravity(LocalDeforModelInfo &localDeforModelInfo)
-{
-	size_t len = localDeforModelInfo.coord.size();
-	GetContourGravity(localDeforModelInfo.coord, localDeforModelInfo.gravity);
-	for (size_t i = 0; i < len; ++i)
-	{
-		localDeforModelInfo.coord[i].x -= localDeforModelInfo.gravity.x;
-		localDeforModelInfo.coord[i].y -= localDeforModelInfo.gravity.y;
-	}
-}
-//========================================================================================
-
 //对聚类后的模板打标签====================================================================
 void LabelContour(LocalDeforModelInfo& localDeforModelInfo)
 {
@@ -198,37 +189,7 @@ void LabelContour(LocalDeforModelInfo& localDeforModelInfo)
 }
 //========================================================================================
 
-//计算每个子轮廓的法向量==================================================================
-void ComputeContourNormal(const vector<Point2f>& contour, const vector<vector<uint>>& segContIdx, vector<Point2f>& normals)
-{
-	size_t segContNum = segContIdx.size();
-	if (normals.size() != segContNum)
-		normals.resize(segContNum);
-	for (size_t i = 0; i < segContNum; ++i)
-	{
-		const vector<uint>& segCont = segContIdx[i];
-		size_t p_number = segCont.size();
-		vector<Point2f> fitLinePoint(p_number);
-		for (size_t i = 0; i < p_number; ++i)
-		{
-			fitLinePoint[i] = contour[segCont[i]];
-		}
-		Vec4f line_;
-		fitLine(fitLinePoint, line_, DIST_L2, 0, 0.1, 0.01);
-		normals[i].x = -line_[1];
-		normals[i].y = line_[0];
-		cv::Point2f ref_p = fitLinePoint[0];
-		float cosVal = ref_p.x * normals[i].x + ref_p.y * normals[i].y;
-		if (cosVal > 0)
-		{
-			normals[i].x = -normals[i].x;
-			normals[i].y = -normals[i].y;
-		}
-	}
-}
-//========================================================================================
-
-//移动轮廓================================================================================
+//平移轮廓================================================================================
 void TranslationContour(const vector<Point2f>& contour, const vector<uint>& contIdx, 
 	const Point3f& normal_, vector<Point2f>& tranContour, int transLen)
 {
@@ -250,6 +211,7 @@ void TopMatch(const Mat &s_x, const Mat &s_y, const vector<Point2f>& r_coord, co
 	int maxW = s_x.cols - 2, maxH = s_x.rows - 2;
 	float NormGreediness = ((1 - 0.9 * minScore) / (1 - 0.9)) / segNum;
 	float anMinScore = 1 - minScore, NormMinScore = minScore / segNum;
+
 	vector<int> v_TransLen_(segNum);
 	for (int y = 2; y < maxH; ++y)
 	{
@@ -291,23 +253,6 @@ void TopMatch(const Mat &s_x, const Mat &s_y, const vector<Point2f>& r_coord, co
 						v_TransLen_[index] = transLen;
 					}
 				}
-				//===============================
-				//for (int i = 0; i < segIdx[index].size(); ++i)
-				//{
-				//	uint idx = segIdx[index][i];
-				//	int cur_x = x + r_coord[idx].x;
-				//	int cur_y = y + r_coord[idx].y;
-				//	if (cur_x < 2 || cur_y < 2 || cur_x > maxW || cur_y > maxH)
-				//		continue;
-				//	short gx = s_x.at<short>(cur_y, cur_x);
-				//	short gy = s_y.at<short>(cur_y, cur_x);
-				//	if (abs(gx) > 0 || abs(gy) > 0)
-				//	{
-				//		float grad_x = 0.0f, grad_y = 0.0f;
-				//		NormalGrad((int)gx, (int)gy, grad_x, grad_y);
-				//		segContScore += abs(grad_x * r_grad[idx].x + grad_y * r_grad[idx].y);
-				//	}
-				//}
 				partial_score += segContScore / segIdx[index].size();
 				score = partial_score / sum_i;
 				if (score < (min(anMinScore + NormGreediness * sum_i, NormMinScore * sum_i)))
@@ -323,7 +268,6 @@ void TopMatch(const Mat &s_x, const Mat &s_y, const vector<Point2f>& r_coord, co
 				{
 					reses.translates[j] = v_TransLen_[j];
 				}
-				//reses.push_back(matchRes);
 			}
 		}
 	}
@@ -332,17 +276,16 @@ void TopMatch(const Mat &s_x, const Mat &s_y, const vector<Point2f>& r_coord, co
 
 //匹配====================================================================================
 void Match(const Mat &image, const vector<Point2f>& r_coord, const vector<Point2f>& r_grad, const vector<vector<uint>>& segIdx, 
-	const vector<Point3f>& normals_, cv::Point center, float minScore, float angle, vector<int>& transLen_down, LocalMatchRes& reses)
+	const vector<Point3f>& normals_, int* center, float minScore, float angle, vector<int>& transLen_down, LocalMatchRes& reses)
 {
 	int segNum = segIdx.size();
-	int maxW = center.x + 5, maxH = center.y + 5;
 	float NormGreediness = ((1 - 0.9 * minScore) / (1 - 0.9)) / segNum;
 	float anMinScore = 1 - minScore, NormMinScore = minScore / segNum;
 
 	vector<int> v_TransLen_(segNum);
-	for (int y = center.y - 5; y < maxH; ++y)
+	for (int y = center[1]; y < center[3]; ++y)
 	{
-		for (int x = center.x - 5; x < maxW; ++x)
+		for (int x = center[0]; x < center[2]; ++x)
 		{
 			float partial_score = 0.0f, score = 0.0f;
 			for (int index = 0; index < segNum; index++)
@@ -377,23 +320,6 @@ void Match(const Mat &image, const vector<Point2f>& r_coord, const vector<Point2
 						v_TransLen_[index] = transLen;
 					}
 				}
-				//===============================
-				//for (int i = 0; i < segIdx[index].size(); ++i)
-				//{
-				//	uint idx = segIdx[index][i];
-				//	int cur_x = x + r_coord[idx].x;
-				//	int cur_y = y + r_coord[idx].y;
-				//	if (cur_x < 2 || cur_y < 2 || cur_x > maxW || cur_y > maxH)
-				//		continue;
-				//	short gx = s_x.at<short>(cur_y, cur_x);
-				//	short gy = s_y.at<short>(cur_y, cur_x);
-				//	if (abs(gx) > 0 || abs(gy) > 0)
-				//	{
-				//		float grad_x = 0.0f, grad_y = 0.0f;
-				//		NormalGrad((int)gx, (int)gy, grad_x, grad_y);
-				//		segContScore += abs(grad_x * r_grad[idx].x + grad_y * r_grad[idx].y);
-				//	}
-				//}
 				partial_score += segContScore / segIdx[index].size();
 				score = partial_score / sum_i;
 				if (score < (min(anMinScore + NormGreediness * sum_i, NormMinScore * sum_i)))
@@ -497,25 +423,42 @@ void GetTranslation(vector<int>& segContMapIdx, vector<int>& transLen_up, vector
 }
 //========================================================================================
 
+//绘制匹配到的结果========================================================================
+void DrawLocDeforRes(Mat& image, LocalDeforModelInfo& models, LocalMatchRes& res)
+{
+	vector<Point2f> r_coord, r_grad;
+	RotateCoordGrad(models.coord, models.grad, r_coord, r_grad, res.angle);
+	vector<Point2f> r_t_coord(r_coord.size());
+	vector<Point3f> normals_;
+	RotContourVec(models.normals_, normals_, res.angle);
+	for (int i = 0; i < models.segContIdx.size(); ++i)
+	{
+		vector<Point2f> tranContour;
+		TranslationContour(r_coord, models.segContIdx[i], normals_[i], tranContour, res.translates[i]);
+		for (int j = 0; j < tranContour.size(); ++j)
+		{
+			r_t_coord[models.segContIdx[i][j]] = tranContour[j];
+		}
+	}
+	DrawContours(image, r_t_coord, Point2f(res.c_x, res.c_y));
+}
+//========================================================================================
+
 //匹配====================================================================================
 void LocalDeforModelMatch(Mat &srcImg, LocalDeforModel* &model)
 {
 	const int pyr_n = model->pyrNum - 1;
 	vector<Mat> imgPry;
-	get_pyr_image(srcImg, imgPry, pyr_n + 1);
-	double t3 = getTickCount();
+	GetPyrImg(srcImg, imgPry, pyr_n + 1);
 	float angStep = model->angStep > 1 ? model->angStep : 1;
 	float angleStep_ = angStep * pow(2, pyr_n);
 
-	int angNum = (model->endAng - model->startAng) / angleStep_ + 1;
 	//顶层匹配
+	int angNum = (model->endAng - model->startAng) / angleStep_ + 1;
 	Mat sobel_x, sobel_y;
 	Sobel(imgPry[pyr_n], sobel_x, CV_16SC1, 1, 0, 3);
 	Sobel(imgPry[pyr_n], sobel_y, CV_16SC1, 0, 1, 3);
-	vector<vector<MatchRes>> mulMatchRes(angNum);
-
 	vector<LocalMatchRes> reses_(angNum);
-	//计算轮廓的法向量用于后面的平移
 #pragma omp parallel for
 	for (int i = 0; i < angNum; ++i)
 	{
@@ -530,39 +473,24 @@ void LocalDeforModelMatch(Mat &srcImg, LocalDeforModel* &model)
 	std::stable_sort(reses_.begin(), reses_.end());
 	LocalMatchRes res = reses_[0];
 
-	Mat img1;
-	cvtColor(imgPry[pyr_n], img1, COLOR_GRAY2BGR);
-	vector<Point2f> r_coord, r_grad;
-	RotateCoordGrad(model->models[pyr_n].coord, model->models[pyr_n].grad, r_coord, r_grad, res.angle);
-	vector<Point2f> r_t_coord(r_coord.size());
-	vector<Point3f> normals_;
-	RotContourVec(model->models[pyr_n].normals_, normals_, res.angle);
-	for (int i = 0; i < model->models[pyr_n].segContIdx.size(); ++i)
-	{
-		vector<Point2f> tranContour;
-		TranslationContour(r_coord, model->models[pyr_n].segContIdx[i], normals_[i], tranContour, res.translates[i]);
-		for (int j = 0; j < tranContour.size(); ++j)
-		{
-			r_t_coord[model->models[pyr_n].segContIdx[i][j]] = tranContour[j];
-		}
-	}
-	draw_contours(img1, r_t_coord, Point2f(res.c_x, res.c_y));
+	Mat img0;
+	cvtColor(imgPry[pyr_n], img0, COLOR_GRAY2BGR);
+	DrawLocDeforRes(img0, model->models[pyr_n], res);
 
+	reses_.resize(5);
 	for (int pyr_num_ = pyr_n - 1;  pyr_num_ > -1; --pyr_num_)
 	{	
-		reses_.clear();
-		reses_.resize(5);
+		for (size_t i = 0; i < 5; ++i)
+			reses_[i].score = 0.0f;
 		vector<int> transLen_down;
 		GetTranslation(model->models[pyr_num_].segContMapIdx, res.translates, transLen_down);
 		angleStep_ /= 2;
-		cv::Point center(2.0 * res.c_x, 2.0 * res.c_y);
-		float start_angle = res.angle;
-		res.reset();
+		int center[4] = { 2 * res.c_x - 5, 2 * res.c_y - 5,	2 * res.c_x + 5, 2 * res.c_y + 5 };
 #pragma omp parallel for
 		for (int i = -2; i <= 2; ++i)
 		{
 			reses_[i + 2].translates.resize(model->models[pyr_num_].segContIdx.size());
-			float angle = start_angle + i * angleStep_;
+			float angle = res.angle + i * angleStep_;
 			vector<Point2f> r_coord, r_grad;
 			RotateCoordGrad(model->models[pyr_num_].coord, model->models[pyr_num_].grad, r_coord, r_grad, angle);
 			vector<Point3f> contNormals;
@@ -571,23 +499,9 @@ void LocalDeforModelMatch(Mat &srcImg, LocalDeforModel* &model)
 		}
 		std::stable_sort(reses_.begin(), reses_.end());
 		res = reses_[0];
-		Mat img1_other;
-		cvtColor(imgPry[pyr_num_], img1_other, COLOR_GRAY2BGR);
-		vector<Point2f> r_coord_other, r_grad_ohter;
-		RotateCoordGrad(model->models[pyr_num_].coord, model->models[pyr_num_].grad, r_coord_other, r_grad_ohter, res.angle);
-		vector<Point3f> lines_0;
-		RotContourVec(model->models[pyr_num_].normals_, lines_0, res.angle);
-		vector<Point2f> r_t_coord_ohter(r_coord_other.size());
-		for (int i = 0; i < model->models[pyr_num_].segContIdx.size(); ++i)
-		{
-			vector<Point2f> tranContour;
-			TranslationContour(r_coord_other, model->models[pyr_num_].segContIdx[i], lines_0[i], tranContour, res.translates[i]);
-			for (int j = 0; j < tranContour.size(); ++j)
-			{
-				r_t_coord_ohter[model->models[pyr_num_].segContIdx[i][j]] = tranContour[j];
-			}
-		}
-		draw_contours(img1_other, r_t_coord_ohter, Point2f(res.c_x, res.c_y));
+		Mat img;
+		cvtColor(imgPry[pyr_num_], img, COLOR_GRAY2BGR);
+		DrawLocDeforRes(img, model->models[pyr_num_], res);
 	}
 	return;
 }

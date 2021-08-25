@@ -4,197 +4,58 @@
 //创建模板=============================================================================
 bool CreateShapeModel(Mat &modImg, ShapeModel* &model, SPAPLEMODELINFO &shapeModelInfo)
 {
-	clear_model(model);
+	ClearModel(model);
 	model = new ShapeModel;
-	vector<Mat> imgPry;
-	get_pyr_image(modImg, imgPry, shapeModelInfo.pyrNumber);
 
-	vector<Point2f> v_Gravity;
-	vector<vector<Point2f>> vv_Coord;
-	vector<vector<float>> vv_GradX, vv_GradY;
+	model->angStep = shapeModelInfo.angStep;
+	model->startAng = shapeModelInfo.startAng;
+	model->endAng = shapeModelInfo.endAng;
+
+	vector<Mat> imgPry;
+	GetPyrImg(modImg, imgPry, shapeModelInfo.pyrNumber);
+
 	for (int i = 0; i < imgPry.size(); i++)
 	{
-		//vector<Point2f> v_Coord, v_RedCoord;
-		//vector<float> v_GradX, v_GradY, v_RedGradX, v_RedGradY, v_Amplitude;
-		//vector<Point> contour(0);
-		//ExtractModelContour(imgPry[i], shapeModelInfo, contour);
-		//if (contour.size() < 20)
-		//	break;
-		////提取模板信息
-		//ExtractModelInfo(imgPry[i], contour, v_Coord, v_GradX, v_GradY, v_Amplitude);
-		//if (v_Coord.size() != v_GradX.size() || v_GradX.size() != v_GradY.size() || v_Amplitude.size() != v_GradY.size())
-		//	break;
-		////减少点的个数
-		//ReduceMatchPoint(v_Coord, v_GradX, v_GradY, v_Amplitude, v_RedCoord, v_RedGradX, v_RedGradY, shapeModelInfo.step);
-		////计算重心
-		//Point2f gravity;
-		//GetContourGravity(v_RedCoord, gravity);
-		//TranContour(v_RedCoord, gravity);
-		//v_Gravity.push_back(gravity);
-		//vv_Coord.push_back(v_RedCoord);
-		//vv_GradX.push_back(v_RedGradX);
-		//vv_GradY.push_back(v_RedGradY);
-		//Mat colorImg;
-		//cvtColor(imgPry[i], colorImg, COLOR_GRAY2BGR);
-		//draw_contours(colorImg, v_RedCoord, gravity);
-		model->pyr_n++;
+		//提取轮廓
+		vector<Point> v_Coord_;
+		ExtractModelContour(imgPry[i], shapeModelInfo, v_Coord_);
+		if (v_Coord_.size() < 10)
+			break;
+		//提取模板梯度信息
+		vector<Point2f> v_Coord, v_Grad;
+		vector<float> v_Amplitude;
+		ExtractModelInfo(imgPry[i], v_Coord_, v_Coord, v_Grad, v_Amplitude);
+		if (v_Coord.size() < 10)
+			break;
+		//减少轮廓点个数
+		ShapeInfo models;
+		ReduceMatchPoint(v_Coord, v_Grad, v_Amplitude, models.coord, models.grad, shapeModelInfo.step);
+		//计算重心
+		GetContourGravity(models.coord, models.gravity);
+		//中心化轮廓
+		Point2f gravity = Point2f(-models.gravity.x, -models.gravity.y);
+		TranContour(models.coord, gravity);
+		Mat colorImg;
+		cvtColor(imgPry[i], colorImg, COLOR_GRAY2BGR);
+		DrawContours(colorImg, models.coord, models.gravity);
+		model->models.push_back(models);
+		model->pyrNum++;
 	}
-	if (vv_Coord.size() != vv_GradX.size() || vv_GradX.size() != vv_GradY.size()
-		|| vv_GradY.size() != v_Gravity.size() || vv_Coord.size() != model->pyr_n)
-		return false;
-	CreateModelInfo(vv_Coord, vv_GradX, vv_GradY, v_Gravity, model);
-	ComputeNMSRange(vv_Coord[model->pyr_n - 1], model->min_x, model->min_y);
+	ComputeNMSRange(model->models[model->pyrNum - 1].coord, model->min_x, model->min_y);
 	return true;
 }
 //========================================================================================
 
-//获得模板信息============================================================================
-void CreateModelInfo(vector<vector<Point2f>> &vv_Coord, vector<vector<float>> &vv_GradX,
-	vector<vector<float>> &vv_GradY, vector<Point2f> &v_Gravity, ShapeModel* &pShapeModel)
-{
-	if (pShapeModel == nullptr)
-		return;
-	pShapeModel->ShapeInfos.resize(pShapeModel->pyr_n);
-	for (int i = 0; i < pShapeModel->pyr_n; i++)
-	{
-		pShapeModel->ShapeInfos[i].g_ = v_Gravity[i];
-		pShapeModel->ShapeInfos[i].x_ = Mat(Size(vv_Coord[i].size(), 2), CV_32FC1, Scalar(0));
-		pShapeModel->ShapeInfos[i].y_ = Mat(Size(vv_Coord[i].size(), 2), CV_32FC1, Scalar(0));
-		pShapeModel->ShapeInfos[i].p_n = vv_Coord[i].size();
-
-		float* pCoordGradX0 = pShapeModel->ShapeInfos[i].x_.ptr<float>(0);
-		float* pCoordGradX1 = pShapeModel->ShapeInfos[i].x_.ptr<float>(1);
-		float* pCoordGradY0 = pShapeModel->ShapeInfos[i].y_.ptr<float>(0);
-		float* pCoordGradY1 = pShapeModel->ShapeInfos[i].y_.ptr<float>(1);
-
-		for (int j = 0; j < vv_Coord[i].size(); j++)
-		{
-			pCoordGradX0[j] = vv_Coord[i][j].x;
-			pCoordGradX1[j] = vv_GradX[i][j];
-			pCoordGradY0[j] = vv_Coord[i][j].y;
-			pCoordGradY1[j] = vv_GradY[i][j];
-		}
-	}
-}
-//========================================================================================
-
-//寻找模板================================================================================
-void FindShapeModel(Mat &srcImg, ShapeModel *model, vector<MatchRes> &MatchReses)
-{
-	if (MatchReses.size() > 0)
-		MatchReses.clear();
-	const int pyr_n = model->pyr_n - 1;
-	vector<Mat> imgPry;
-	get_pyr_image(srcImg, imgPry, pyr_n + 1);
-	double t3 = getTickCount();
-	float angStep = model->angStep > 1 ? model->angStep : 1;
-	float angleStep_ = angStep * pow(2, pyr_n + 1);
-
-	int angNum = (model->e_ang - model->s_ang) / angleStep_ + 1;
-	float minScore = model->minScore / (pyr_n + 1);
-	int p_n = model->ShapeInfos[pyr_n].p_n;
-	//顶层匹配
-	Mat sobel_x, sobel_y;
-	Sobel(imgPry[pyr_n], sobel_x, CV_16SC1, 1, 0, 3);
-	Sobel(imgPry[pyr_n], sobel_y, CV_16SC1, 0, 1, 3);
-	const Mat& top_x_ = model->ShapeInfos[pyr_n].x_;
-	const Mat& top_y_ = model->ShapeInfos[pyr_n].y_;
-	vector<vector<MatchRes>> mulMatchRes(angNum);
-#pragma omp parallel for
-	for (int i = 0; i < angNum; ++i)
-	{
-		vector<MatchRes> reses;
-		float angle = model->s_ang + i * angleStep_;
-		Mat r_x_ = Mat(Size(p_n, 2), CV_32FC1, Scalar(0));
-		Mat r_y_ = Mat(Size(p_n, 2), CV_32FC1, Scalar(0));
-		RotateCoordGrad(top_x_, top_y_, r_x_, r_y_, angle);
-		TopMatch(sobel_x, sobel_y, r_x_, r_y_, p_n, minScore, model->greediness, angle, model->min_x, model->min_y, reses);
-		mulMatchRes[i] = reses;
-	}
-
-	//进行非极大值抑制
-	vector<MatchRes> totalNum;
-	for (int i = 0; i < angNum; ++i)
-	{
-		for (int j = 0; j < mulMatchRes[i].size(); ++j)
-		{
-			totalNum.push_back(mulMatchRes[i][j]);
-		}
-	}
-	vector<MatchRes> resNMS;	
-	NMS(totalNum, resNMS, model->min_x, model->min_y);
-	int res_n = std::min((int)resNMS.size(), model->res_n);
-
-	Mat img1;
-	Mat r_x, r_y;
-	cvtColor(imgPry[pyr_n], img1, COLOR_GRAY2BGR);
-	for (int i = 0; i < res_n; ++i)
-	{
-		RotateCoordGrad(model->ShapeInfos[pyr_n].x_, model->ShapeInfos[pyr_n].y_,
-			r_x, r_y, resNMS[i].angle);
-		draw_contours(img1, r_x.ptr<float>(0), r_y.ptr<float>(0),
-			Point(resNMS[i].c_x, resNMS[i].c_y), model->ShapeInfos[pyr_n].p_n);
-	}
-	//其他层匹配
-	for (int k = 0; k < res_n; ++k)
-	{
-		MatchRes& res_ = resNMS[k];
-		for (int i = pyr_n - 1; i > -1; --i)
-		{
-			p_n = model->ShapeInfos[i].p_n;
-			angleStep_ = angStep * pow(2, i);
-			minScore = model->minScore / (i + 1);
-			res_.score = 0.0f;
-			int center[4] = { 2 * res_.c_x - 10, 2 * res_.c_y - 10,	2 * res_.c_x + 10, 2 * res_.c_y + 10 };
-			const Mat& x_ = model->ShapeInfos[i].x_;
-			const Mat& y_ = model->ShapeInfos[i].y_;
-			const Mat& img = imgPry[i];
-#pragma omp parallel for
-			for (int j = -2; j <= 2; ++j)
-			{
-				float angle = res_.angle + j * angleStep_;
-				Mat r_x_ = Mat(Size(p_n, 2), CV_32FC1, Scalar(0));
-				Mat r_y_ = Mat(Size(p_n, 2), CV_32FC1, Scalar(0));
-				RotateCoordGrad(x_, y_, r_x_, r_y_, angle);
-				MatchShapeModel(img, r_x_, r_y_, p_n, minScore, model->greediness, angle, center, res_);
-			}
-		}
-	}
-	for (size_t i = 0; i < resNMS.size(); ++i)
-	{
-		if (resNMS[i].score > model->minScore)
-			MatchReses.push_back(resNMS[i]);
-	}
-	double t4 = (getTickCount() - t3) / getTickFrequency();
-	cout << "t4 = " << t4 << endl;
-
-	Mat img;
-	cvtColor(imgPry[0], img, COLOR_GRAY2BGR);
-	for (size_t i = 0; i < MatchReses.size(); ++i)
-	{
-		RotateCoordGrad(model->ShapeInfos[0].x_, model->ShapeInfos[0].y_,	r_x, r_y, MatchReses[i].angle);
-		draw_contours(img, r_x.ptr<float>(0), r_y.ptr<float>(0),
-			Point(MatchReses[i].c_x, MatchReses[i].c_y), model->ShapeInfos[0].p_n);
-	}
-	return;
-}
-//====================================================================================================
-
 //匹配================================================================================================
-void TopMatch(Mat &s_x, Mat &s_y, Mat &r_x, Mat &r_y, int p_n, float minScore,
-	float greediness, float angle, int min_x, int min_y, vector<MatchRes>& reses)
+void TopMatch(Mat &s_x, Mat &s_y, const vector<Point2f>& r_coord, const vector<Point2f>& r_grad,
+	float minScore, float greediness, float angle, vector<MatchRes>& reses)
 {
 	vector<MatchRes> reses_;
 	int maxW = s_x.cols - 2;
 	int maxH = s_x.rows - 2;
-	float NormGreediness = ((1 - greediness * minScore) / (1 - greediness)) / p_n;
+	float NormGreediness = ((1 - greediness * minScore) / (1 - greediness)) / r_coord.size();
 	float anMinScore = 1 - minScore;
-	float NormMinScore = minScore / p_n;
-
-	float* pCoord_x = r_x.ptr<float>(0);
-	float* pGrad_x = r_x.ptr<float>(1);
-	float* pCoord_y = r_y.ptr<float>(0);
-	float* pGrad_y = r_y.ptr<float>(1);
+	float NormMinScore = minScore / r_coord.size();
 
 	for (int y = 2; y < maxH; ++y)
 	{
@@ -202,10 +63,10 @@ void TopMatch(Mat &s_x, Mat &s_y, Mat &r_x, Mat &r_y, int p_n, float minScore,
 		{
 			float partial_score = 0.0f, score = 0.0f;
 			int sum = 0.0;
-			for (int index = 0; index < p_n; index++)
+			for (int index = 0; index < r_coord.size(); index++)
 			{
-				int cur_x = x + pCoord_x[index];
-				int cur_y = y + pCoord_y[index];
+				int cur_x = x + r_coord[index].x;
+				int cur_y = y + r_coord[index].y;
 				++sum;
 				if (cur_x < 2 || cur_y < 2 || cur_x > maxW || cur_y > maxH)
 					continue;
@@ -215,7 +76,7 @@ void TopMatch(Mat &s_x, Mat &s_y, Mat &r_x, Mat &r_y, int p_n, float minScore,
 				{
 					float grad_x = 0.0f, grad_y = 0.0f;
 					NormalGrad((int)gx, (int)gy, grad_x, grad_y);
-					partial_score += (grad_x * pGrad_x[index] + grad_y * pGrad_y[index]);
+					partial_score += (grad_x * r_grad[index].x + grad_y * r_grad[index].y);
 					score = partial_score / sum;
 					if (score < (min(anMinScore + NormGreediness * sum, NormMinScore * sum)))
 						break;
@@ -228,26 +89,20 @@ void TopMatch(Mat &s_x, Mat &s_y, Mat &r_x, Mat &r_y, int p_n, float minScore,
 				matchRes.c_x = x;
 				matchRes.c_y = y;
 				matchRes.angle = angle;
-				reses_.push_back(matchRes);
+				reses.push_back(matchRes);
 			}
 		}
 	}
-	NMS(reses_, reses, min_x, min_y);
 }
-void MatchShapeModel(const Mat &image, Mat &RotCG_X, Mat &RotCG_Y, int length,
+void MatchShapeModel(const Mat &image, const vector<Point2f>& r_coord, const vector<Point2f>& r_grad,
 	float minScore, float greediness, float angle, int *center, MatchRes &matchRes)
 {
 	int maxW = image.cols - 2;
 	int maxH = image.rows - 2;
 
-	float NormGreediness = ((1 - greediness * minScore) / (1 - greediness)) / length;
+	float NormGreediness = ((1 - greediness * minScore) / (1 - greediness)) / r_coord.size();
 	float anMinScore = 1 - minScore;
-	float NormMinScore = minScore / length;
-
-	float* pCoord_x = RotCG_X.ptr<float>(0);
-	float* pGrad_x = RotCG_X.ptr<float>(1);
-	float* pCoord_y = RotCG_Y.ptr<float>(0);
-	float* pGrad_y = RotCG_Y.ptr<float>(1);
+	float NormMinScore = minScore / r_coord.size();
 
 	for (int y = center[1]; y < center[3]; y++)
 	{
@@ -255,10 +110,10 @@ void MatchShapeModel(const Mat &image, Mat &RotCG_X, Mat &RotCG_Y, int length,
 		{
 			float partial_score = 0.0f, score = 0.0;
 			int sum = 0.0;
-			for (int index = 0; index < length; index++)
+			for (int index = 0; index < r_coord.size(); index++)
 			{
-				int cur_x = x + pCoord_x[index];
-				int cur_y = y + pCoord_y[index];
+				int cur_x = x + r_coord[index].x;
+				int cur_y = y + r_coord[index].y;
 				++sum;
 				if (cur_x < 2 || cur_y < 2 || cur_x > maxW || cur_y > maxH)
 					continue;
@@ -269,7 +124,7 @@ void MatchShapeModel(const Mat &image, Mat &RotCG_X, Mat &RotCG_Y, int length,
 				{
 					float grad_x = 0.0f, grad_y = 0.0f;
 					NormalGrad(gx, gy, grad_x, grad_y);
-					partial_score += (grad_x * pGrad_x[index] + grad_y * pGrad_y[index]);
+					partial_score += (grad_x * r_grad[index].x + grad_y * r_grad[index].y);
 					score = partial_score / sum;
 					if (score < (min(anMinScore + NormGreediness * sum, NormMinScore * sum)))
 						break;
@@ -287,24 +142,108 @@ void MatchShapeModel(const Mat &image, Mat &RotCG_X, Mat &RotCG_Y, int length,
 }
 //====================================================================================================
 
-//重设模板=============================================================================
-void clear_model(ShapeModel* &pShapeModel)
+//绘制轮廓============================================================================================
+void DrawShapeRes(Mat& image, ShapeInfo& models, vector<MatchRes>& res)
 {
-	if (pShapeModel != nullptr)
+	for (int i = 0; i < res.size(); ++i)
 	{
-		if (pShapeModel->ShapeInfos.size() != 0)
+		vector<Point2f> r_coord, r_grad;
+		RotateCoordGrad(models.coord, models.grad, r_coord, r_grad, res[i].angle);
+		DrawContours(image, r_coord, Point2f(res[i].c_x, res[i].c_y));
+	}
+}
+//====================================================================================================
+
+//重设模板=============================================================================
+void ClearModel(ShapeModel* &pModel)
+{
+	if (pModel != nullptr)
+	{
+		if (pModel->models.size() != 0)
 		{
-			pShapeModel->ShapeInfos.resize(0);
+			pModel->models.clear();
 		}
-		delete pShapeModel;
-		pShapeModel = nullptr;
+		delete pModel;
+		pModel = nullptr;
 	}
 }
 //=====================================================================================
 
+//寻找模板================================================================================
+void FindShapeModel(Mat &srcImg, ShapeModel *model, vector<MatchRes> &MatchReses)
+{
+	if (MatchReses.size() > 0)
+		MatchReses.clear();
+	const int pyr_n = model->pyrNum - 1;
+	vector<Mat> imgPry;
+	GetPyrImg(srcImg, imgPry, pyr_n + 1);
+	float angStep = model->angStep > 1 ? model->angStep : 1;
+	float angleStep_ = angStep * pow(2, pyr_n + 1);
+
+	int angNum = (model->endAng - model->startAng) / angleStep_ + 1;
+	//顶层匹配
+	Mat sobel_x, sobel_y;
+	Sobel(imgPry[pyr_n], sobel_x, CV_16SC1, 1, 0, 3);
+	Sobel(imgPry[pyr_n], sobel_y, CV_16SC1, 0, 1, 3);
+	vector<vector<MatchRes>> mulMatchRes(angNum);
+#pragma omp parallel for
+	for (int i = 0; i < angNum; ++i)
+	{
+		vector<MatchRes> reses;
+		float angle = model->startAng + i * angleStep_;
+		vector<Point2f> r_coord, r_grad;
+		RotateCoordGrad(model->models[pyr_n].coord, model->models[pyr_n].grad, r_coord, r_grad, angle);
+		TopMatch(sobel_x, sobel_y, r_coord, r_grad, model->minScore, model->greediness, angle, reses);
+		mulMatchRes[i] = reses;
+	}
+
+	//进行非极大值抑制
+	vector<MatchRes> resNMS;
+	ShapeNMS(mulMatchRes, resNMS, model->min_x, model->min_y, model->res_n);
+
+	Mat image0;
+	cvtColor(imgPry[pyr_n], image0, COLOR_GRAY2BGR);
+	DrawShapeRes(image0, model->models[pyr_n], resNMS);
+
+	//其他层匹配
+	vector<MatchRes> reses_(5);
+	for (int k = 0; k < resNMS.size(); ++k)
+	{
+		for (int i = pyr_n - 1; i > -1; --i)
+		{
+			for (size_t j = 0; j < 5; ++j)
+				reses_[j].score = 0.0f;
+			angleStep_ = angStep * pow(2, i);
+			float minScore = model->minScore / (i + 1);
+			int center[4] = { 2 * resNMS[k].c_x - 10, 2 * resNMS[k].c_y - 10, 2 * resNMS[k].c_x + 10, 2 * resNMS[k].c_y + 10 };
+#pragma omp parallel for
+			for (int j = -2; j <= 2; ++j)
+			{
+				float angle = resNMS[k].angle + j * angleStep_;
+				vector<Point2f> r_coord, r_grad;
+				RotateCoordGrad(model->models[i].coord, model->models[i].grad, r_coord, r_grad, angle);
+				MatchShapeModel(imgPry[i], r_coord, r_grad, minScore, model->greediness, angle, center, reses_[j+2]);
+			}
+			std::stable_sort(reses_.begin(), reses_.end());
+			resNMS[k] = reses_[0];
+		}
+	}
+	for (size_t i = 0; i < resNMS.size(); ++i)
+	{
+		if (resNMS[i].score > model->minScore)
+			MatchReses.push_back(resNMS[i]);
+	}
+
+	Mat img;
+	cvtColor(imgPry[0], img, COLOR_GRAY2BGR);
+	DrawShapeRes(img, model->models[0], MatchReses);
+	return;
+}
+//====================================================================================================
+
 void shape_match_test()
 {
-	string imgPath = "D:/data/定位测试图片/model1.bmp";
+	string imgPath = "../image/model1.bmp";
 	Mat modImg = imread(imgPath, 0);
 	ShapeModel *model = new ShapeModel;
 
@@ -317,10 +256,10 @@ void shape_match_test()
 	CreateShapeModel(modImg, model, shapeModelInfo);
 	vector<MatchRes> v_MatchRes;
 
-	model->s_ang = -180;
-	model->e_ang = 180;
+	model->startAng = -180;
+	model->endAng = 180;
 	model->res_n = 3;
-	string testImgPath = "D:/data/定位测试图片/b.bmp";
+	string testImgPath = "../image/f.bmp";
 	Mat testImg = imread(testImgPath, 0);
 	FindShapeModel(testImg, model, v_MatchRes);
 	//Mat testImg = imread("5.png", 0);

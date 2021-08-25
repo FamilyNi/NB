@@ -62,9 +62,6 @@ void ExtractModelContour(Mat &srcImg, SPAPLEMODELINFO &shapeModelInfo, vector<ve
 //模板点聚类
 void GetKNearestPoint(vector<Point2f> &contours, vector<Point2f> &grads, LocalDeforModelInfo &localDeforModelInfo);
 
-//求取每个子轮廓的重心
-void ComputeSegContGravity(LocalDeforModelInfo &localDeforModelInfo);
-
 //计算子轮廓的方向向量
 void ComputeSegContourVec(LocalDeforModel &model);
 
@@ -74,10 +71,7 @@ void GetMapIndex(LocalDeforModel& localDeforModel);
 //对聚类后的模板打标签
 void LabelContour(LocalDeforModelInfo& localDeforModelInfo);
 
-//计算每个子轮廓的法向量
-void ComputeContourNormal(const vector<Point2f>& contour, const vector<vector<uint>>& segContIdx, vector<Point2f>& normals);
-
-//移动轮廓
+//平移轮廓
 void TranslationContour(const vector<Point2f>& contour, const vector<uint>& contIdx,
 	const Point3f& normals, vector<Point2f>& tranContour, int transLen);
 
@@ -86,8 +80,8 @@ void TopMatch(const Mat &s_x, const Mat &s_y, const vector<Point2f>& r_coord, co
 	const vector<vector<uint>>& segIdx, const vector<Point3f>& contNormals, float minScore, float angle, LocalMatchRes& reses);
 
 //匹配
-void Match(const Mat &image, const vector<Point2f>& r_coord, const vector<Point2f>& r_grad, const vector<vector<uint>>& segIdx, const vector<Point3f>& contNormals,
-	cv::Point center, float minScore, float angle, vector<int>& transLen_down, LocalMatchRes& reses);
+void Match(const Mat &image, const vector<Point2f>& r_coord, const vector<Point2f>& r_grad, const vector<vector<uint>>& segIdx,
+	const vector<Point3f>& normals_, int* center, float minScore, float angle, vector<int>& transLen_down, LocalMatchRes& reses);
 
 //获取平移量
 void GetTranslation(vector<int>& segContMapIdx, vector<int>& transLen_up, vector<int>& transLen_down);
@@ -97,6 +91,9 @@ void RotContourVec(const vector<Point2f>& srcVec, vector<Point2f>& dstVec, float
 
 //上层映射到下层
 void UpMapToDown(LocalDeforModelInfo& up_, LocalDeforModelInfo& down_, vector<int>& transLen_up, vector<vector<int>>& transLen_down);
+
+//绘制匹配到的结果
+void DrawLocDeforRes(Mat& image, LocalDeforModelInfo& models, LocalMatchRes& res);
 
 //匹配
 void LocalDeforModelMatch(Mat &modImg, LocalDeforModel* &model);
