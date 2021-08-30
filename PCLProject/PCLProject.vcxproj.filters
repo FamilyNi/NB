@@ -78,6 +78,9 @@
     <ClCompile Include="SiftMatch.cpp">
       <Filter>源文件\MatchFile</Filter>
     </ClCompile>
+    <ClCompile Include="LBPfeatures.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utils.h">
@@ -130,6 +133,9 @@
     </ClInclude>
     <ClInclude Include="SiftMatch.h">
       <Filter>头文件\MatchFile</Filter>
+    </ClInclude>
+    <ClInclude Include="LBPfeatures.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

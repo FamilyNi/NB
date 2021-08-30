@@ -15,9 +15,10 @@
 #include "SiftMatch.h"
 #include "ContourOpr.h"
 #include "ShapeMatch.h"
+#include "LBPfeatures.h"
 
 int main(int argc, char *argv[])
 {
-	shape_match_test();
+	LBPfeaturesTest();
 	return (0);
 }

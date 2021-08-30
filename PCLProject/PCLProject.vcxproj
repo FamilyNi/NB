@@ -169,6 +169,7 @@
     <ClCompile Include="FitModel.cpp" />
     <ClCompile Include="GrayCode.cpp" />
     <ClCompile Include="JC_Calibrate.cpp" />
+    <ClCompile Include="LBPfeatures.cpp" />
     <ClCompile Include="LocalDeforableModel.cpp" />
     <ClCompile Include="MathOpr.cpp" />
     <ClCompile Include="PointCloudOpr.cpp" />
@@ -188,6 +189,7 @@
     <ClInclude Include="FitModel.h" />
     <ClInclude Include="GrayCode.h" />
     <ClInclude Include="JC_Calibrate.h" />
+    <ClInclude Include="LBPfeatures.h" />
     <ClInclude Include="LocalDeforableModel.h" />
     <ClInclude Include="MathOpr.h" />
     <ClInclude Include="PC_Filter.h" />
