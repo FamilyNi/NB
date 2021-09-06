@@ -133,3 +133,39 @@ void LBPfeaturesTest()
 	cv::Mat lbpFeature;
 	LBPDetectLine(image, lbpFeature, 2, 8);
 }
+
+void TestMMSER()
+{
+	cv::Mat image = cv::imread("1.jpg", 0);
+
+	cv::Ptr<cv::MSER> ptrMSER = cv::MSER::create(5, 200, 20000, 0.5);
+
+	std::vector<std::vector<cv::Point> > points;
+	std::vector<cv::Rect> rects;
+	ptrMSER->detectRegions(image, points, rects);
+
+	cv::Mat output(image.size(), CV_8UC3);
+	output = cv::Scalar(255, 255, 255);
+	cv::RNG rng;
+	// 针对每个检测到的特征区域，在彩色区域显示 MSER
+	// 反向排序，先显示较大的 MSER
+	for (std::vector<std::vector<cv::Point> >::reverse_iterator
+		it = points.rbegin();
+		it != points.rend(); ++it) {
+		// 生成随机颜色
+		cv::Vec3b c(rng.uniform(0, 254),
+			rng.uniform(0, 254), rng.uniform(0, 254));
+		// 针对 MSER 集合中的每个点
+		for (std::vector<cv::Point>::iterator itPts = it->begin();
+			itPts != it->end(); ++itPts) {
+			// 不重写 MSER 的像素
+			if (output.at<cv::Vec3b>(*itPts)[0] == 255) {
+				output.at<cv::Vec3b>(*itPts) = c;
+			}
+		}
+	}
+
+	cv::imshow("image", image);
+	cv::imshow("output", output);
+	waitKey(0);
+}

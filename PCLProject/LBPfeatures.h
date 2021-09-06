@@ -1,5 +1,6 @@
 #pragma once
 #include "utils.h"
+#include "opencv2/features2d.hpp"
 
 //Ë«ÏßÐÔ²åÖµ
 void BilinearInterpolation(const Mat& img, float x, float y, int& value);
@@ -14,3 +15,5 @@ void ExtractLBPFeature(const Mat& srcImg, Mat& lbpFeature, float raduis, int pts
 void LBPDetectLine(const Mat& srcImg, Mat& lbpFeature, float raduis, int ptsNum);
 
 void LBPfeaturesTest();
+
+void TestMMSER();

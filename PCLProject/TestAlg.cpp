@@ -16,9 +16,11 @@
 #include "ContourOpr.h"
 #include "ShapeMatch.h"
 #include "LBPfeatures.h"
+#include "ImageFilter.h"
+#include "FFT.h"
 
 int main(int argc, char *argv[])
 {
-	LBPfeaturesTest();
+	FilterTest();
 	return (0);
 }

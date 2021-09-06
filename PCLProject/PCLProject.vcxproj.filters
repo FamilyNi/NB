@@ -25,6 +25,12 @@
     <Filter Include="源文件\MatchFile">
       <UniqueIdentifier>{53075bf6-c05d-4c9e-a239-70e8fbdf43ae}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\ImageFile">
+      <UniqueIdentifier>{0bbb9252-e2a6-45c6-b7e4-de83c1411416}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\ImageFile">
+      <UniqueIdentifier>{7f5118ed-b12a-4228-b53e-a4c0673b0306}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="JC_Calibrate.cpp">
@@ -34,9 +40,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="GrayCode.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="WaveLet.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="FileOpr.cpp">
@@ -79,7 +82,16 @@
       <Filter>源文件\MatchFile</Filter>
     </ClCompile>
     <ClCompile Include="LBPfeatures.cpp">
-      <Filter>源文件</Filter>
+      <Filter>源文件\ImageFile</Filter>
+    </ClCompile>
+    <ClCompile Include="WaveLet.cpp">
+      <Filter>源文件\ImageFile</Filter>
+    </ClCompile>
+    <ClCompile Include="ImageFilter.cpp">
+      <Filter>源文件\ImageFile</Filter>
+    </ClCompile>
+    <ClCompile Include="FFT.cpp">
+      <Filter>源文件\ImageFile</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -90,9 +102,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="GrayCode.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="WaveLet.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="FileOpr.h">
@@ -134,8 +143,17 @@
     <ClInclude Include="SiftMatch.h">
       <Filter>头文件\MatchFile</Filter>
     </ClInclude>
+    <ClInclude Include="WaveLet.h">
+      <Filter>头文件\ImageFile</Filter>
+    </ClInclude>
     <ClInclude Include="LBPfeatures.h">
-      <Filter>头文件</Filter>
+      <Filter>头文件\ImageFile</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageFilter.h">
+      <Filter>头文件\ImageFile</Filter>
+    </ClInclude>
+    <ClInclude Include="FFT.h">
+      <Filter>头文件\ImageFile</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
