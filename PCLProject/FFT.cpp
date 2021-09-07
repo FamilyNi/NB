@@ -94,26 +94,64 @@ void IngF_SymmetricAssignment(Mat& filter)
 }
 //========================================================================
 
-//gauss低通滤波器=========================================================
-void ImgF_GetGaussianFilter(Mat &filter, int width, int height, double radius, int mode)
+//理想的单通滤波器========================================================
+void ImgF_GetIdealFilter(Mat &filter, int imgW, int imgH, double radius, int passMode)
 {
 	if (!filter.empty())
 	{
 		filter.release();
 	}
-	if (mode == 0)
-		filter = Mat(Size(width, height), CV_32FC2, Scalar::all(0));
-	else if (mode == 1)
-		filter = Mat(Size(width, height), CV_32FC2, Scalar::all(1));
+	if (passMode == 0)
+		filter = Mat(Size(imgW, imgH), CV_32FC2, Scalar::all(0));
+	else if (passMode == 1)
+		filter = Mat(Size(imgW, imgH), CV_32FC2, Scalar::all(1));
 	else
 		return;
-	double half_w = width / 2;
-	double half_h = height / 2;
+	double half_w = imgW / 2;
+	double half_h = imgH / 2;
+	radius = std::min(radius, std::min(half_w, half_h));
+
+	float *pData = filter.ptr<float>(0);
+	double radius_2 = radius * radius;
+	int step = 2 * imgW;
+	for (int y = 0; y < radius; ++y)
+	{
+		int offset = step * y;
+		for (int x = 0; x < radius; ++x)
+		{
+			float r_ = x * x + y * y;
+			if (r_ < radius_2)
+			{
+				double value = passMode == 0 ? 1 : 0;
+				pData[2 * x + offset] = value;
+				pData[2 * x + 1 + offset] = value;
+			}
+		}
+	}
+	IngF_SymmetricAssignment(filter);
+}
+//========================================================================
+
+//gauss低通滤波器=========================================================
+void ImgF_GetGaussianFilter(Mat &filter, int imgW, int imgH, double radius, int passMode)
+{
+	if (!filter.empty())
+	{
+		filter.release();
+	}
+	if (passMode == 0)
+		filter = Mat(Size(imgW, imgH), CV_32FC2, Scalar::all(0));
+	else if (passMode == 1)
+		filter = Mat(Size(imgW, imgH), CV_32FC2, Scalar::all(1));
+	else
+		return;
+	double half_w = imgW / 2;
+	double half_h = imgH / 2;
 	radius = std::min(radius, std::min(half_w, half_h));
 
 	float *pData = filter.ptr<float>(0);
 	double radius_22 = 2 * radius * radius;
-	int step = 2 * width;
+	int step = 2 * imgW;
 	for (int y = 0; y < half_h; ++y)
 	{
 		int offset = step * y;
@@ -121,7 +159,7 @@ void ImgF_GetGaussianFilter(Mat &filter, int width, int height, double radius, i
 		{
 			double r_ = x * x + y * y;
 			double value = exp(-r_ / radius_22);
-			value = mode == 0 ? value : 1 - value;
+			value = passMode == 0 ? value : 1 - value;
 			pData[2 * x + offset] = value;
 			pData[2 * x + 1 + offset] = value;
 		}
@@ -131,25 +169,25 @@ void ImgF_GetGaussianFilter(Mat &filter, int width, int height, double radius, i
 //========================================================================
 
 //常规带阻滤波器==========================================================
-void ImgF_GetBandFilter(Mat &filter, int width, int height, double lr, double hr, int mode)
+void ImgF_GetBandFilter(Mat &filter, int imgW, int imgH, double lr, double hr, int passMode)
 {
-	double minLen = std::min(width, height) / 2.0;
+	double minLen = std::min(imgW, imgH) / 2.0;
 	CV_CheckLT(lr, minLen, "最小半径不能大于图像最小边长的的二分之一");
 	if (!filter.empty())
 	{
 		filter.release();
 	}
-	if (mode == 0)
-		filter = Mat(Size(width, height), CV_32FC2, Scalar::all(0));
-	else if (mode == 1)
-		filter = Mat(Size(width, height), CV_32FC2, Scalar::all(1));
+	if (passMode == 0)
+		filter = Mat(Size(imgW, imgH), CV_32FC2, Scalar::all(0));
+	else if (passMode == 1)
+		filter = Mat(Size(imgW, imgH), CV_32FC2, Scalar::all(1));
 	else
 		return;
 	hr = std::min(hr, minLen);
 	double lr_2 = lr * lr;
 	double hr_2 = hr * hr;
 	float *pData = filter.ptr<float>(0);
-	int step = 2 * width;
+	int step = 2 * imgW;
 	for (int y = 0; y < hr; y++)
 	{
 		int offset = step * y;
@@ -158,50 +196,36 @@ void ImgF_GetBandFilter(Mat &filter, int width, int height, double lr, double hr
 			float r_ = x * x + y * y;
 			if (r_ > lr_2 && r_ < hr_2)
 			{
-				double value = mode == 0 ? 1 : 0;
+				double value = passMode == 0 ? 1 : 0;
 				pData[2 * x + offset] = value;
 				pData[2 * x + 1 + offset] = value;
 			}
 		}
 	}
-	for (int y = height - hr - 1; y < height; ++y)
-	{
-		int offset = step * y;
-		int y_ = height - 1 - y;
-		for (int x = 0; x < hr; ++x)
-		{
-			double r_ = x * x + y_ * y_;
-			if (r_ > lr_2 && r_ < hr_2)
-			{
-				double value = mode == 0 ? 1 : 0;
-				pData[2 * x + offset] = value;
-				pData[2 * x + 1 + offset] = value;
-			}
-		}
-	}
+	IngF_SymmetricAssignment(filter);
 }
 //========================================================================
 
 //构建blpf滤波器==========================================================
-void ImgF_GetBLPFFilter(Mat &filter, int width, int height, double radius, int n, int mode)
+void ImgF_GetBLPFFilter(Mat &filter, int imgW, int imgH, double radius, int n, int passMode)
 {
 	if (!filter.empty())
 	{
 		filter.release();
 	}
-	if (mode == 0)
-		filter = Mat(Size(width, height), CV_32FC2, Scalar::all(0));
-	else if (mode == 1)
-		filter = Mat(Size(width, height), CV_32FC2, Scalar::all(1));
+	if (passMode == 0)
+		filter = Mat(Size(imgW, imgH), CV_32FC2, Scalar::all(0));
+	else if (passMode == 1)
+		filter = Mat(Size(imgW, imgH), CV_32FC2, Scalar::all(1));
 	else
 		return;
-	double half_w = width / 2;
-	double half_h = height / 2;
+	double half_w = imgW / 2;
+	double half_h = imgH / 2;
 	radius = std::min(radius, std::min(half_w, half_h));
 
 	int n_2 = 2 * n;
 	float *pData = filter.ptr<float>(0);
-	int step = 2 * width;
+	int step = 2 * imgW;
 	double radius_2 = radius * radius;
 	for (int y = 0; y < half_h; ++y)
 	{
@@ -210,7 +234,7 @@ void ImgF_GetBLPFFilter(Mat &filter, int width, int height, double radius, int n
 		{
 			double r_ = x * x + y * y;
 			double value = 1.0 / (1.0 + std::pow(r_ / radius_2, n_2));
-			value = mode == 0 ? value : 1 - value;
+			value = passMode == 0 ? value : 1 - value;
 			pData[2 * x + offset] = value;
 			pData[2 * x + 1 + offset] = value;
 		}
@@ -220,23 +244,23 @@ void ImgF_GetBLPFFilter(Mat &filter, int width, int height, double radius, int n
 //========================================================================
 
 //构建同态滤波器==========================================================
-void ImgF_GetHomoFilter(Mat &filter, int width, int height, double radius, double L, double H, double c)
+void ImgF_GetHomoFilter(Mat &filter, int imgW, int imgH, double radius, double L, double H, double c)
 {
 	if (!filter.empty())
 	{
 		filter.release();
 	}
 	float diff = H - L;
-	filter = Mat(Size(width, height), CV_32FC2, Scalar::all(0));
-	radius = std::min(radius, std::min(width / 2.0, height / 2.0));
+	filter = Mat(Size(imgW, imgH), CV_32FC2, Scalar::all(0));
+	radius = std::min(radius, std::min(imgW / 2.0, imgH / 2.0));
 
 	float *pData = filter.ptr<float>(0);
-	int step = 2 * width;
+	int step = 2 * imgW;
 	double radius_2 = radius * radius;
-	for (int y = 0; y < height / 2; ++y)
+	for (int y = 0; y < imgH / 2; ++y)
 	{
 		int offset = step * y;
-		for (int x = 0; x < width / 2; ++x)
+		for (int x = 0; x < imgW / 2; ++x)
 		{
 			double r_ = x * x + y * y;
 			float value = (H - L) * (1 - exp(-c * r_ / radius_2)) + L;
@@ -248,55 +272,25 @@ void ImgF_GetHomoFilter(Mat &filter, int width, int height, double radius, doubl
 }
 //========================================================================
 
-//频率滤波================================================================
-void nb_fft_filter(Mat &srcImg, Mat &filter, Mat &dstImg)
+//获取频率滤波器==========================================================
+void ImgF_GetFilter(Mat& filter, int imgW, int imgH, double lr, double hr, int passMode, IMGF_MODE filterMode)
 {
-	int r = srcImg.rows;
-	int c = srcImg.cols;
-	int M = getOptimalDFTSize(r);
-	int N = getOptimalDFTSize(c);
-	copyMakeBorder(filter, filter, 0, M - r, 0, N - c, cv::BORDER_CONSTANT, Scalar::all(0));
-
-	Mat fftImg;
-	ImgF_FFT(srcImg, fftImg);
-
-	Mat fftFilterImg = fftImg.mul(filter);
-
-	Mat freqImg;
-	ImgF_DisplayFreqImg(fftFilterImg, freqImg);
-
-	Mat invFFTImg;
-	ImgF_InvFFT(fftFilterImg, invFFTImg);
-	Mat roi = invFFTImg(Rect(0, 0, c, r));
-	double minVal, maxVal;
-	minMaxLoc(roi, &minVal, &maxVal, NULL, NULL);
-	roi = (roi - minVal)/ (maxVal - minVal) * 255.0;
-	////cv::norm(roi, roi, NORM_MINMAX);
-	//cv::exp(roi, roi);
-	//roi = roi - 1;
-	roi.convertTo(dstImg, CV_8UC1);
-	//F2UChar(roi, dstImg);
+	switch (filterMode)
+	{
+	case IMGF_IDEAL:
+		ImgF_GetIdealFilter(filter, imgW, imgH, lr, passMode);
+		break;
+	case IMGF_GAUSSIAN:
+		ImgF_GetGaussianFilter(filter, imgW, imgH, lr, passMode);
+		break;
+	case IMGF_BAND:
+		ImgF_GetBandFilter(filter, imgW, imgH, lr, hr, passMode);
+		break;
+	case IMGF_BLPF:
+		ImgF_GetBLPFFilter(filter, imgW, imgH, lr, (int)hr, passMode);
+		break;
+	default:
+		break;
+	}
 }
 //========================================================================
-
-//FFT测试=================================================================
-void FFTTest()
-{
-	string filename = "1.jpg";
-	Mat img = imread(samples::findFile(filename), 0);
-	Mat filter;
-	int width = img.cols, height = img.rows;
-	float radius = 100;
-	ImgF_GetBLPFFilter(filter, width, height, 50, 100, 1);
-
-	//resize(img, img, Size(1000, 700));
-	//Mat imgF;
-	//img.convertTo(imgF, CV_32FC1);
-	//Mat imgExp;
-	//log((imgF + 1), imgExp);
-	//Mat filter;
-	//get_blpf_filter(filter, img.cols, img.rows, 200, 2);
-	Mat dstImg;
-	nb_fft_filter(img, filter, dstImg);
-	int t = 1;
-}

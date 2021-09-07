@@ -106,7 +106,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_SILENCE_FPOS_SEEKPOS_DEPRECATION_WARNING;_CRT_SECURE_NO_WARNINGS;_SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_SILENCE_FPOS_SEEKPOS_DEPRECATION_WARNING;_CRT_SECURE_NO_WARNINGS;_SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS;NB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>G:\opencv450\include;G:\PCL1.9.1\PCL 1.9.1\3rdParty\FLANN\include;G:\PCL1.9.1\PCL 1.9.1\3rdParty\VTK\include\vtk-8.1;G:\PCL1.9.1\PCL 1.9.1\include\pcl-1.9;G:\PCL1.9.1\PCL 1.9.1\3rdParty\Eigen\eigen3;G:\PCL1.9.1\PCL 1.9.1\3rdParty\Boost\include\boost-1_68;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
@@ -146,7 +146,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_SILENCE_FPOS_SEEKPOS_DEPRECATION_WARNING;_CRT_SECURE_NO_WARNINGS;_SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;_SILENCE_FPOS_SEEKPOS_DEPRECATION_WARNING;_CRT_SECURE_NO_WARNINGS;_SILENCE_STDEXT_HASH_DEPRECATION_WARNINGS;NB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>G:\opencv450\include;G:\PCL1.9.1\PCL 1.9.1\3rdParty\FLANN\include;G:\PCL1.9.1\PCL 1.9.1\3rdParty\VTK\include\vtk-8.1;G:\PCL1.9.1\PCL 1.9.1\include\pcl-1.9;G:\PCL1.9.1\PCL 1.9.1\3rdParty\Boost\include\boost-1_68;G:\PCL1.9.1\PCL 1.9.1\3rdParty\Eigen\eigen3;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FloatingPointModel>Fast</FloatingPointModel>
@@ -169,11 +169,14 @@
     <ClCompile Include="FileOpr.cpp" />
     <ClCompile Include="FitModel.cpp" />
     <ClCompile Include="GrayCode.cpp" />
+    <ClCompile Include="ImageEnhance.cpp" />
     <ClCompile Include="ImageFilter.cpp" />
+    <ClCompile Include="ImageSeg.cpp" />
     <ClCompile Include="JC_Calibrate.cpp" />
     <ClCompile Include="LBPfeatures.cpp" />
     <ClCompile Include="LocalDeforableModel.cpp" />
     <ClCompile Include="MathOpr.cpp" />
+    <ClCompile Include="OpenCV_Utils.cpp" />
     <ClCompile Include="PointCloudOpr.cpp" />
     <ClCompile Include="PPFMatch.cpp" />
     <ClCompile Include="ShapeMatch.cpp" />
@@ -191,11 +194,14 @@
     <ClInclude Include="FileOpr.h" />
     <ClInclude Include="FitModel.h" />
     <ClInclude Include="GrayCode.h" />
+    <ClInclude Include="ImageEnhance.h" />
     <ClInclude Include="ImageFilter.h" />
+    <ClInclude Include="ImageSeg.h" />
     <ClInclude Include="JC_Calibrate.h" />
     <ClInclude Include="LBPfeatures.h" />
     <ClInclude Include="LocalDeforableModel.h" />
     <ClInclude Include="MathOpr.h" />
+    <ClInclude Include="OpenCV_Utils.h" />
     <ClInclude Include="PC_Filter.h" />
     <ClInclude Include="PC_Seg.h" />
     <ClInclude Include="PointCloudOpr.h" />

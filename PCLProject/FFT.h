@@ -1,7 +1,12 @@
 #pragma once
-/*已于2019年1月5号全部完成测试*/
-
 #include "utils.h"
+
+enum IMGF_MODE{
+	IMGF_IDEAL = 0,
+	IMGF_GAUSSIAN = 1,
+	IMGF_BAND = 2,
+	IMGF_BLPF = 3
+};
 
 //显示图像频谱图
 void ImgF_DisplayFreqImg(Mat& fftImg, Mat& freqImg);
@@ -15,18 +20,22 @@ void ImgF_InvFFT(Mat& fftImg, Mat& invFFTImg);
 //滤波器对称赋值
 void IngF_SymmetricAssignment(Mat& filter);
 
-//高斯低通滤波器
-void ImgF_GetGaussianFilter(Mat &filter, int width, int height, double radius, int mode);
+//理想的单通滤波器
+void ImgF_GetIdealFilter(Mat &filter, int imgW, int imgH, double radius, int passMode);
+
+//高斯单通滤波器
+void ImgF_GetGaussianFilter(Mat &filter, int imgW, int imgH, double radius, int passMode);
 
 //带状滤波器
-void ImgF_GetBandFilter(Mat &filter, int width, int height, double lr, double hr, int mode);
+void ImgF_GetBandFilter(Mat &filter, int imgW, int imgH, double lr, double hr, int passMode);
 
 //巴特沃尔斯录波器
-void ImgF_GetBLPFFilter(Mat &filter, int width, int height, double radius, int n, int mode);
+void ImgF_GetBLPFFilter(Mat &filter, int imgW, int imgH, double radius, int n, int passMode);
 
 //同态滤波器
-void ImgF_GetHomoFilter(Mat &filter, int width, int height, double radius, double L, double H, double c);
+void ImgF_GetHomoFilter(Mat &filter, int imgW, int imgH, double radius, double L, double H, double c);
 
-void nb_fft_filter(Mat &srcImg, Mat &filter, Mat &dstImg);
+//获取频率滤波器
+void ImgF_GetFilter(Mat& filter, int imgW, int imgH, double lr, double hr, int passMode, IMGF_MODE filterMode);
 
 void FFTTest();

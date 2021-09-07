@@ -1,7 +1,7 @@
 #include "ImageFilter.h"
 
 //Òýµ¼ÂË²¨=============================================================================
-void Img_GuidFilter(Mat& srcImg, Mat& guidImg, Mat& dstImg, int size, float eps)
+NB_API void Img_GuidFilter(Mat& srcImg, Mat& guidImg, Mat& dstImg, int size, float eps)
 {
 	if (!dstImg.empty())
 		dstImg.release();
@@ -59,7 +59,7 @@ void Img_GuidFilter(Mat& srcImg, Mat& guidImg, Mat& dstImg, int size, float eps)
 //=====================================================================================
 
 //×ÔÊÊÓ¦CannyÂË²¨======================================================================
-void Img_AdaptiveCannyFilter(Mat& srcImg, Mat& dstImg, int size, double sigma)
+NB_API void Img_AdaptiveCannyFilter(Mat& srcImg, Mat& dstImg, int size, double sigma)
 {
 	cv::Scalar midVal = cv::mean(srcImg);
 	double minVal = midVal[0] * (1 - sigma);
@@ -68,14 +68,23 @@ void Img_AdaptiveCannyFilter(Mat& srcImg, Mat& dstImg, int size, double sigma)
 }
 //=====================================================================================
 
+//GobarÂË²¨============================================================================
+NB_API void Img_GabarFilter(Mat& srcImg, Mat& dstImg)
+{
+	Mat gabarKernel = cv::getGaborKernel(cv::Size(5, 5), 1.4, 45, 10, 1);
+	cv::filter2D(srcImg, dstImg, srcImg.type(), gabarKernel);
+}
+//=====================================================================================
+
 //ÆµÂÊÓòÂË²¨===========================================================================
-void ImgF_FreqFilter(Mat& srcImg, Mat& dstImg, double radius, int mode)
+NB_API void ImgF_FreqFilter(Mat& srcImg, Mat& dstImg, double lr, double hr, int passMode, IMGF_MODE filterMode)
 {
 	int imgH = srcImg.rows, imgW = srcImg.cols;
+	int imgH_ = getOptimalDFTSize(imgH);
+	int imgW_ = getOptimalDFTSize(imgW);
 	Mat filter;
-	int M = getOptimalDFTSize(imgH);
-	int N = getOptimalDFTSize(imgW);
-	ImgF_GetGaussianFilter(filter, N, M, radius, mode);
+	ImgF_GetFilter(filter, imgW_, imgH_, lr, hr, passMode, filterMode);
+
 	Mat srcImg_32F;
 	srcImg.convertTo(srcImg_32F, CV_32F);
 
@@ -106,7 +115,7 @@ void ImgF_FreqFilter(Mat& srcImg, Mat& dstImg, double radius, int mode)
 //=====================================================================================
 
 //Í¬Ì©ÂË²¨=============================================================================
-void ImgF_HomoFilter(Mat& srcImg, Mat& dstImg, double radius, double L, double H, double c)
+NB_API void ImgF_HomoFilter(Mat& srcImg, Mat& dstImg, double radius, double L, double H, double c)
 {
 	int imgH = srcImg.rows, imgW = srcImg.cols;
 	
@@ -147,10 +156,10 @@ void ImgF_HomoFilter(Mat& srcImg, Mat& dstImg, double radius, double L, double H
 
 void FilterTest()
 {
-	string imgPath = "1.jpg";
+	string imgPath = "../image/b.bmp";
 	Mat srcImg = imread(imgPath, 1);
 
 	Mat dstImg;
-	ImgF_HomoFilter(srcImg, dstImg, 10, 0.5, 1.5, 1);
+	Img_GuidFilter(srcImg, srcImg, dstImg, 5, 0.02);
 	Mat t = dstImg.clone();
 }

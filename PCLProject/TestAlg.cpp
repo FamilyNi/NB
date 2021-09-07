@@ -17,10 +17,11 @@
 #include "ShapeMatch.h"
 #include "LBPfeatures.h"
 #include "ImageFilter.h"
-#include "FFT.h"
+#include "ImageEnhance.h"
+#include "ImageSeg.h"
 
 int main(int argc, char *argv[])
 {
-	FilterTest();
+	ImgSegTest();
 	return (0);
 }

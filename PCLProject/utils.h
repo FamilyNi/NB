@@ -31,6 +31,10 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 
+#ifdef NB
+#define NB_API _declspec(dllexport )
+#endif
+
 const float EPS = 1e-8f;
 
 struct Plane3D

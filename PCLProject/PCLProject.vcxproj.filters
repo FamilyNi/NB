@@ -93,6 +93,15 @@
     <ClCompile Include="FFT.cpp">
       <Filter>源文件\ImageFile</Filter>
     </ClCompile>
+    <ClCompile Include="ImageEnhance.cpp">
+      <Filter>源文件\ImageFile</Filter>
+    </ClCompile>
+    <ClCompile Include="ImageSeg.cpp">
+      <Filter>源文件\ImageFile</Filter>
+    </ClCompile>
+    <ClCompile Include="OpenCV_Utils.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utils.h">
@@ -154,6 +163,15 @@
     </ClInclude>
     <ClInclude Include="FFT.h">
       <Filter>头文件\ImageFile</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageEnhance.h">
+      <Filter>头文件\ImageFile</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageSeg.h">
+      <Filter>头文件\ImageFile</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenCV_Utils.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
