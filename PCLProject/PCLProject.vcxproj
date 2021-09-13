@@ -163,11 +163,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ComputeCircle.cpp" />
+    <ClCompile Include="ComputeLine.cpp" />
     <ClCompile Include="ContourOpr.cpp" />
     <ClCompile Include="DrawShape.cpp" />
     <ClCompile Include="FFT.cpp" />
     <ClCompile Include="FileOpr.cpp" />
     <ClCompile Include="FitModel.cpp" />
+    <ClCompile Include="GrabEdges.cpp" />
     <ClCompile Include="GrayCode.cpp" />
     <ClCompile Include="ImageEnhance.cpp" />
     <ClCompile Include="ImageFilter.cpp" />
@@ -188,11 +191,14 @@
     <ClCompile Include="WaveLet.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ComputeCircle.h" />
+    <ClInclude Include="ComputeLine.h" />
     <ClInclude Include="ContourOpr.h" />
     <ClInclude Include="DrawShape.h" />
     <ClInclude Include="FFT.h" />
     <ClInclude Include="FileOpr.h" />
     <ClInclude Include="FitModel.h" />
+    <ClInclude Include="GrabEdges.h" />
     <ClInclude Include="GrayCode.h" />
     <ClInclude Include="ImageEnhance.h" />
     <ClInclude Include="ImageFilter.h" />

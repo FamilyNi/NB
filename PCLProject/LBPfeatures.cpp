@@ -136,9 +136,9 @@ void LBPfeaturesTest()
 
 void TestMMSER()
 {
-	cv::Mat image = cv::imread("1.jpg", 0);
+	cv::Mat image = cv::imread("C:/Users/Administrator/Desktop/2.jpg", 0);
 
-	cv::Ptr<cv::MSER> ptrMSER = cv::MSER::create(5, 200, 20000, 0.5);
+	cv::Ptr<cv::MSER> ptrMSER = cv::MSER::create(5, 800000, 1000000, 0.5);
 
 	std::vector<std::vector<cv::Point> > points;
 	std::vector<cv::Rect> rects;

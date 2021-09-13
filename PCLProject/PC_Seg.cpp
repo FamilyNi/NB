@@ -220,15 +220,10 @@ void DONSeg(PC_XYZ::Ptr &srcPC, float large_r, float small_r, float thresVal)
 	{
 		P_N l_pn = normals_large_scale->points[i];
 		P_N s_pn = normals_small_scale->points[i];
-		//float diff_x = std::fabs(abs(l_pn.normal_x) - abs(s_pn.normal_x)) * 0.5;
-		//float diff_y = std::fabs(abs(l_pn.normal_y) - abs(s_pn.normal_y)) * 0.5;
-		//float diff_z = std::fabs(abs(l_pn.normal_z) - abs(s_pn.normal_z)) * 0.5;
-		//if (diff_x > thresVal || diff_y > thresVal || diff_z > thresVal)
-		//{
-		//	dstPC->points.push_back(srcPC->points[i]);
-		//}
-		if (std::fabs(l_pn.normal_x * s_pn.normal_x + l_pn.normal_y
-			* s_pn.normal_y + l_pn.normal_z * s_pn.normal_z) < thresVal)
+		float diff_x = std::fabs(abs(l_pn.normal_x) - abs(s_pn.normal_x)) * 0.5;
+		float diff_y = std::fabs(abs(l_pn.normal_y) - abs(s_pn.normal_y)) * 0.5;
+		float diff_z = std::fabs(abs(l_pn.normal_z) - abs(s_pn.normal_z)) * 0.5;
+		if (diff_x > thresVal || diff_y > thresVal || diff_z > thresVal)
 		{
 			dstPC->points.push_back(srcPC->points[i]);
 		}

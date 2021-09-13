@@ -31,6 +31,18 @@
     <Filter Include="源文件\ImageFile">
       <UniqueIdentifier>{7f5118ed-b12a-4228-b53e-a4c0673b0306}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\BaseOpr">
+      <UniqueIdentifier>{32b31e65-9910-4f06-8eb8-732f917ea5e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\BaseOpr">
+      <UniqueIdentifier>{4576f094-200f-44ef-98b1-a8c19ebfcb92}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\ComputeModelFile">
+      <UniqueIdentifier>{2d9c3b3e-1d37-49d9-a818-585114870055}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\ComputeModelFile">
+      <UniqueIdentifier>{46047c80-e8ed-48df-92f9-d7e6d6607662}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="JC_Calibrate.cpp">
@@ -41,12 +53,6 @@
     </ClCompile>
     <ClCompile Include="GrayCode.cpp">
       <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="FileOpr.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="FitModel.cpp">
-      <Filter>源文件\PointCloudFile</Filter>
     </ClCompile>
     <ClCompile Include="PC_Filter.cpp">
       <Filter>源文件\PointCloudFile</Filter>
@@ -59,9 +65,6 @@
     </ClCompile>
     <ClCompile Include="PPFMatch.cpp">
       <Filter>源文件\PointCloudFile</Filter>
-    </ClCompile>
-    <ClCompile Include="MathOpr.cpp">
-      <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ContourOpr.cpp">
       <Filter>源文件\MatchFile</Filter>
@@ -99,8 +102,26 @@
     <ClCompile Include="ImageSeg.cpp">
       <Filter>源文件\ImageFile</Filter>
     </ClCompile>
+    <ClCompile Include="FileOpr.cpp">
+      <Filter>源文件\BaseOpr</Filter>
+    </ClCompile>
+    <ClCompile Include="MathOpr.cpp">
+      <Filter>源文件\BaseOpr</Filter>
+    </ClCompile>
     <ClCompile Include="OpenCV_Utils.cpp">
-      <Filter>源文件</Filter>
+      <Filter>源文件\BaseOpr</Filter>
+    </ClCompile>
+    <ClCompile Include="FitModel.cpp">
+      <Filter>源文件\ComputeModelFile</Filter>
+    </ClCompile>
+    <ClCompile Include="GrabEdges.cpp">
+      <Filter>源文件\ComputeModelFile</Filter>
+    </ClCompile>
+    <ClCompile Include="ComputeLine.cpp">
+      <Filter>源文件\ComputeModelFile</Filter>
+    </ClCompile>
+    <ClCompile Include="ComputeCircle.cpp">
+      <Filter>源文件\ComputeModelFile</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -111,9 +132,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="GrayCode.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="FileOpr.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="PointCloudOpr.h">
@@ -127,12 +145,6 @@
     </ClInclude>
     <ClInclude Include="PC_Seg.h">
       <Filter>头文件\PointCloudFile</Filter>
-    </ClInclude>
-    <ClInclude Include="FitModel.h">
-      <Filter>头文件\PointCloudFile</Filter>
-    </ClInclude>
-    <ClInclude Include="MathOpr.h">
-      <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="LocalDeforableModel.h">
       <Filter>头文件\MatchFile</Filter>
@@ -170,8 +182,26 @@
     <ClInclude Include="ImageSeg.h">
       <Filter>头文件\ImageFile</Filter>
     </ClInclude>
+    <ClInclude Include="MathOpr.h">
+      <Filter>头文件\BaseOpr</Filter>
+    </ClInclude>
+    <ClInclude Include="FileOpr.h">
+      <Filter>头文件\BaseOpr</Filter>
+    </ClInclude>
     <ClInclude Include="OpenCV_Utils.h">
-      <Filter>头文件</Filter>
+      <Filter>头文件\BaseOpr</Filter>
+    </ClInclude>
+    <ClInclude Include="FitModel.h">
+      <Filter>头文件\ComputeModelFile</Filter>
+    </ClInclude>
+    <ClInclude Include="GrabEdges.h">
+      <Filter>头文件\ComputeModelFile</Filter>
+    </ClInclude>
+    <ClInclude Include="ComputeLine.h">
+      <Filter>头文件\ComputeModelFile</Filter>
+    </ClInclude>
+    <ClInclude Include="ComputeCircle.h">
+      <Filter>头文件\ComputeModelFile</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

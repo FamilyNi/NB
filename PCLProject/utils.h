@@ -35,7 +35,7 @@
 #define NB_API _declspec(dllexport )
 #endif
 
-const float EPS = 1e-8f;
+const double EPS = 1e-8;
 
 struct Plane3D
 {

@@ -66,7 +66,7 @@ void VecCross_PC(P_XYZ& vec1, P_XYZ& vec2, P_XYZ& vec)
 //向量归一化=========================================================
 void Normal_PC(P_XYZ& p)
 {
-	float norm_ = 1 / std::max(std::sqrt(p.x * p.x + p.y * p.y + p.z * p.z), EPS);
+	float norm_ = 1 / std::max(std::sqrt(p.x * p.x + p.y * p.y + p.z * p.z), 1e-8f);
 	p.x *= norm_; p.y *= norm_; p.z *= norm_;
 }
 //==================================================================

@@ -156,10 +156,10 @@ NB_API void ImgF_HomoFilter(Mat& srcImg, Mat& dstImg, double radius, double L, d
 
 void FilterTest()
 {
-	string imgPath = "../image/b.bmp";
-	Mat srcImg = imread(imgPath, 1);
+	string imgPath = "C:/Users/Administrator/Desktop/2.jpg";
+	Mat srcImg = imread(imgPath, 0);
 
 	Mat dstImg;
-	Img_GuidFilter(srcImg, srcImg, dstImg, 5, 0.02);
+	ImgF_FreqFilter(srcImg, dstImg, 100,100, 1, IMGF_MODE::IMGF_GAUSSIAN);
 	Mat t = dstImg.clone();
 }

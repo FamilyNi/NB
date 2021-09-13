@@ -14,7 +14,7 @@ typedef struct PPFFEATRUE
 {
 	float dist;
 	float ang_N1D;
-	float ang_N2D;
+	double ang_N2D;
 	float ang_N1N2;
 	PPFFEATRUE() :dist(0.0f), ang_N1D(0.0f),
 		ang_N2D(0.0f), ang_N1N2(0.0f)

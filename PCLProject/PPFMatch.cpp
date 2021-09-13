@@ -30,7 +30,7 @@ void ComputePPFFEATRUE(P_XYZ& ref_p, P_XYZ& p_, P_N& ref_pn, P_N& p_n, PPFFEATRU
 {
 	P_XYZ p_v(ref_p.x - p_.x, ref_p.y - p_.y, ref_p.z - p_.z);
 	ppfFEATRUE.dist = std::sqrt(p_v.x * p_v.x + p_v.y * p_v.y + p_v.z * p_v.z);
-	float normal_ = 1.0f / std::max(ppfFEATRUE.dist, EPS);
+	float normal_ = 1.0f / std::max(ppfFEATRUE.dist, 1e-8f);
 	p_v.x *= normal_; p_v.y *= normal_; p_v.z *= normal_;
 
 	ppfFEATRUE.ang_N1N2 = acosf(ref_pn.normal_x * p_n.normal_x + ref_pn.normal_y * p_n.normal_y + ref_pn.normal_z * p_n.normal_z);
