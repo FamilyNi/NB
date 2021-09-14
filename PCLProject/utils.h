@@ -37,6 +37,12 @@
 
 const double EPS = 1e-8;
 
+enum NB_MODEL_FIT_METHOD {
+	OLS_FIT = 0,
+	HUBER_FIT = 1,
+	TURKEY_FIT = 2
+};
+
 struct Plane3D
 {
 	double a;

@@ -107,39 +107,6 @@ float SpaceLineNearestPt(Vec6f& line1, Vec6f& line2, P_XYZ& pt1, P_XYZ& pt2)
 }
 //===================================================================
 
-//四点计算球=========================================================
-void ComputeSphere(vector<P_XYZ>& pts, Sphere& sphere)
-{
-	if (pts.size() < 4)
-		return;
-	cv::Mat XYZ(cv::Size(3, 3), CV_64FC1, cv::Scalar(0));
-	double* pXYZ = XYZ.ptr<double>();
-	cv::Mat m(cv::Size(1, 3), CV_64FC1, cv::Scalar(0));
-	double* pM = m.ptr<double>();
-	for (int i = 0; i < pts.size() - 1; ++i)
-	{
-		int idx = 3 * i;
-		pXYZ[idx] = pts[i].x - pts[i + 1].x;
-		pXYZ[idx + 1] = pts[i].y - pts[i + 1].y;
-		pXYZ[idx + 2] = pts[i].z - pts[i + 1].z;
-
-		double pt0_d = pts[i].x * pts[i].x + pts[i].y * pts[i].y + pts[i].z * pts[i].z;
-		double pt1_d = pts[i + 1].x * pts[i + 1].x + pts[i + 1].y * pts[i + 1].y + pts[i + 1].z * pts[i + 1].z;
-		pM[i] = (pt0_d - pt1_d) / 2.0;
-	}
-
-	cv::Mat center = (XYZ.inv()) * m;
-	sphere.c_x = center.ptr<double>(0)[0];
-	sphere.c_y = center.ptr<double>(0)[1];
-	sphere.c_z = center.ptr<double>(0)[2];
-	double diff_x = pts[0].x - sphere.c_x;
-	double diff_y = pts[0].y - sphere.c_y;
-	double diff_z = pts[0].z - sphere.c_z;
-	sphere.r = std::sqrt(diff_x * diff_x + diff_y * diff_y + diff_z * diff_z);
-	return;
-}
-//===================================================================
-
 //三面求点===========================================================
 void ComputePtBasePlanes(Plane3D plane1, Plane3D plane2, Plane3D plane3, P_XYZ& point)
 {
@@ -164,17 +131,11 @@ void ComputePtBasePlanes(Plane3D plane1, Plane3D plane2, Plane3D plane3, P_XYZ& 
 }
 //===================================================================
 
-//三点求面===========================================================
-void ComputePlane(P_XYZ& pt1, P_XYZ& pt2, P_XYZ& pt3, Plane3D& plane)
+/*计算两点之间的距离--二维*/
+template <typename T1, typename T2>
+double Img_ComputePPDist(T1& pt1, T2& pt2)
 {
-	P_XYZ nor_1(pt1.x - pt2.x, pt1.y - pt2.y, pt1.z - pt2.z);
-	P_XYZ nor_2(pt1.x - pt3.x, pt1.y - pt3.y, pt1.z - pt3.z);
-	P_XYZ norm(0,0,0);
-	VecCross_PC(nor_1, nor_2, norm);
-	if (abs(norm.x) < EPS && abs(norm.y) < EPS && abs(norm.z) < EPS)
-		return;
-	Normal_PC(norm);
-	plane.a = norm.x; plane.b = norm.y; plane.c = norm.z;
-	plane.d = -(plane.a * pt1.x + plane.b * pt1.y + plane.c * pt1.z);
+	double diff_x = pt1.x - pt2.x;
+	double diff_y = pt1.y - pt2.y;
+	return std::sqrt(max(diff_x * diff_x + diff_y * diff_y, EPS));
 }
-//===================================================================

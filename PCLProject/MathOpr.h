@@ -33,18 +33,13 @@ void Normal_PC(P_XYZ& p);
 */
 float SpaceLineNearestPt(Vec6f& line1, Vec6f& line2, P_XYZ& pt1, P_XYZ& pt2);
 
-//四点计算球
-void ComputeSphere(vector<P_XYZ>& pts, Sphere& pSphere);
-
 /*三面求空间点:
 	plane1、plane2、plane3：[in]表示三个平面
 	point：[out]三面相交的点
 */
 void ComputePtBasePlanes(Plane3D plane1, Plane3D plane2, Plane3D plane3, P_XYZ& point);
 
-/*三点求面:
-	pts1、pts2、pts3：[in]输入三个点
-	plane：[out]计算得到的平面
-	注：三个平面的法向量a、b、c必须是归一化的
-*/
-void ComputePlane(P_XYZ& pt1, P_XYZ& pt2, P_XYZ& pt3, Plane3D& plane);
+
+/*计算两点之间的距离--二维*/
+template <typename T1, typename T2>
+double Img_ComputePPDist(T1& pt1, T2& pt2);

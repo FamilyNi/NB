@@ -25,7 +25,7 @@
 
 int main(int argc, char *argv[])
 {
-	CircleTest();
+	LineTest();
 	//ImgSegTest();
 	string imgPath = "C:/Users/Administrator/Desktop/1.bmp";
 	cv::Mat srcImg = cv::imread(imgPath, 0);

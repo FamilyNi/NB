@@ -123,6 +123,12 @@
     <ClCompile Include="ComputeCircle.cpp">
       <Filter>源文件\ComputeModelFile</Filter>
     </ClCompile>
+    <ClCompile Include="ComputePlane.cpp">
+      <Filter>源文件\ComputeModelFile</Filter>
+    </ClCompile>
+    <ClCompile Include="ComputeSphere.cpp">
+      <Filter>源文件\ComputeModelFile</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utils.h">
@@ -201,6 +207,12 @@
       <Filter>头文件\ComputeModelFile</Filter>
     </ClInclude>
     <ClInclude Include="ComputeCircle.h">
+      <Filter>头文件\ComputeModelFile</Filter>
+    </ClInclude>
+    <ClInclude Include="ComputePlane.h">
+      <Filter>头文件\ComputeModelFile</Filter>
+    </ClInclude>
+    <ClInclude Include="ComputeSphere.h">
       <Filter>头文件\ComputeModelFile</Filter>
     </ClInclude>
   </ItemGroup>

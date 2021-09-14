@@ -67,91 +67,120 @@ void Img_RANSACComputeLine(vector<T>& pts, cv::Vec3d& line, vector<T>& inlinerPt
 }
 //==============================================================================================
 
-/*Turkey直线拟合*/
-void Img_TurkeyFitLine(vector<cv::Point>& pts, cv::Vec3d& line, int k, double thres)
+//最小二乘法拟合直线============================================================================
+template <typename T>
+void Img_OLSFitLine(vector<T>& pts, vector<double>& weights, cv::Vec3d& line)
 {
-	//初始化权重以及权重坐标
-	vector<double> weigths(pts.size(), 1);
-	vector<Point> w_pts(pts.size());
+	double w_sum = 0.0;
+	double w_x_sum = 0.0;
+	double w_y_sum = 0.0;
+	for (int i = 0; i < weights.size(); ++i)
+	{
+		w_sum += weights[i];
+		w_x_sum += weights[i] * pts[i].x;
+		w_y_sum += weights[i] * pts[i].y;
+	}
+	w_sum = 1.0 / std::max(w_sum, EPS);
+	double w_x_mean = w_x_sum * w_sum;
+	double w_y_mean = w_y_sum * w_sum;
+	Mat A(2, 2, CV_64FC1, cv::Scalar(0));
+	double* pA = A.ptr<double>(0);
 	for (int i = 0; i < pts.size(); ++i)
 	{
-		w_pts[i] = pts[i];
+		double x_ = pts[i].x - w_x_mean;
+		double y_ = pts[i].y - w_y_mean;
+		pA[0] += weights[i] * x_ * x_;
+		pA[1] += weights[i] * x_ * y_;
+		pA[3] += weights[i] * y_ * y_;
+	}
+	pA[2] = pA[1];
+	Mat eigenVal, eigenVec;
+	eigenNonSymmetric(A, eigenVal, eigenVec);
+	double* pEigenVec = eigenVec.ptr<double>(1);
+	line[0] = pEigenVec[0];
+	line[1] = pEigenVec[1];
+	line[2] = -(w_x_mean * line[0] + w_y_mean * line[1]);
+}
+//==============================================================================================
+
+//Huber计算权重=================================================================================
+template <typename T>
+void Img_HuberLineWeights(vector<T>& pts, cv::Vec3d& line, vector<double>& weights)
+{
+	double tao = 1.345;
+	for (int i = 0; i < pts.size(); ++i)
+	{
+		double distance = abs(pts[i].x * line[0] + pts[i].y * line[1] + line[2]);
+		if (distance <= tao)
+		{
+			weights[i] = 1;
+		}
+		else
+		{
+			weights[i] = tao / distance;
+		}
+	}
+}
+//==============================================================================================
+
+//Turkey计算权重================================================================================
+template <typename T>
+void Img_TurkeyLineWeights(vector<T>& pts, cv::Vec3d& line, vector<double>& weights)
+{
+	vector<double> dists(pts.size());
+	for (int i = 0; i < pts.size(); ++i)
+	{
+		double distance = abs(pts[i].x * line[0] + pts[i].y * line[1] + line[2]);
+		dists[i] = distance;
+	}
+	vector<double> disttanceSort = dists;
+	sort(disttanceSort.begin(), disttanceSort.end());
+	double tao = disttanceSort[(disttanceSort.size() - 1) / 2] / 0.6745 * 2;
+
+	for (int i = 0; i < dists.size(); ++i)
+	{
+		if (dists[i] <= tao)
+		{
+			double d_tao = dists[i] / tao;
+			weights[i] = std::pow((1 - d_tao * d_tao), 2);
+		}
+		else weights[i] = 0;
+	}
+}
+//==============================================================================================
+
+//直线拟合======================================================================================
+template <typename T>
+void Img_FitLine(vector<T>& pts, cv::Vec3d& line, int k, NB_MODEL_FIT_METHOD method)
+{
+	vector<double> weights(pts.size(), 1);
+	if (method == NB_MODEL_FIT_METHOD::OLS_FIT)
+	{
+		Img_OLSFitLine(pts, weights, line);
+		return;
 	}
 
-	//进行迭代
-	vector<double> pldistance(pts.size());
-	cv::Vec4d line_;
 	for (int i = 0; i < k; ++i)
 	{
-		//求权重和、权重坐标各种矩
-		//float w_sum = 0.0;
-		//float center_x = 0.0;
-		//float center_y = 0.0;
-		//float center_xy = 0.0;
-		//float center_x2 = 0.0;
-		//float center_y2 = 0.0;
-		//for (int j = 0; j < weigths.size(); ++j)
-		//{
-		//	w_sum += weigths[j];
-		//	center_x += weigths[j] * weights_points[j].x;
-		//	center_y += weigths[j] * weights_points[j].y;
-		//	center_xy += center_x * weights_points[j].y;
-		//	center_x2 += center_x * weights_points[j].x;
-		//	center_y2 += center_y * weights_points[j].y;
-		//}
-		//w_sum = 1.0 / w_sum;
-
-		////求矩阵个元素
-		//float u20 = (center_x2 - center_x * center_x * w_sum) / weights_points.size();
-		//float u11 = (center_xy - center_x * center_y * w_sum) / weights_points.size();
-		//float u02 = (center_y2 - center_y * center_y * w_sum) / weights_points.size();
-
-		//求二阶矩的本征值以及本征向量
-		//Mat A = (Mat_<float>(2, 2) << u20, u11, u11, u02);
-		//Mat eigenValue, eigenVector;
-		//eigenNonSymmetric(A, eigenValue, eigenVector);
-
-		//提取直线的a, b , c值，较小本征值的本征向量一般放在第一列，测试是这样的。
-		//float* pEigenVector = eigenVector.ptr<float>(0);
-		cv::fitLine(w_pts, line_, DistanceTypes::DIST_L2, 0, 0.01, 0.01);
-		//line[0] = pEigenVector[0];
-		//line[1] = pEigenVector[2];
-		//line[2] = (-center_x * line[0] - center_y * line[1]) * w_sum;
-
-		//求点到直线的距离——这里是原坐标点并不是权重坐标点
-		line_[2] = -(line_[2] * (-line_[1]) + line_[3] * line_[0]);
-		//float norm = sqrt(line[0] * line[0] + line[1] * line[1]);
-		for (int j = 0; j < pts.size(); ++j)
+		Img_OLSFitLine(pts, weights, line);
+		switch (method)
 		{
-			float distance = abs(pts[j].x * (-line_[1]) + pts[j].y * line_[0] + line_[2]);
-			pldistance[j] = distance;
-		}
-		//求限制条件tao
-		vector<double> disttanceSort = pldistance;
-		sort(disttanceSort.begin(), disttanceSort.end());
-		double tao = disttanceSort[(disttanceSort.size() - 1) / 2] / 0.6745 * 2;
-
-		//更新权重
-		for (int j = 0; j < pldistance.size(); ++j)
-		{
-			if (pldistance[j] <= tao)
-				weigths[j] = pow(1 - (pldistance[j] / tao)*(pldistance[j] / tao), 2);
-			else weigths[j] = 5.0 / pldistance[j];
-		}
-		for (int j = 0; j < pldistance.size(); ++j)
-		{
-			w_pts[j] = pts[j] * weigths[j];
+		case HUBER_FIT:
+			Img_HuberLineWeights(pts, line, weights);
+			break;
+		case TURKEY_FIT:
+			Img_TurkeyLineWeights(pts, line, weights);
+			break;
+		default:
+			break;
 		}
 	}
-	line[0] = -line_[1];
-	line[1] = line_[0];
-	line[2] = line_[2];
 }
-
+//==============================================================================================
 
 void LineTest()
 {
-	string imgPath = "C:/Users/Administrator/Desktop/4.bmp";
+	string imgPath = "C:/Users/Administrator/Desktop/testimage/7.bmp";
 	cv::Mat srcImg = cv::imread(imgPath, 0);
 	cv::Mat binImg;
 	cv::threshold(srcImg, binImg, 10, 255, ThresholdTypes::THRESH_BINARY_INV);
@@ -183,7 +212,7 @@ void LineTest()
 
 	cv::Vec3d line;
 	vector<cv::Point> inlinerPts;
-	Img_TurkeyFitLine(pts, line, 5, 2);
+	Img_FitLine(pts, line, 5, NB_MODEL_FIT_METHOD::HUBER_FIT);
 	cv::Point s_pt, e_pt;
 	s_pt.x = 35; s_pt.y = -(line[2] + 35 * line[0]) / line[1];
 	e_pt.x = 800; e_pt.y = -(line[2] + 800 * line[0]) / line[1];
