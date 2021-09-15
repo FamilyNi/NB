@@ -45,8 +45,8 @@ template <typename T>
 void Img_TurkeyCircleWeights(vector<T>& pts, cv::Vec3d& circle, vector<double>& weights);
 
 /*拟合园
-	k：[in]迭代次数
 	circle：[out]
+	k：[in]迭代次数
 	method：[in]拟合方式---最小二乘、huber、turkey
 */
 template <typename T>

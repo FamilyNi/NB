@@ -1,6 +1,22 @@
 #pragma once
 #include "utils.h"
 
+//点到平面的距离
+double PC_PtToPlaneDist(P_XYZ& pt, cv::Vec4d& plane);
+
+//向量归一化
+template <typename T>
+void PC_VecNormal(T& p);
+
+//点到平面的投影点
+void PC_PtProjPlanePt(P_XYZ& pt, cv::Vec4d& plane, P_XYZ& projPt);
+
+//空间点到空间直线的距离
+double PC_3DPtTo3DLineDist(P_XYZ& pt, cv::Vec6d& line);
+
+//空间点到空间直线的投影
+void PC_3DPtProjLinePt(P_XYZ& pt, cv::Vec6d& line, P_XYZ& projPt);
+
 //十进制转二进制
 void DecToBin(const int dec_num, vector<bool>& bin);
 
@@ -19,10 +35,6 @@ void GrayCodeToBin(const vector<bool>& grayCode, vector<bool>& bin);
 */
 void VecCross_PC(P_XYZ& vec1, P_XYZ& vec2, P_XYZ& vec);
 
-/*向量归一化：
-	p：[in--out]待归一化向量
-*/
-void Normal_PC(P_XYZ& p);
 
 /*空间两线距离最近的点:
 	line1：[in]直线1---前三个数据为方向向量，后三个为空间点

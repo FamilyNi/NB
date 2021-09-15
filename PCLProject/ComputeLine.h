@@ -47,7 +47,11 @@ void Img_HuberLineWeights(vector<T>& pts, cv::Vec3d& line, vector<double>& weigh
 template <typename T>
 void Img_TurkeyLineWeights(vector<T>& pts, cv::Vec3d& line, vector<double>& weights);
 
-/*直线拟合*/
+/*直线拟合：
+	line：[out]
+	k：[in]迭代次数
+	method：[in]拟合方式---最小二乘、huber、turkey
+*/
 template <typename T>
 void Img_FitLine(vector<T>& pts, cv::Vec3d& line, int k, NB_MODEL_FIT_METHOD method);
 

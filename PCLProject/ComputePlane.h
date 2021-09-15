@@ -26,14 +26,14 @@ void PC_OLSFitPlane(vector<T>& pts, vector<double>& weights, cv::Vec4d& plane);
 	weights：[out]权重
 */
 template <typename T>
-void Img_HuberPlaneWeights(vector<T>& pts, cv::Vec4d& plane, vector<double>& weights);
+void PC_HuberPlaneWeights(vector<T>& pts, cv::Vec4d& plane, vector<double>& weights);
 
 /*Turkey计算权重：
 	plane：[in]
 	weights：[out]权重
 */
 template <typename T>
-void Img_TurkeyPlaneWeights(vector<T>& pts, cv::Vec4d& plane, vector<double>& weights);
+void PC_TurkeyPlaneWeights(vector<T>& pts, cv::Vec4d& plane, vector<double>& weights);
 
 /*平面拟合：
 	plane：[out]
@@ -41,4 +41,7 @@ void Img_TurkeyPlaneWeights(vector<T>& pts, cv::Vec4d& plane, vector<double>& we
 	method：[in]拟合方式---最小二乘、huber、turkey
 */
 template <typename T>
-void Img_FitLine(vector<T>& pts, cv::Vec4d& plane, int k, NB_MODEL_FIT_METHOD method);
+void PC_FitPlane(vector<T>& pts, cv::Vec4d& plane, int k, NB_MODEL_FIT_METHOD method);
+
+
+void PC_PlaneTest();

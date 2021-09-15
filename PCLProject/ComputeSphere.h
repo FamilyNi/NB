@@ -26,19 +26,22 @@ void PC_OLSFitSphere(vector<T>& pts, vector<double>& weights, cv::Vec4d& sphere)
 	weights：[out]权重
 */
 template <typename T>
-void Img_HuberSphereWeights(vector<T>& pts, cv::Vec3d& sphere, vector<double>& weights);
+void PC_HuberSphereWeights(vector<T>& pts, cv::Vec4d& sphere, vector<double>& weights);
 
 /*Turkey计算权重：
 	sphere：[in]
 	weights：[out]权重
 */
 template <typename T>
-void Img_TurkeySphereWeights(vector<T>& pts, cv::Vec4d& sphere, vector<double>& weights);
+void PC_TurkeySphereWeights(vector<T>& pts, cv::Vec4d& sphere, vector<double>& weights);
 
 /*拟合球：
-	k：[in]迭代次数
 	sphere：[out]
+	k：[in]迭代次数
 	method：[in]拟合方式---最小二乘、huber、turkey
 */
 template <typename T>
-void Img_FitSphere(vector<T>& pts, cv::Vec4d& sphere, int k, NB_MODEL_FIT_METHOD method);
+void PC_FitSphere(vector<T>& pts, cv::Vec4d& sphere, int k, NB_MODEL_FIT_METHOD method);
+
+
+void PC_SphereTest();

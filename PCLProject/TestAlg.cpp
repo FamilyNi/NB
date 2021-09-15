@@ -3,7 +3,6 @@
 
 #include "utils.h"
 #include "PC_Filter.h"
-#include "FitModel.h"
 #include "PC_Seg.h"
 #include "JC_Calibrate.h"
 #include "PPFMatch.h"
@@ -22,29 +21,49 @@
 #include "GrabEdges.h"
 #include "ComputeLine.h"
 #include "ComputeCircle.h"
+#include "ComputeSphere.h"
+#include "ComputePlane.h"
+#include "Compute3DLine.h"
 
 int main(int argc, char *argv[])
 {
-	LineTest();
-	//ImgSegTest();
-	string imgPath = "C:/Users/Administrator/Desktop/1.bmp";
-	cv::Mat srcImg = cv::imread(imgPath, 0);
+	PC_3DLineTest();
 
-	//第一种思路
-	vector<cv::Point> circle;
-	cv::Point center(285, 472);
-	cv::Point center_(290, 153);
-	Img_GrabEdgesRect(srcImg, circle, center, center_, 200, 5, 2, 10, IMG_GRABEDGEMODE::IMG_EDGE_ABSOLUTE, 4, 0);
+	PC_XYZ::Ptr linePC(new PC_XYZ);
+	cv::Vec6d line(5, 15, 7.65, 6.25, 3.65, 7.65);
+	PC_DrawLine(linePC, -10, 25, -15, 15, 21, 41, line, 3);
 
-
-	Mat colorImg;
-	cv::cvtColor(srcImg, colorImg, cv::COLOR_GRAY2BGR);
-	for (int i = 0; i < circle.size(); ++i)
+	vector<cv::Point3f> pts(linePC->points.size());
+	for (int i = 0; i < pts.size(); ++i)
 	{
-		cv::line(colorImg, circle[i], circle[i], cv::Scalar(0, 255, 0), 2);
-		//cv::drawContours(colorImg, lines, i, cv::Scalar(0, 0, 255), 1);
+		pts[i] = cv::Point3f(linePC->points[i].x, linePC->points[i].y, linePC->points[i].z);
+	}
+	cv::Vec6f line_;
+	cv::fitLine(pts, line_, cv::DIST_L2, 0, 0.01, 0.01);
+
+	PC_XYZ::Ptr noisePC(new PC_XYZ);
+	PC_AddNoise(linePC, noisePC, 3, 3);
+	pcl::io::savePLYFile("C:/Users/Administrator/Desktop/testimage/噪声直线.ply", *noisePC);
+	pcl::visualization::PCLVisualizer viewer;
+	viewer.addCoordinateSystem(10);
+	//显示轨迹
+	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> write(noisePC, 255, 255, 255); //设置点云颜色
+	viewer.addPointCloud(noisePC, write, "linePC");
+	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "linePC");
+
+	//pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> red(noise, 255, 0, 0); //设置点云颜色
+	//viewer.addPointCloud(noise, red, "noise");
+	//viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "noise");
+	while (!viewer.wasStopped())
+	{
+		viewer.spinOnce();
 	}
 
-	ImgSegTest();
+	//ImgSegTest();
+	string imgPath = "C:/Users/Administrator/Desktop/灰度图.bmp";
+	cv::Mat srcImg = cv::imread(imgPath, 0);
+	cv::Mat gaussImg;
+	cv::GaussianBlur(srcImg, gaussImg, cv::Size(7, 7), 1.41, 1.41);
+
 	return (0);
 }

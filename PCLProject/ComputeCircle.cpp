@@ -242,7 +242,7 @@ void CircleTest()
 
 	cv::Vec3d circle;
 	//vector<Point> inlinerPts;
-	Img_FitCircle(pts, circle, 10, NB_MODEL_FIT_METHOD::OLS_FIT);
+	Img_FitCircle(pts, circle, 5, NB_MODEL_FIT_METHOD::TURKEY_FIT);
 	//Mat circleImg(srcImg.size(), srcImg.type(), cv::Scalar(255,255,255));
 	cv::circle(colorImg, cv::Point(circle[0], circle[1]), circle[2], cv::Scalar(0, 255, 0), 2);
 	//cv::imwrite("C:/Users/Administrator/Desktop/testimage/8.bmp", circleImg);

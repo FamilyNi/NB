@@ -1,6 +1,5 @@
 #include "JC_Calibrate.h"
 #include "PC_Filter.h"
-#include "FitModel.h"
 #include "PC_Seg.h"
 #include <pcl/segmentation/region_growing.h>
 #include "FileOpr.h"

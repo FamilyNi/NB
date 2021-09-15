@@ -65,7 +65,7 @@ void PC_OLSFitPlane(vector<T>& pts, vector<double>& weights, cv::Vec4d& plane)
 
 //Huber计算权重=================================================================================
 template <typename T>
-void Img_HuberPlaneWeights(vector<T>& pts, cv::Vec4d& plane, vector<double>& weights)
+void PC_HuberPlaneWeights(vector<T>& pts, cv::Vec4d& plane, vector<double>& weights)
 {
 	double tao = 1.345;
 	for (int i = 0; i < pts.size(); ++i)
@@ -85,7 +85,7 @@ void Img_HuberPlaneWeights(vector<T>& pts, cv::Vec4d& plane, vector<double>& wei
 
 //Turkey计算权重================================================================================
 template <typename T>
-void Img_TurkeyPlaneWeights(vector<T>& pts, cv::Vec4d& plane, vector<double>& weights)
+void PC_TurkeyPlaneWeights(vector<T>& pts, cv::Vec4d& plane, vector<double>& weights)
 {
 	vector<double> dists(pts.size());
 	for (int i = 0; i < pts.size(); ++i)
@@ -111,27 +111,27 @@ void Img_TurkeyPlaneWeights(vector<T>& pts, cv::Vec4d& plane, vector<double>& we
 }
 //==============================================================================================
 
-//直线拟合======================================================================================
+//平面拟合======================================================================================
 template <typename T>
-void Img_FitLine(vector<T>& pts, cv::Vec4d& plane, int k, NB_MODEL_FIT_METHOD method)
+void PC_FitPlane(vector<T>& pts, cv::Vec4d& plane, int k, NB_MODEL_FIT_METHOD method)
 {
 	vector<double> weights(pts.size(), 1);
 	if (method == NB_MODEL_FIT_METHOD::OLS_FIT)
 	{
-		PC_OLSFitPlane(pts, weights, circle);
+		PC_OLSFitPlane(pts, weights, plane);
 		return;
 	}
 
 	for (int i = 0; i < k; ++i)
 	{
-		PC_OLSFitPlane(pts, weights, circle);
+		PC_OLSFitPlane(pts, weights, plane);
 		switch (method)
 		{
 		case HUBER_FIT:
-			Img_HuberPlaneWeights(pts, circle, weights);
+			PC_HuberPlaneWeights(pts, plane, weights);
 			break;
 		case TURKEY_FIT:
-			Img_TurkeyPlaneWeights(pts, circle, weights);
+			PC_TurkeyPlaneWeights(pts, plane, weights);
 			break;
 		default:
 			break;
@@ -139,3 +139,29 @@ void Img_FitLine(vector<T>& pts, cv::Vec4d& plane, int k, NB_MODEL_FIT_METHOD me
 	}
 }
 //==============================================================================================
+
+
+void PC_PlaneTest()
+{
+	PC_XYZ::Ptr srcPC(new PC_XYZ);
+	pcl::io::loadPLYFile("C:/Users/Administrator/Desktop/testimage/噪声平面.ply", *srcPC);
+
+	pcl::visualization::PCLVisualizer viewer;
+	viewer.addCoordinateSystem(10);
+	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> write(srcPC, 255, 255, 255); //设置点云颜色
+	viewer.addPointCloud(srcPC, write, "srcPC");
+	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "srcPC");
+
+	while (!viewer.wasStopped())
+	{
+		viewer.spinOnce();
+	}
+
+	vector<P_XYZ> pts(srcPC->points.size());
+	for (int i = 0; i < srcPC->points.size(); ++i)
+	{
+		pts[i] = srcPC->points[i];
+	}
+	cv::Vec4d plane;
+	PC_FitPlane(pts, plane, 5, NB_MODEL_FIT_METHOD::OLS_FIT);
+}

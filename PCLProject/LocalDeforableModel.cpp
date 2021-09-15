@@ -140,6 +140,8 @@ void GetMapIndex(LocalDeforModel& localDeforModel)
 		LocalDeforModelInfo& down_ = localDeforModel.models[i - 1];
 		Mat source = cv::Mat(gravitys_up).reshape(1);
 		down_.segContMapIdx.resize(down_.segContIdx.size());
+		cv::flann::KDTreeIndexParams indexParams(2);
+		cv::flann::Index kdtree(source, indexParams);
 		for (size_t j = 0; j < down_.segContIdx.size(); ++j)
 		{
 			float sum_x = 0.0f, sum_y = 0.0f;
@@ -152,10 +154,6 @@ void GetMapIndex(LocalDeforModel& localDeforModel)
 			vector<float> vecQuery(2);//存放查询点
 			vecQuery[0] = sum_x / down_.segContIdx[j].size() * 0.5f - 2.0f; //查询点x坐标
 			vecQuery[1] = sum_y / down_.segContIdx[j].size() * 0.5f - 2.0f; //查询点y坐标
-
-			cv::flann::KDTreeIndexParams indexParams(2);
-			cv::flann::Index kdtree(source, indexParams);
-
 			vector<int> vecIndex(1);//存放返回的点索引
 			vector<float> vecDist(1);//存放距离
 			cv::flann::SearchParams params(32);//设置knnSearch搜索参数

@@ -111,9 +111,6 @@
     <ClCompile Include="OpenCV_Utils.cpp">
       <Filter>源文件\BaseOpr</Filter>
     </ClCompile>
-    <ClCompile Include="FitModel.cpp">
-      <Filter>源文件\ComputeModelFile</Filter>
-    </ClCompile>
     <ClCompile Include="GrabEdges.cpp">
       <Filter>源文件\ComputeModelFile</Filter>
     </ClCompile>
@@ -127,6 +124,9 @@
       <Filter>源文件\ComputeModelFile</Filter>
     </ClCompile>
     <ClCompile Include="ComputeSphere.cpp">
+      <Filter>源文件\ComputeModelFile</Filter>
+    </ClCompile>
+    <ClCompile Include="Compute3DLine.cpp">
       <Filter>源文件\ComputeModelFile</Filter>
     </ClCompile>
   </ItemGroup>
@@ -197,9 +197,6 @@
     <ClInclude Include="OpenCV_Utils.h">
       <Filter>头文件\BaseOpr</Filter>
     </ClInclude>
-    <ClInclude Include="FitModel.h">
-      <Filter>头文件\ComputeModelFile</Filter>
-    </ClInclude>
     <ClInclude Include="GrabEdges.h">
       <Filter>头文件\ComputeModelFile</Filter>
     </ClInclude>
@@ -213,6 +210,9 @@
       <Filter>头文件\ComputeModelFile</Filter>
     </ClInclude>
     <ClInclude Include="ComputeSphere.h">
+      <Filter>头文件\ComputeModelFile</Filter>
+    </ClInclude>
+    <ClInclude Include="Compute3DLine.h">
       <Filter>头文件\ComputeModelFile</Filter>
     </ClInclude>
   </ItemGroup>

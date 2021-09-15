@@ -92,7 +92,7 @@ void PC_OLSFitSphere(vector<T>& pts, vector<double>& weights, cv::Vec4d& sphere)
 
 //huber计算权重=================================================================================
 template <typename T>
-void Img_HuberSphereWeights(vector<T>& pts, cv::Vec3d& circle, vector<double>& weights)
+void PC_HuberSphereWeights(vector<T>& pts, cv::Vec4d& circle, vector<double>& weights)
 {
 	double tao = 1.345;
 	for (int i = 0; i < pts.size(); ++i)
@@ -116,7 +116,7 @@ void Img_HuberSphereWeights(vector<T>& pts, cv::Vec3d& circle, vector<double>& w
 
 //Turkey计算权重================================================================================
 template <typename T>
-void Img_TurkeySphereWeights(vector<T>& pts, cv::Vec4d& circle, vector<double>& weights)
+void PC_TurkeySphereWeights(vector<T>& pts, cv::Vec4d& circle, vector<double>& weights)
 {
 	vector<double> dists(pts.size());
 	for (int i = 0; i < pts.size(); ++i)
@@ -148,26 +148,26 @@ void Img_TurkeySphereWeights(vector<T>& pts, cv::Vec4d& circle, vector<double>& 
 
 //拟合球========================================================================================
 template <typename T>
-void Img_FitSphere(vector<T>& pts, cv::Vec4d& sphere, int k, NB_MODEL_FIT_METHOD method)
+void PC_FitSphere(vector<T>& pts, cv::Vec4d& sphere, int k, NB_MODEL_FIT_METHOD method)
 {
 	vector<double> weights(pts.size(), 1);
 
 	if (method == NB_MODEL_FIT_METHOD::OLS_FIT)
 	{
-		PC_OLSFitSphere(pts, weights, circle);
+		PC_OLSFitSphere(pts, weights, sphere);
 		return;
 	}
 
 	for (int i = 0; i < k; ++i)
 	{
-		PC_OLSFitSphere(pts, weights, circle);
+		PC_OLSFitSphere(pts, weights, sphere);
 		switch (method)
 		{
 		case HUBER_FIT:
-			Img_HuberSphereWeights(pts, circle, weights);
+			PC_HuberSphereWeights(pts, sphere, weights);
 			break;
 		case TURKEY_FIT:
-			Img_TurkeySphereWeights(pts, circle, weights);
+			PC_TurkeySphereWeights(pts, sphere, weights);
 			break;
 		default:
 			break;
@@ -175,3 +175,18 @@ void Img_FitSphere(vector<T>& pts, cv::Vec4d& sphere, int k, NB_MODEL_FIT_METHOD
 	}
 }
 //==============================================================================================
+
+void PC_SphereTest()
+{
+	PC_XYZ::Ptr srcPC(new PC_XYZ);
+	pcl::io::loadPLYFile("C:/Users/Administrator/Desktop/testimage/噪声球.ply", *srcPC);
+
+	vector<P_XYZ> pts(srcPC->points.size());
+	for (int i = 0; i < srcPC->points.size(); ++i)
+	{
+		pts[i] = srcPC->points[i];
+	}
+
+	cv::Vec4d sphere;
+	PC_FitSphere(pts, sphere, 5, NB_MODEL_FIT_METHOD::TURKEY_FIT);
+}

@@ -1,4 +1,5 @@
 #include "ContourOpr.h"
+#include <opencv2/flann.hpp>
 
 //提取轮廓======================================================================
 void ExtractContour(Mat &srcImg, vector<vector<Point>> &contours, float lowVal, float highVal, int mode)
@@ -174,6 +175,41 @@ void MergeContour(vector<vector<Point>> &contours, vector<Point> &contour)
 	for (int i = 0; i < contours.size(); i++)
 	{
 		contour.insert(contour.end(), contours[i].begin(), contours[i].end());
+	}
+}
+//==============================================================================
+
+//轮廓平滑======================================================================
+void SmoothContour(vector<cv::Point2f>& srcContour, vector<cv::Point2f>& dstContour, int size, double thresVal)
+{
+	dstContour.resize(srcContour.size());
+	cv::Mat source = cv::Mat(srcContour).reshape(1);
+	cv::flann::KDTreeIndexParams indexParams(2);
+	cv::flann::Index kdtree(source, indexParams);
+	for (int i = 0; i < srcContour.size(); ++i)
+	{
+		vector<float> vecQuery(2);//存放查询点
+		vecQuery[0] = srcContour[i].x; //查询点x坐标
+		vecQuery[1] = srcContour[i].y; //查询点y坐标
+		vector<int> vecIndex(size);//存放返回的点索引
+		vector<float> vecDist(size);//存放距离
+		cv::flann::SearchParams params(32);//设置knnSearch搜索参数
+		kdtree.knnSearch(vecQuery, vecIndex, vecDist, size, params);
+		vector<cv::Point2f> pts_(size);
+		for (int j = 0; j < size; ++j)
+		{
+			pts_[j] = srcContour[vecIndex[j]];
+		}
+		cv::Vec4d line;
+		cv::fitLine(pts_, line, cv::DIST_L2, 0, 0.01, 0.01);
+		float scale = srcContour[i].x * line[0] + srcContour[i].y * line[1] - (line[2] * line[0] + line[3] * line[1]);
+		cv::Point2f v_p;
+		v_p.x = line[2] + scale * line[0]; v_p.y = line[3] + scale * line[1];
+		double dist = std::powf(v_p.x - srcContour[i].x, 2) + std::powf(v_p.y - srcContour[i].y, 2);
+		if (dist > thresVal)
+			dstContour[i] = v_p;
+		else
+			dstContour[i] = srcContour[i];
 	}
 }
 //==============================================================================

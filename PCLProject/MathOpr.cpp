@@ -1,5 +1,47 @@
 #include "MathOpr.h"
 
+//点到平面的距离
+double PC_PtToPlaneDist(P_XYZ& pt, cv::Vec4d& plane)
+{
+	return abs(pt.x * plane[0] + pt.y * plane[1] + pt.z * plane[2] + plane[3]);
+}
+
+//向量归一化
+template <typename T>
+void PC_VecNormal(T& p)
+{
+	float norm_ = 1 / std::max(std::sqrt(p.x * p.x + p.y * p.y + p.z * p.z), 1e-8f);
+	p.x *= norm_; p.y *= norm_; p.z *= norm_;
+}
+
+//点到平面的投影点
+void PC_PtProjPlanePt(P_XYZ& pt, cv::Vec4d& plane, P_XYZ& projPt)
+{
+	float dist = pt.x * plane[0] + pt.y * plane[1] + pt.z * plane[2] + plane[3];
+	projPt = { pt.x - float(dist * plane[0]), float(pt.x - dist * plane[1]),float(pt.x - dist * plane[2]) };
+}
+
+//空间点到空间直线的距离
+double PC_3DPtTo3DLineDist(P_XYZ& pt, cv::Vec6d& line)
+{
+	double scale = pt.x * line[0] + pt.y * line[1] + pt.z * line[2] -
+		(line[3] * line[0] + line[4] * line[1] + line[5] * line[2]);
+	double diff_x = line[3] + scale * line[0] - pt.x;
+	double diff_y = line[4] + scale * line[1] - pt.y;
+	double diff_z = line[5] + scale * line[2] - pt.z;
+	return std::sqrt(diff_x * diff_x + diff_y * diff_y + diff_z * diff_z);
+}
+
+//空间点到空间直线的投影
+void PC_3DPtProjLinePt(P_XYZ& pt, cv::Vec6d& line, P_XYZ& projPt)
+{
+	float scale = pt.x * line[0] + pt.y * line[1] + pt.z * line[2] -
+		(line[3] * line[0] + line[4] * line[1] + line[5] * line[2]);
+	projPt.x = line[3] + scale * line[0];
+	projPt.y = line[4] + scale * line[1]; 
+	projPt.z = line[5] + scale * line[2];
+}
+
 //十进制转二进制=====================================================
 void DecToBin(const int dec_num, vector<bool>& bin)
 {
@@ -62,14 +104,6 @@ void VecCross_PC(P_XYZ& vec1, P_XYZ& vec2, P_XYZ& vec)
 	vec.z = vec1.x * vec2.y - vec1.y * vec2.x;
 }
 //===================================================================
-
-//向量归一化=========================================================
-void Normal_PC(P_XYZ& p)
-{
-	float norm_ = 1 / std::max(std::sqrt(p.x * p.x + p.y * p.y + p.z * p.z), 1e-8f);
-	p.x *= norm_; p.y *= norm_; p.z *= norm_;
-}
-//==================================================================
 
 //空间两线距离最近的点===============================================
 float SpaceLineNearestPt(Vec6f& line1, Vec6f& line2, P_XYZ& pt1, P_XYZ& pt2)

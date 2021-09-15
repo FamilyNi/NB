@@ -37,4 +37,7 @@ void PolyFitContour(vector<Point> &contour, vector<Point> &poly, double distThre
 /*ºÏ²¢ÂÖÀª*/
 void MergeContour(vector<vector<Point>> &contours, vector<Point> &contour);
 
+/*ÂÖÀªÆ½»¬*/
+void SmoothContour(vector<cv::Point2f>& srcContour, vector<cv::Point2f>& dstContour, int size, double thresVal);
+
 
