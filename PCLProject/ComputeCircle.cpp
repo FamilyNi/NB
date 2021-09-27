@@ -187,25 +187,27 @@ void Img_FitCircle(vector<T>& pts, cv::Vec3d& circle, int k, NB_MODEL_FIT_METHOD
 {
 	vector<double> weights(pts.size(), 1);
 
+	Img_OLSFitCircle(pts, weights, circle);
 	if (method == NB_MODEL_FIT_METHOD::OLS_FIT)
 	{
-		Img_OLSFitCircle(pts, weights, circle);
 		return;
 	}
-		
-	for (int i = 0; i < k; ++i)
+	else
 	{
-		Img_OLSFitCircle(pts, weights, circle);
-		switch (method)
+		for (int i = 0; i < k; ++i)
 		{
-		case HUBER_FIT:
-			Img_HuberCircleWeights(pts, circle, weights);
-			break;
-		case TURKEY_FIT:
-			Img_TurkeyCircleWeights(pts, circle, weights);
-			break;
-		default:
-			break;
+			switch (method)
+			{
+			case HUBER_FIT:
+				Img_HuberCircleWeights(pts, circle, weights);
+				break;
+			case TURKEY_FIT:
+				Img_TurkeyCircleWeights(pts, circle, weights);
+				break;
+			default:
+				break;
+			}
+			Img_OLSFitCircle(pts, weights, circle);
 		}
 	}
 }

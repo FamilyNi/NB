@@ -54,9 +54,13 @@ NB_API void Img_EmphasizeEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize, doubl
 			for (int c_ = 0; c_ < channel; ++c_)
 			{
 				int offset_ = offset + x + c_;
-				double src_x = (double)pSrc[offset_];
-				double mean_x = (double)pMean[offset_];
-				pDst[offset_] = static_cast<uchar>(round((src_x - mean_x) * factor) + src_x);
+				int src_x = (int)pSrc[offset_];
+				int mean_x = (int)pMean[offset_];
+				int value = (round((src_x - mean_x) * factor) + src_x);
+				if (value > 0 && value < 256)
+					pDst[offset_] = value;
+				if (value > 255)
+					pDst[offset_] = 255;
 			}
 		}
 	}
@@ -64,7 +68,7 @@ NB_API void Img_EmphasizeEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize, doubl
 //=========================================================================
 
 //halcon中的illuminate算子=================================================
-NB_API void Img_IlluminateEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize, float factor)
+NB_API void Img_IlluminateEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize, double factor)
 {
 	Mat meanImg = Mat(srcImg.size(), srcImg.type(), cv::Scalar(0));
 	boxFilter(srcImg, meanImg, srcImg.type(), ksize);
@@ -85,29 +89,73 @@ NB_API void Img_IlluminateEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize, floa
 			for (int c_ = 0; c_ < channel; ++c_)
 			{
 				int offset_ = offset + x + c_;
-				double src_x = (double)pSrc[offset_];
-				double mean_x = (double)pMean[offset_];
-				pDst[offset_] = static_cast<uchar>(round((127 - mean_x) * factor + src_x));
+				int src_x = (int)pSrc[offset_];
+				int mean_x = (int)pMean[offset_];
+				int value = (round((127 - mean_x) * factor) + src_x);
+				if (value > 0 && value < 256)
+					pDst[offset_] = value;
+				if (value > 255)
+					pDst[offset_] = 255;
 			}
 		}
 	}
 }
 //==========================================================================
 
-//图像的线性增强============================================================
-NB_API void Img_LinerEnhance(Mat& srcImg, Mat& dstImg, double a, double b)
+//局部标准差图像增强=======================================================
+NB_API void Img_LSDEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize)
 {
-	dstImg = srcImg * a + b;
+	dstImg = Mat(srcImg.size(), srcImg.type(), cv::Scalar(0));
+	Mat meanImg(srcImg.size(), srcImg.type(), cv::Scalar(0));
+	cv::boxFilter(srcImg, meanImg, meanImg.type(), ksize);
+	int row = srcImg.rows;
+	int col = srcImg.cols;
+	int channel = srcImg.channels();
+	int step = col * channel;
+	uchar* pSrc = srcImg.ptr<uchar>(0);
+	uchar* pMean = meanImg.ptr<uchar>(0);
+	uchar* pDst = dstImg.ptr<uchar>(0);
+	int half_y = ksize.height / 2;
+	int half_x = ksize.width / 2;
+
+	cv::Scalar mean, stdDev;
+	cv::meanStdDev(srcImg, mean, stdDev);
+	for (int y = 0; y < row; ++y)
+	{
+		int s_y = std::max(0, y - half_y);
+		int e_y = std::min(row, y + half_y);
+		int offset_y = y * step;
+		for (int x = 0; x < col; ++x)
+		{
+			int s_x = std::max(0, x - half_x);
+			int e_x = std::min(col, x + half_x);
+			Mat rect = srcImg(Range(s_y, e_y), Range(s_x, e_x));
+			cv::Scalar mean_, stdDev_;
+			cv::meanStdDev(rect, mean_, stdDev_);
+			int offset_x = offset_y + x * channel;
+			for (int c_ = 0; c_ < channel; ++c_)
+			{
+				int offset_ = offset_x + c_;
+				double src_x = (double)pSrc[offset_];
+				double mean_x = (double)pMean[offset_];
+				double value = (src_x - mean_x) * stdDev[c_] / stdDev_[c_] + mean_x;
+				if (value > 0 && value < 256)
+					pDst[offset_] = value;
+				if (value > 255)
+					pDst[offset_] = 255;
+			}
+		}
+	}
 }
 //==========================================================================
 
 void EnhanceTest()
 {
-	string imgPath = "2.jpg";
-	Mat srcImg = imread(imgPath, 0);
+	string imgPath = "C:/Users/Administrator/Desktop/testimage/12.png";
+	Mat srcImg = imread(imgPath, 1);
 
 	Mat dstImg;
-	Img_IlluminateEnhance(srcImg, dstImg, cv::Size(50,50), 0.6);
+	Img_LSDEnhance(srcImg, dstImg, cv::Size(50,50));
 	Mat t1 = (srcImg - dstImg) * 100;
 	Mat t = dstImg.clone();
 }

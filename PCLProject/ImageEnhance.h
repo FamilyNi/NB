@@ -32,12 +32,17 @@ NB_API void Img_Enhance(Mat& srcImg, Mat& table, Mat &dstImg);
 */
 NB_API void Img_EmphasizeEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize, double factor);
 
-//halcon中的illuminate算子================================================
-NB_API void Img_IlluminateEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize, float factor);
-
-/*图像的线性增强
-	计算公式：dstImg = a * srcImg + b;
+/*halcon中的illuminate算子：
+	计算公式：
+	mean：均值滤波后的图像
+	ksize：[in]均值滤波的大小
+	factor：[in]比例因子
 */
-NB_API void Img_LinerEnhance(Mat& srcImg, Mat& dstImg, double a, double b);
+NB_API void Img_IlluminateEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize, double factor);
+
+/*局部标准差图像增强：
+	计算公式：dstImg = mean(srcImg) + G * (srcImg - mean(srcImg))
+*/
+NB_API void Img_LSDEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize);
 
 void EnhanceTest();

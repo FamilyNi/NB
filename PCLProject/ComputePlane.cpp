@@ -116,25 +116,27 @@ template <typename T>
 void PC_FitPlane(vector<T>& pts, cv::Vec4d& plane, int k, NB_MODEL_FIT_METHOD method)
 {
 	vector<double> weights(pts.size(), 1);
+	PC_OLSFitPlane(pts, weights, plane);
 	if (method == NB_MODEL_FIT_METHOD::OLS_FIT)
 	{
-		PC_OLSFitPlane(pts, weights, plane);
 		return;
 	}
-
-	for (int i = 0; i < k; ++i)
+	else
 	{
-		PC_OLSFitPlane(pts, weights, plane);
-		switch (method)
+		for (int i = 0; i < k; ++i)
 		{
-		case HUBER_FIT:
-			PC_HuberPlaneWeights(pts, plane, weights);
-			break;
-		case TURKEY_FIT:
-			PC_TurkeyPlaneWeights(pts, plane, weights);
-			break;
-		default:
-			break;
+			switch (method)
+			{
+			case HUBER_FIT:
+				PC_HuberPlaneWeights(pts, plane, weights);
+				break;
+			case TURKEY_FIT:
+				PC_TurkeyPlaneWeights(pts, plane, weights);
+				break;
+			default:
+				break;
+			}
+			PC_OLSFitPlane(pts, weights, plane);
 		}
 	}
 }

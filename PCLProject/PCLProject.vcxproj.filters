@@ -129,6 +129,12 @@
     <ClCompile Include="Compute3DLine.cpp">
       <Filter>源文件\ComputeModelFile</Filter>
     </ClCompile>
+    <ClCompile Include="ComputeEllipse.cpp">
+      <Filter>源文件\ComputeModelFile</Filter>
+    </ClCompile>
+    <ClCompile Include="ComputePoint.cpp">
+      <Filter>源文件\ComputeModelFile</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utils.h">
@@ -213,6 +219,12 @@
       <Filter>头文件\ComputeModelFile</Filter>
     </ClInclude>
     <ClInclude Include="Compute3DLine.h">
+      <Filter>头文件\ComputeModelFile</Filter>
+    </ClInclude>
+    <ClInclude Include="ComputeEllipse.h">
+      <Filter>头文件\ComputeModelFile</Filter>
+    </ClInclude>
+    <ClInclude Include="ComputePoint.h">
       <Filter>头文件\ComputeModelFile</Filter>
     </ClInclude>
   </ItemGroup>

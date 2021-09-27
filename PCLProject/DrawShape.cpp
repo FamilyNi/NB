@@ -108,6 +108,25 @@ void PC_DrawEllipsoid(PC_XYZ::Ptr& ellipsoid, P_XYZ& center, double a, double b,
 }
 //==================================================================
 
+//ªÊ÷∆Õ÷‘≤==========================================================
+void Img_DrawEllipse(Mat& ellipseImg, cv::Point2d& center, double rotAng, double a, double b, double step)
+{
+	if (ellipseImg.empty())
+		return;
+	double cosVal = std::cos(rotAng);
+	double sinVal = std::sin(rotAng);
+	for (double theta = 0; theta < CV_2PI; theta += step)
+	{
+		cv::Point p_;
+		double x = a * std::cos(theta);
+		double y = b * std::sin(theta);
+		p_.x = cosVal * x - sinVal * y + center.x;
+		p_.y = cosVal * y + sinVal * x + center.y;
+		cv::line(ellipseImg, p_, p_, cv::Scalar(0), 3);
+	}
+}
+//==================================================================
+
 //ÃÌº”‘Î…˘==========================================================
 void PC_AddNoise(PC_XYZ::Ptr& srcPC, PC_XYZ::Ptr& noisePC, int range, int step)
 {

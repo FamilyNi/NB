@@ -164,16 +164,6 @@ NB_API void Img_LocAdapThresholdSeg(Mat& srcImg, Mat& dstImg, cv::Size size, dou
 }
 //=========================================================================================
 
-//基于直方图的多阈值分割===================================================================
-NB_API void Img_HistMultiplySeg(Mat& srcImg, Mat& dstImg, double sigma)
-{
-	Mat hist;
-	Img_ComputeImgHist(srcImg, hist);
-	cv::GaussianBlur(hist, hist, cv::Size(3, 1), sigma);
-
-}
-//=========================================================================================
-
 //迟滞分割=================================================================================
 NB_API void Img_HysteresisSeg(Mat& srcImg, Mat& dstImg, double thresVal1, double thresVal2)
 {
@@ -265,73 +255,83 @@ NB_API void Img_DotImgSeg(Mat& srcImg, Mat& dstImg, int size, IMG_SEG mode)
 //=========================================================================================
 
 //区域生长=================================================================================
-NB_API void Img_RegionGrowSeg(Mat& srcImg, Mat& labels, int dist_c, int dist_r, int thresVal)
+NB_API void Img_RegionGrowSeg(Mat& srcImg, Mat& labels, int dist_c, int dist_r, int thresVal, int minRegionSize)
 {
 	if (!labels.empty())
 		labels.release();
-	labels = Mat(srcImg.size(), CV_32SC1, cv::Scalar(0));
-	Mat mask(srcImg.size(), CV_8UC1, cv::Scalar(0));
-	int col = srcImg.cols;
-	int row = srcImg.rows;
-	int label = 0;
 	int half_c = dist_c / 2;
 	int half_r = dist_r / 2;
 
+	Mat padded;
+	copyMakeBorder(srcImg, padded, half_r, half_r, half_c, half_c, cv::BORDER_REFLECT, Scalar::all(0));
+	Mat mask(padded.size(), CV_8UC1, cv::Scalar(0));
+	int minArea = dist_c * dist_c;
+	uchar* pPadded = padded.ptr<uchar>(0);
+	int col = padded.cols - half_c;
+	int row = padded.rows - half_r;
+	int half_c_1 = half_c + 1;
+	int half_r_1 = half_r + 1;
+	int step = padded.cols * padded.channels();
+	uchar* pMask = mask.ptr<uchar>(0);
 	queue<cv::Point> seeds;
 	seeds.push(cv::Point(half_c, half_r));
+	vector<vector<cv::Point>> regions;
 	while (!seeds.empty())
 	{
 		queue<cv::Point> seed;
 		if (mask.at<uchar>(seeds.front()) == 0)
 		{
-			++label;
-			cv::Point& s_pt = seeds.front();
-			seed.push(s_pt);
+			seed.push(seeds.front());
 		}
 		seeds.pop();
+		vector<cv::Point> region;
 		while (!seed.empty())
 		{
 			int c_x = seed.front().x;
 			int c_y = seed.front().y;
 			seed.pop();
-			int ref_val = (int)(srcImg.at<uchar>(c_y, c_x));
-			for (int y_ = c_y - dist_r; y_ <= c_y + dist_r; y_ += dist_r)
+			int ref_val = (int)(pPadded[c_y * step + c_x]);
+			for (int y = c_y - dist_r; y <= c_y + dist_r; y += dist_r)
 			{
-				int y = std::min(row - 1, std::max(0, y_));
-				for (int x_ = c_x - dist_c; x_ <= c_x + dist_c; x_ += dist_c)
+				if (y >= half_r && y <= row)
 				{
-					int x = std::min(col - 1, std::max(0, x_));
-					int s_x = std::max(0, x - half_c);
-					int e_x = std::min(col - 1, x + half_c + 1);
-					int s_y = std::max(0, y - half_r);
-					int e_y = std::min(row - 1, y + half_r + 1);
-					//判断该区域是否呗生长
-					if (cv::countNonZero(labels(Range(s_y, e_y), Range(s_x, e_x))) < (e_x - s_x) * (e_y - s_y))
+					int offset_y = y * step;
+					for (int x = c_x - dist_c; x <= c_x + dist_c; x += dist_c)
 					{
-						uchar& isSeed = mask.at<uchar>(y, x);
-						int val = (int)(srcImg.at<uchar>(y, x));
-						if (abs(ref_val - val) < thresVal)
+						if (x >= half_c && x <= col)
 						{
-							labels(Range(s_y, e_y), Range(s_x, e_x)) = label;
-							if (isSeed == 0)
+							int offset = offset_y + x;
+							int val = abs((int)(pPadded[offset]) - ref_val);
+							if (val < thresVal && pMask[offset] == 0)
 							{
-								seed.push(cv::Point(x, y));
-								isSeed = 255;
+								cv::Point pt_(x, y);
+								pMask[offset] = 255;
+								region.push_back(pt_);
+								seed.push(pt_);
+							}
+							else
+							{
+								seeds.push(cv::Point(x, y));
 							}
 						}
 					}
 				}
 			}
 		}
-		cv::Point min_p(0,0);
-		cv::minMaxLoc(labels, NULL, NULL, &min_p, NULL);
-		if (min_p.x > 0 || min_p.y > 0)
+		if (region.size() * minArea > minRegionSize)
+			regions.push_back(region);
+	}
+	Mat region(padded.size(), CV_8UC3, cv::Scalar(0));
+	for (int i = 0; i < regions.size(); ++i)
+	{
+		for (int j = 0; j < regions[i].size(); ++j)
 		{
-			seeds.push(min_p);
+			int end_y = std::min(regions[i][j].y + half_r + 1, padded.rows);
+			int end_x = std::min(regions[i][j].x + half_c + 1, padded.cols);
+			cv::Scalar color(0,0,0);
+			color(i % 3) = 255;
+			region(Range(regions[i][j].y - half_r, end_y), Range(regions[i][j].x - half_c, end_x)) = color;
 		}
-		else
-			break;
-		//cv::minMaxLoc
 	}
 }
 //=========================================================================================
@@ -382,11 +382,11 @@ void NB_AnisImgSeg(Mat &srcImg, Mat &dstImg, int WS, double C_Thr, int lowThr, i
 
 void ImgSegTest()
 {
-	string imgPath = "C:/Users/Administrator/Desktop/2.jpg";
+	string imgPath = "C:/Users/Administrator/Desktop/testimage/05.jpg";
 	Mat srcImg = imread(imgPath, 0);
 
 	Mat dstImg;
-	Img_HysteresisSeg(srcImg, dstImg, 10, 30);
+	Img_RegionGrowSeg(srcImg, dstImg, 3, 3, 5, 1000);
 
 	Mat t = dstImg.clone();
 }

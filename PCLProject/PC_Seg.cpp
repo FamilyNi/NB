@@ -228,18 +228,6 @@ void DONSeg(PC_XYZ::Ptr &srcPC, float large_r, float small_r, float thresVal)
 			dstPC->points.push_back(srcPC->points[i]);
 		}
 	}
-	pcl::visualization::PCLVisualizer viewer;
-	//œ‘ æπÏº£
-	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> white(srcPC, 255, 255, 255);
-	viewer.addPointCloud(srcPC, white, "srcPC");
-	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "srcPC");
-	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> red(dstPC, 255, 0, 0);
-	viewer.addPointCloud(dstPC, red, "dstPC");
-	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "dstPC");
-	while (!viewer.wasStopped())
-	{
-		viewer.spinOnce();
-	}
 }
 //===================================================================================
 

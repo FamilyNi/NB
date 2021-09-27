@@ -45,10 +45,6 @@ NB_API void Img_IterTresholdSeg(Mat& srcImg, Mat& dstImg, double eps, IMG_SEG mo
 */
 NB_API void Img_LocAdapThresholdSeg(Mat& srcImg, Mat& dstImg, cv::Size size, double stdDevScale, double absThres, IMG_SEG mode);
 
-/*基于直方图的多阈值分割：
-*/
-NB_API void Img_HistMultiplySeg(Mat& srcImg, Mat& dstImg, double sigma);
-
 /*迟滞分割*/
 NB_API void Img_HysteresisSeg(Mat& srcImg, Mat& dstImg, double thresVal1, double thresVal2);
 
@@ -56,7 +52,7 @@ NB_API void Img_HysteresisSeg(Mat& srcImg, Mat& dstImg, double thresVal1, double
 NB_API void Img_DotImgSeg(Mat& srcImg, Mat& dstImg, int size, IMG_SEG mode);
 
 /*区域生长*/
-NB_API void Img_RegionGrowSeg(Mat& srcImg, Mat& label, int thresVal);
+NB_API void Img_RegionGrowSeg(Mat& srcImg, Mat& labels, int dist_c, int dist_r, int thresVal, int minRegionSize);
 
 //各向异性的图像分割
 void NB_AnisImgSeg(Mat &srcImg, Mat &dstImg, int WS, double C_Thr, int lowThr, int highThr);

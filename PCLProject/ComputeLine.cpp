@@ -154,25 +154,27 @@ template <typename T>
 void Img_FitLine(vector<T>& pts, cv::Vec3d& line, int k, NB_MODEL_FIT_METHOD method)
 {
 	vector<double> weights(pts.size(), 1);
+	Img_OLSFitLine(pts, weights, line);
 	if (method == NB_MODEL_FIT_METHOD::OLS_FIT)
 	{
-		Img_OLSFitLine(pts, weights, line);
 		return;
 	}
-
-	for (int i = 0; i < k; ++i)
+	else
 	{
-		Img_OLSFitLine(pts, weights, line);
-		switch (method)
+		for (int i = 0; i < k; ++i)
 		{
-		case HUBER_FIT:
-			Img_HuberLineWeights(pts, line, weights);
-			break;
-		case TURKEY_FIT:
-			Img_TurkeyLineWeights(pts, line, weights);
-			break;
-		default:
-			break;
+			switch (method)
+			{
+			case HUBER_FIT:
+				Img_HuberLineWeights(pts, line, weights);
+				break;
+			case TURKEY_FIT:
+				Img_TurkeyLineWeights(pts, line, weights);
+				break;
+			default:
+				break;
+			}
+			Img_OLSFitLine(pts, weights, line);
 		}
 	}
 }

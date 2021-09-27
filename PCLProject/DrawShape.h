@@ -41,6 +41,9 @@ void PC_DrawSphere(PC_XYZ::Ptr& spherePC, P_XYZ& center, double raduis, double s
 */
 void PC_DrawEllipsoid(PC_XYZ::Ptr& ellipsoidPC, P_XYZ& center, double a, double b, double c, double step);
 
+/*绘制椭圆*/
+void Img_DrawEllipse(Mat& ellipseImg, cv::Point2d& center, double rotAng, double a, double b, double step);
+
 /*添加噪声：
 	srcPC：[in]原始点云
 	noisePC：[out]噪声点云

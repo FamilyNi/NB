@@ -165,8 +165,10 @@
   <ItemGroup>
     <ClCompile Include="Compute3DLine.cpp" />
     <ClCompile Include="ComputeCircle.cpp" />
+    <ClCompile Include="ComputeEllipse.cpp" />
     <ClCompile Include="ComputeLine.cpp" />
     <ClCompile Include="ComputePlane.cpp" />
+    <ClCompile Include="ComputePoint.cpp" />
     <ClCompile Include="ComputeSphere.cpp" />
     <ClCompile Include="ContourOpr.cpp" />
     <ClCompile Include="DrawShape.cpp" />
@@ -195,8 +197,10 @@
   <ItemGroup>
     <ClInclude Include="Compute3DLine.h" />
     <ClInclude Include="ComputeCircle.h" />
+    <ClInclude Include="ComputeEllipse.h" />
     <ClInclude Include="ComputeLine.h" />
     <ClInclude Include="ComputePlane.h" />
+    <ClInclude Include="ComputePoint.h" />
     <ClInclude Include="ComputeSphere.h" />
     <ClInclude Include="ContourOpr.h" />
     <ClInclude Include="DrawShape.h" />

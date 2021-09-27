@@ -92,16 +92,16 @@ void PC_OLSFitSphere(vector<T>& pts, vector<double>& weights, cv::Vec4d& sphere)
 
 //huber计算权重=================================================================================
 template <typename T>
-void PC_HuberSphereWeights(vector<T>& pts, cv::Vec4d& circle, vector<double>& weights)
+void PC_HuberSphereWeights(vector<T>& pts, cv::Vec4d& sphere, vector<double>& weights)
 {
 	double tao = 1.345;
 	for (int i = 0; i < pts.size(); ++i)
 	{
-		double diff_x = pts[i].x - circle[0];
-		double diff_y = pts[i].y - circle[1];
-		double diff_z = pts[i].z - circle[2];
+		double diff_x = pts[i].x - sphere[0];
+		double diff_y = pts[i].y - sphere[1];
+		double diff_z = pts[i].z - sphere[2];
 		double distance = std::sqrt(max(diff_x * diff_x + diff_y * diff_y + diff_z * diff_z, EPS));
-		distance = abs(distance - circle[3]);
+		distance = abs(distance - sphere[3]);
 		if (distance <= tao)
 		{
 			weights[i] = 1;
@@ -116,16 +116,16 @@ void PC_HuberSphereWeights(vector<T>& pts, cv::Vec4d& circle, vector<double>& we
 
 //Turkey计算权重================================================================================
 template <typename T>
-void PC_TurkeySphereWeights(vector<T>& pts, cv::Vec4d& circle, vector<double>& weights)
+void PC_TurkeySphereWeights(vector<T>& pts, cv::Vec4d& sphere, vector<double>& weights)
 {
 	vector<double> dists(pts.size());
 	for (int i = 0; i < pts.size(); ++i)
 	{
-		double diff_x = pts[i].x - circle[0];
-		double diff_y = pts[i].y - circle[1];
-		double diff_z = pts[i].z - circle[2];
+		double diff_x = pts[i].x - sphere[0];
+		double diff_y = pts[i].y - sphere[1];
+		double diff_z = pts[i].z - sphere[2];
 		double distance = std::sqrt(max(diff_x * diff_x + diff_y * diff_y + diff_z * diff_z, EPS));
-		distance = abs(distance - circle[3]);
+		distance = abs(distance - sphere[3]);
 		dists[i] = distance;
 	}
 	//求限制条件tao
@@ -151,26 +151,27 @@ template <typename T>
 void PC_FitSphere(vector<T>& pts, cv::Vec4d& sphere, int k, NB_MODEL_FIT_METHOD method)
 {
 	vector<double> weights(pts.size(), 1);
-
+	PC_OLSFitSphere(pts, weights, sphere);
 	if (method == NB_MODEL_FIT_METHOD::OLS_FIT)
 	{
-		PC_OLSFitSphere(pts, weights, sphere);
 		return;
 	}
-
-	for (int i = 0; i < k; ++i)
+	else
 	{
-		PC_OLSFitSphere(pts, weights, sphere);
-		switch (method)
+		for (int i = 0; i < k; ++i)
 		{
-		case HUBER_FIT:
-			PC_HuberSphereWeights(pts, sphere, weights);
-			break;
-		case TURKEY_FIT:
-			PC_TurkeySphereWeights(pts, sphere, weights);
-			break;
-		default:
-			break;
+			switch (method)
+			{
+			case HUBER_FIT:
+				PC_HuberSphereWeights(pts, sphere, weights);
+				break;
+			case TURKEY_FIT:
+				PC_TurkeySphereWeights(pts, sphere, weights);
+				break;
+			default:
+				break;
+			}
+			PC_OLSFitSphere(pts, weights, sphere);
 		}
 	}
 }

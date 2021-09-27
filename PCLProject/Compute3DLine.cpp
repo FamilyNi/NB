@@ -110,25 +110,27 @@ template <typename T>
 void PC_Fit3DLine(vector<T>& pts, cv::Vec6d& line, int k, NB_MODEL_FIT_METHOD method)
 {
 	vector<double> weights(pts.size(), 1);
+	PC_OLSFit3DLine(pts, weights, line);
 	if (method == NB_MODEL_FIT_METHOD::OLS_FIT)
 	{
-		PC_OLSFit3DLine(pts, weights, line);
 		return;
 	}
-
-	for (int i = 0; i < k; ++i)
+	else
 	{
-		PC_OLSFit3DLine(pts, weights, line);
-		switch (method)
+		for (int i = 0; i < k; ++i)
 		{
-		case HUBER_FIT:
-			PC_Huber3DLineWeights(pts, line, weights);
-			break;
-		case TURKEY_FIT:
-			PC_Turkey3DLineWeights(pts, line, weights);
-			break;
-		default:
-			break;
+			switch (method)
+			{
+			case HUBER_FIT:
+				PC_Huber3DLineWeights(pts, line, weights);
+				break;
+			case TURKEY_FIT:
+				PC_Turkey3DLineWeights(pts, line, weights);
+				break;
+			default:
+				break;
+			}
+			PC_OLSFit3DLine(pts, weights, line);
 		}
 	}
 }

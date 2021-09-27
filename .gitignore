@@ -279,3 +279,17 @@ PCLProject/2.jpg
 *.png
 *.bmp
 *.jpg
+shape_match/Blob.cpp
+shape_match/Blob.h
+shape_match/ExtractFeature.cpp
+shape_match/ExtractFeature.h
+shape_match/ImageSeg.cpp
+shape_match/ImageSeg.h
+shape_match/ImageTransformer.cpp
+shape_match/ImageTransformer.h
+shape_match/NeuralNetwork.cpp
+shape_match/NeuralNetwork.h
+shape_match/SubPixel.cpp
+shape_match/SubPixel.h
+shape_match/units.cpp
+shape_match/utils.h
