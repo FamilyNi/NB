@@ -23,7 +23,7 @@ void PC_DrawLine(PC_XYZ::Ptr& linePC, double min_x, double max_x, double min_y,
 			{
 				P_XYZ p{ x,y,z };
 				P_XYZ projPt;
-				PC_3DPtProjLinePt(p, line, projPt);
+				PC_PtProjLinePt(p, line, projPt);
 				linePC->points.push_back(projPt);
 			}
 		}

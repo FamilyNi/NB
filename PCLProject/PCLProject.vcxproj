@@ -168,7 +168,7 @@
     <ClCompile Include="ComputeEllipse.cpp" />
     <ClCompile Include="ComputeLine.cpp" />
     <ClCompile Include="ComputePlane.cpp" />
-    <ClCompile Include="ComputePoint.cpp" />
+    <ClCompile Include="ComputePts.cpp" />
     <ClCompile Include="ComputeSphere.cpp" />
     <ClCompile Include="ContourOpr.cpp" />
     <ClCompile Include="DrawShape.cpp" />
@@ -200,7 +200,7 @@
     <ClInclude Include="ComputeEllipse.h" />
     <ClInclude Include="ComputeLine.h" />
     <ClInclude Include="ComputePlane.h" />
-    <ClInclude Include="ComputePoint.h" />
+    <ClInclude Include="ComputePts.h" />
     <ClInclude Include="ComputeSphere.h" />
     <ClInclude Include="ContourOpr.h" />
     <ClInclude Include="DrawShape.h" />

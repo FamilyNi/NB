@@ -64,7 +64,8 @@ void PC_Huber3DLineWeights(vector<T>& pts, cv::Vec6d& line, vector<double>& weig
 	double tao = 1.345;
 	for (int i = 0; i < pts.size(); ++i)
 	{
-		double distance = PC_3DPtTo3DLineDist(pts[i], line);
+		double distance = 0.0;
+		PC_PtToLineDist(pts[i], line, distance);
 		if (distance <= tao)
 		{
 			weights[i] = 1;
@@ -81,11 +82,10 @@ void PC_Huber3DLineWeights(vector<T>& pts, cv::Vec6d& line, vector<double>& weig
 template <typename T>
 void PC_Turkey3DLineWeights(vector<T>& pts, cv::Vec6d& line, vector<double>& weights)
 {
-	vector<double> dists(pts.size());
+	vector<double> dists(pts.size(), 0.0);
 	for (int i = 0; i < pts.size(); ++i)
 	{
-		double distance = PC_3DPtTo3DLineDist(pts[i], line);
-		dists[i] = distance;
+		PC_PtToLineDist(pts[i], line, dists[i]);
 	}
 	//求限制条件tao
 	vector<double> disttanceSort = dists;

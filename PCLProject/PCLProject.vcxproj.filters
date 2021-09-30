@@ -132,7 +132,7 @@
     <ClCompile Include="ComputeEllipse.cpp">
       <Filter>源文件\ComputeModelFile</Filter>
     </ClCompile>
-    <ClCompile Include="ComputePoint.cpp">
+    <ClCompile Include="ComputePts.cpp">
       <Filter>源文件\ComputeModelFile</Filter>
     </ClCompile>
   </ItemGroup>
@@ -224,7 +224,7 @@
     <ClInclude Include="ComputeEllipse.h">
       <Filter>头文件\ComputeModelFile</Filter>
     </ClInclude>
-    <ClInclude Include="ComputePoint.h">
+    <ClInclude Include="ComputePts.h">
       <Filter>头文件\ComputeModelFile</Filter>
     </ClInclude>
   </ItemGroup>
