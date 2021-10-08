@@ -178,6 +178,7 @@
     <ClCompile Include="GrayCode.cpp" />
     <ClCompile Include="ImageEnhance.cpp" />
     <ClCompile Include="ImageFilter.cpp" />
+    <ClCompile Include="ImageGLCM.cpp" />
     <ClCompile Include="ImageSeg.cpp" />
     <ClCompile Include="JC_Calibrate.cpp" />
     <ClCompile Include="LBPfeatures.cpp" />
@@ -210,6 +211,7 @@
     <ClInclude Include="GrayCode.h" />
     <ClInclude Include="ImageEnhance.h" />
     <ClInclude Include="ImageFilter.h" />
+    <ClInclude Include="ImageGLCM.h" />
     <ClInclude Include="ImageSeg.h" />
     <ClInclude Include="JC_Calibrate.h" />
     <ClInclude Include="LBPfeatures.h" />

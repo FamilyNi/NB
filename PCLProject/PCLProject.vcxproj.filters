@@ -135,6 +135,9 @@
     <ClCompile Include="ComputePts.cpp">
       <Filter>源文件\ComputeModelFile</Filter>
     </ClCompile>
+    <ClCompile Include="ImageGLCM.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utils.h">
@@ -226,6 +229,9 @@
     </ClInclude>
     <ClInclude Include="ComputePts.h">
       <Filter>头文件\ComputeModelFile</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageGLCM.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,65 +1,62 @@
 #include "DrawShape.h"
+#include "PointCloudOpr.h"
+#include "MathOpr.h"
 
-//绘制平面==========================================================
-void PC_DrawLine(PC_XYZ::Ptr& linePC, double min_x, double max_x, double min_y,
-	double max_y, double min_z, double max_z, cv::Vec6d& line, double step)
+//形状变换==========================================================
+void PC_ShapeTrans(PC_XYZ::Ptr& pc, cv::Vec6d& shape, int mode)
 {
-	double norm = std::sqrt(line[0] * line[0] + line[1] * line[1] + line[2] * line[2]);
-	if (abs(norm - 1) > 1e-8)
+	double norm_ = std::sqrt(shape[0] * shape[0] +
+		shape[1] * shape[1] + shape[2] * shape[2]);
+	cv::Point3d norm_1(shape[0] / norm_, shape[1] / norm_, shape[2] / norm_);
+	cv::Point3d norm_2(1.0f, 0.0f, 0.0f);
+	double rotAng = std::acos(norm_1.x);
+	if (mode == 1)
 	{
-		line[0] /= norm; line[1] /= norm; line[2] /= norm;
+		norm_2 = cv::Point3d(0.0f, 0.0f, 1.0f);
+		rotAng = std::acos(norm_1.z);
 	}
-	if (norm < 1e-8)
-		return;
-	step = step < 1e-5 ? 1 : step;
-	double x_ = (min_x + max_x) / 2.0;
-	double y_ = (min_y + max_y) / 2.0;
-	double z_ = (min_z + max_z) / 2.0;
-	for (float x = min_x; x <= max_x; x += step)
+	cv::Point3d normal_p;
+	PC_VecCross(norm_1, norm_2, normal_p, true);
+	cv::Mat rotMat;
+	RodriguesFormula(normal_p, rotAng, rotMat);
+	Eigen::Matrix4f transMat = Eigen::Matrix4f::Identity();
+	for (int i = 0; i < 3; ++i)
 	{
-		for (float y = min_y; y <= max_y; y += step)
+		for (int j = 0; j < 3; ++j)
 		{
-			for (float z = min_z; z <= max_z; z += step)
-			{
-				P_XYZ p{ x,y,z };
-				P_XYZ projPt;
-				PC_PtProjLinePt(p, line, projPt);
-				linePC->points.push_back(projPt);
-			}
+			transMat(i, j) = rotMat.at<double>(j, i);
 		}
 	}
+	PC_XYZ::Ptr linePC_t(new PC_XYZ);
+	transMat(0, 3) = shape[3]; transMat(1, 3) = shape[4]; transMat(2, 3) = shape[5];
+	pcl::transformPointCloud(*pc, *pc, transMat);
+}
+//==================================================================
+
+//绘制直线==========================================================
+void PC_DrawLine(PC_XYZ::Ptr& linePC, cv::Vec6d& line, double length, double step)
+{
+	step = step < 1e-5 ? 1 : step;
+	for (double x = -length / 2.0; x <= length / 2.0; x += step)
+	{
+		linePC->points.push_back({(float)x, 0.0f, 0.0f});
+	}
+	PC_ShapeTrans(linePC, line, 0);
 }
 //==================================================================
 
 //绘制平面==========================================================
-void PC_DrawPlane(PC_XYZ::Ptr& planePC, double min_x, double max_x, double min_y,
-	double max_y, double min_z, double max_z, cv::Vec4d& plane, double step)
+void PC_DrawPlane(PC_XYZ::Ptr& planePC, cv::Vec6d& plane, double length, double width, double step)
 {
-	double norm = std::sqrt(plane[0] * plane[0] + plane[1] * plane[1] + plane[2] * plane[2]);
-	if (abs(norm - 1) > 1e-8)
-	{
-		plane[0] /= norm; plane[1] /= norm; plane[2] /= norm;
-	}
-	if (norm < 1e-8)
-		return;
 	step = step < 1e-5 ? 1 : step;
-	double x_ = (min_x + max_x) / 2.0;
-	double y_ = (min_y + max_y) / 2.0;
-	double z_ = (min_z + max_z) / 2.0;
-	plane[3] = -(plane[0] * x_ + plane[1] * y_ + plane[2] * z_);
-	for (float x = min_x; x <= max_x; x += step)
+	for (double x = -length / 2.0; x <= length / 2.0; x += step)
 	{
-		for(float y = min_y; y <= max_y; y += step)
+		for (double y = -width / 2.0; y < width / 2.0; y += step)
 		{
-			for (float z = min_z; z <= max_z; z += step)
-			{
-				P_XYZ p{ x,y,z };
-				P_XYZ projPt;
-				PC_PtProjPlanePt(p, plane, projPt);
-				planePC->points.push_back(projPt);
-			}
+			planePC->points.push_back({ (float)x,float(y), 0.0f });
 		}
 	}
+	PC_ShapeTrans(planePC, plane, 1);
 }
 //==================================================================
 
@@ -147,5 +144,20 @@ void PC_AddNoise(PC_XYZ::Ptr& srcPC, PC_XYZ::Ptr& noisePC, int range, int step)
 		noise_->push_back({ p.x + dist_x, p.y + dist_y, p.z + dist_z });
 	}
 	*noisePC = *srcPC + *noise_;
+}
+//==================================================================
+
+//测试程序==========================================================
+void DrawShapeTest()
+{
+	PC_XYZ::Ptr linePC(new PC_XYZ);
+	cv::Vec6d line;
+	line[0] = 12;
+	line[1] = 25;
+	line[2] = 8;
+	line[3] = 106;
+	line[4] = 69;
+	line[5] = 903;
+	PC_DrawLine(linePC, line, 20, 0.5);
 }
 //==================================================================

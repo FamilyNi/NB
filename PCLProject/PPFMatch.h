@@ -49,9 +49,6 @@ typedef struct PPFPose
 	{}
 }PPFPose;
 
-//罗格里德斯公式
-void RodriguesFormula(P_N& rotAxis, float rotAng, cv::Mat& rotMat);
-
 //计算PPF特征
 void ComputePPFFEATRUE(P_XYZ& ref_p, P_XYZ& p_, P_N& ref_pn, P_N& p_n, PPFFEATRUE& ppfFEATRUE);
 

@@ -50,7 +50,7 @@ void PC_ExtractPC(const PC_XYZ::Ptr& srcPC, vector<int>& indexes, PC_XYZ::Ptr& d
 //===================================================================================
 
 //点云直线投影平滑===================================================================
-void PC_LineProjSmooth(const PC_XYZ::Ptr &srcPC, PC_XYZ::Ptr &dstPC, int size, float thresVal)
+void PC_LineProjSmooth(const PC_XYZ::Ptr &srcPC, PC_XYZ::Ptr &dstPC, int size, double thresVal)
 {
 	size_t length = srcPC->points.size();
 	KdTreeFLANN<P_XYZ> kdtree;
@@ -70,7 +70,7 @@ void PC_LineProjSmooth(const PC_XYZ::Ptr &srcPC, PC_XYZ::Ptr &dstPC, int size, f
 			cvp_[j].z = srcPC->points[PIdx[j]].z;
 		}
 		cv::Vec6f line;
-		cv::fitLine(cvp_, line, cv::DIST_HUBER, 0, 0.01, 0.01);
+		cv::fitLine(cvp_, line, cv::DIST_L2, 0, 0.01, 0.01);
 		float scale = p_.x * line[0] + p_.y * line[1] + p_.z * line[2] -
 			(line[3] * line[0] + line[4] * line[1] + line[5] * line[2]);
 		P_XYZ v_p;
@@ -100,29 +100,6 @@ void PC_GetPCGravity(PC_XYZ::Ptr &srcPC, P_XYZ &gravity)
 	gravity.x = sum_x / point_num;
 	gravity.y = sum_y / point_num;
 	gravity.z = sum_z / point_num;
-}
-//===================================================================================
-
-//沿法线方向缩放点云=================================================================
-void PC_ScalePCBaseNormal(PC_XYZ::Ptr &srcPC, PC_XYZ::Ptr &normal_p, PC_XYZ::Ptr &dstPC, float scale)
-{
-	int length = srcPC->points.size();
-	dstPC->points.resize(length);
-	if (normal_p->points.size() != length || dstPC->points.size() != length)
-		return;
-	for (int i = 0; i < length; ++i)
-	{
-		if (isnan(normal_p->points[i].x))
-		{
-			dstPC->points[i].x = NAN;
-		}
-		else
-		{
-			dstPC->points[i].x = srcPC->points[i].x + normal_p->points[i].x *  scale;
-			dstPC->points[i].y = srcPC->points[i].y + normal_p->points[i].y *  scale;
-			dstPC->points[i].z = srcPC->points[i].z + normal_p->points[i].z *  scale;
-		}
-	}
 }
 //===================================================================================
 
@@ -159,19 +136,6 @@ void PC_ComputePCNormal(PC_XYZ::Ptr &srcPC, PC_N::Ptr &normals, float radius)
 	pcl::search::KdTree<P_XYZ>::Ptr kdtree(new pcl::search::KdTree<P_XYZ>);
 	normal_est.setSearchMethod(kdtree);
 	normal_est.compute(*normals);
-}
-//===================================================================================
-
-//叉乘计算法向量=====================================================================
-void PC_MulCrossCalNormal(P_XYZ &p_1, P_XYZ &p_2, P_XYZ &normal_p)
-{
-	normal_p.x = p_1.y * p_2.z - p_1.z * p_2.y;
-	normal_p.y = p_1.z * p_2.x - p_1.x * p_2.z;
-	normal_p.z = p_1.x * p_2.y - p_1.y * p_2.x;
-	float norm_ = std::sqrtf(normal_p.x*normal_p.x + normal_p.y*normal_p.y + normal_p.z * normal_p.z);
-	normal_p.x /= norm_;
-	normal_p.y /= norm_;
-	normal_p.z /= norm_;
 }
 //===================================================================================
 

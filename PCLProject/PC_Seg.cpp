@@ -1,5 +1,6 @@
 #include "PC_Seg.h"
 #include "PC_Filter.h"
+#include "PointCloudOpr.h"
 
 //随机采样一致性的点云分割==========================================================
 void PC_RANSACSeg(PC_XYZ::Ptr &srcPC, PC_XYZ::Ptr &dstPC, int mode, float thresVal)
@@ -114,87 +115,61 @@ void PC_RegionGrowing(PC_XYZ::Ptr &srcPC, std::vector<vector<uint>> &indexs, flo
 //====================================================================================
 
 //DBSCAN分割==========================================================================
-void DBSCANSeg(PC_XYZ::Ptr &srcPC, vector<vector<uint>> &indexs, float radius, int p_number)
+void PC_DBSCANSeg(PC_XYZ::Ptr& srcPC, vector<vector<int>>& indexs,
+	double radius, int n, int minGroup, int maxGroup)
 {
-	size_t length = srcPC->points.size();
-	vector<bool> isCore(length, false);
-	vector<bool> isLabeled(length, false);
+	int length = srcPC->points.size();
 
+	//-1表示该点已经聚类、0表示该点为被聚类且不为核心点、1表示该点为核心点---只有核心点才能成为种子点
+	vector<int> isLabeled(length, 0);
 	pcl::KdTreeFLANN<P_XYZ> kdtree;
 	kdtree.setInputCloud(srcPC);
 	//将点云中的点分为核心与非核心
-	vector<uint> nonCore;
-	for (size_t i = 0; i < length; ++i)
+#pragma omp parallel for
+	for (int i = 0; i < length; ++i)
 	{
 		vector<int> PIdx;
 		vector<float> DistIdx;
 		kdtree.radiusSearch(srcPC->points[i], radius, PIdx, DistIdx);
-		if (PIdx.size() > p_number)
-			isCore[i] = true;
-	}
-
-	//对核心点进行聚类
-	vector<bool> isSand(length, false);
-	for (size_t i = 0; i < length; ++i)
-	{
-		if (isSand[i])
-			continue;
-		if (isCore[i])
+		if (PIdx.size() > n)
 		{
-			queue<uint> sand_p;
-			vector<uint> index;
-			sand_p.push(i);
-			isSand[i] = true;
-			index.push_back(i);
-			while (!sand_p.empty())
-			{
-				vector<int> PIdx;
-				vector<float> DistIdx;
-				kdtree.radiusSearch(srcPC->points[sand_p.front()], radius, PIdx, DistIdx);
-				for (size_t j = 1; j < PIdx.size(); ++j)
-				{
-					if (isCore[PIdx[j]] && !isSand[PIdx[j]])
-					{
-						sand_p.push(PIdx[j]);
-						isSand[PIdx[j]] = true;
-					}
-					if (!isLabeled[PIdx[j]])
-					{
-						index.push_back(PIdx[j]);
-						isLabeled[PIdx[j]] = true;
-					}
-				}
-				sand_p.pop();
-			}
-			indexs.push_back(index);
+			isLabeled[i] = 1;
 		}
 	}
-	//对噪声进行聚类
-	for (size_t i = 0; i < length; ++i)
+
+	//聚类
+	queue<int> sands;
+	for (int i = 0; i < isLabeled.size(); ++i)
 	{
-		if (isLabeled[i])
+		if (isLabeled[i] == 1)
+		{
+			sands.push(i);
+		}
+		else
 			continue;
-		queue<uint> sand_p;
-		vector<uint> index;
-		sand_p.push(i);
-		index.push_back(i);
-		while (!sand_p.empty())
+		vector<int> index(0);
+		while (!sands.empty())
 		{
 			vector<int> PIdx;
 			vector<float> DistIdx;
-			kdtree.radiusSearch(srcPC->points[sand_p.front()], radius, PIdx, DistIdx);
-			for (size_t j = 0; j < PIdx.size(); ++j)
+			kdtree.radiusSearch(srcPC->points[sands.front()], radius, PIdx, DistIdx);
+			for (int i = 0; i < PIdx.size(); ++i)
 			{
-				sand_p.push(PIdx[j]);
-				if (!isLabeled[PIdx[j]])
+				int idx = PIdx[i];
+				if (isLabeled[idx] > -1)
 				{
-					index.push_back(PIdx[j]);
-					isLabeled[i] = true;
+					index.push_back(idx);
+					if (isLabeled[idx] == 1)
+					{
+						sands.push(idx);
+					}
+					isLabeled[idx] = -1;
 				}
 			}
-			sand_p.pop();
+			sands.pop();
 		}
-		indexs.push_back(index);
+		if (index.size() > minGroup && index.size() < maxGroup)
+			indexs.push_back(index);
 	}
 }
 //===================================================================================
@@ -231,16 +206,64 @@ void DONSeg(PC_XYZ::Ptr &srcPC, float large_r, float small_r, float thresVal)
 }
 //===================================================================================
 
+//根据平面分割=======================================================================
+void PC_SegBaseOnPlane(PC_XYZ::Ptr& srcPC, Plane3D& plane, vector<int>& index, double thresVal, int orit)
+{
+	index.reserve(srcPC->points.size());
+	for (int i = 0; i < srcPC->points.size(); ++i)
+	{
+		P_XYZ& p = srcPC->points[i];
+		float dist = p.x * plane.a + p.y * plane.b + p.z * plane.c + plane.d;
+		if (dist < thresVal && orit == 0)
+		{
+			index.push_back(i);
+		}
+		if (dist > thresVal && orit == 1)
+		{
+			index.push_back(i);
+		}
+	}
+}
+//===================================================================================
+
 /*点云分割测试程序*/
 void PC_SegTest()
 {
 	PC_XYZ::Ptr srcPC(new PC_XYZ);
-	string path = "G:/JC_Config/整体点云/样品2/PC.ply";
+	string path = "C:/Users/Administrator/Desktop/testimage/相机1.ply";
 	pcl::io::loadPLYFile(path, *srcPC);
-	PC_XYZ::Ptr v_srcPC(new PC_XYZ);
-	PC_VoxelGrid(srcPC, v_srcPC, 1.6f);
-	float large_r = 20.0f;
-	float small_r = 2.0f;
-	float thresVal = 0.86f;
-	DONSeg(v_srcPC, large_r, small_r, thresVal);
+	PC_XYZ::Ptr downSrcPC(new PC_XYZ);
+	PC_VoxelGrid(srcPC, downSrcPC, 0.2);
+	vector<vector<int>> indexs;
+	PC_DBSCANSeg(downSrcPC, indexs, 0.5, 5, 0, 10000000);
+
+	//PC_XYZ::Ptr dstPC(new PC_XYZ);
+	//PC_ExtractIdxPC(downSrcPC, dstPC, indexs[3]);
+
+	for (int i = 0; i < indexs.size(); ++i)
+	{
+		PC_XYZ::Ptr dstPC(new PC_XYZ);
+		PC_ExtractPC(downSrcPC, indexs[i], dstPC);
+		pcl::visualization::PCLVisualizer viewer;
+		viewer.addCoordinateSystem(10);
+		//显示轨迹
+		pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> red(downSrcPC, 255, 0, 0); //设置点云颜色
+		viewer.addPointCloud(downSrcPC, red, "downSrcPC");
+		viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "downSrcPC");
+
+		pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> write(dstPC, 255, 255, 255); //设置点云颜色
+		viewer.addPointCloud(dstPC, write, "dstPC");
+		viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "dstPC");
+		while (!viewer.wasStopped())
+		{
+			viewer.spinOnce();
+		}
+	}
+
+	//PC_XYZ::Ptr v_srcPC(new PC_XYZ);
+	//PC_VoxelGrid(srcPC, v_srcPC, 1.6f);
+	//float large_r = 20.0f;
+	//float small_r = 2.0f;
+	//float thresVal = 0.86f;
+	//DONSeg(v_srcPC, large_r, small_r, thresVal);
 }

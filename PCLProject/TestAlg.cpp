@@ -28,6 +28,6 @@
 
 int main(int argc, char *argv[])
 {
-	Img_EllipseTest();
+	DrawShapeTest();
 	return (0);
 }

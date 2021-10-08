@@ -3,9 +3,12 @@
 #include "utils.h"
 #include "PointCloudOpr.h"
 
-//罗格里德斯公式====================================================================
-void RodriguesFormula(P_N& rotAxis, float rotAng, cv::Mat& rotMat)
+//罗格里德斯公式======================================================================
+//这里为啥要重写，原因是之前没有规划好--悲剧
+void RodriguesFormula_32(P_N& rotAxis, float rotAng, cv::Mat& rotMat)
 {
+	if (rotMat.size() != cv::Size(3, 3))
+		rotMat = cv::Mat(cv::Size(3, 3), CV_32FC1, cv::Scalar(0.0));
 	float cosVal = std::cos(rotAng);
 	float conVal_ = 1 - cosVal;
 	float sinVal = std::sin(rotAng);
@@ -111,7 +114,7 @@ void ComputeLocTransMat(P_XYZ& ref_p, P_N& ref_pn, cv::Mat& transMat)
 		rotAxis.normal_y *= norm; rotAxis.normal_z *= norm;
 	}
 	cv::Mat rotMat(cv::Size(3, 3), CV_32FC1, cv::Scalar(0));
-	RodriguesFormula(rotAxis, rotAng, rotMat);
+	RodriguesFormula_32(rotAxis, rotAng, rotMat);
 	float* pTransMat = transMat.ptr<float>(0);
 	rotMat.copyTo(transMat(cv::Rect(0, 0, 3, 3)));
 	pTransMat[3] = -(pTransMat[0] * ref_p.x + pTransMat[1] * ref_p.y + pTransMat[2] * ref_p.z);

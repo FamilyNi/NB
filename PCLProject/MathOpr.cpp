@@ -101,16 +101,6 @@ void GrayCodeToBin(const vector<bool>& grayCode, vector<bool>& bin)
 }
 //==========================================================================
 
-//三维向量叉乘==============================================================
-template <typename T>
-void VecCross_PC(T& vec1, T& vec2, T& vec)
-{
-	vec.x = vec1.y * vec2.z - vec1.z * vec2.y;
-	vec.y = vec1.z * vec2.x - vec1.x * vec2.z;
-	vec.z = vec1.x * vec2.y - vec1.y * vec2.x;
-}
-//=========================================================================
-
 //计算点间距===============================================================
 template <typename T>
 void Img_ComputePPDist(T& pt1, T& pt2, double& dist)
@@ -120,3 +110,4 @@ void Img_ComputePPDist(T& pt1, T& pt2, double& dist)
 	return std::sqrt(max(diff_x * diff_x + diff_y * diff_y, EPS));
 }
 //=========================================================================
+
