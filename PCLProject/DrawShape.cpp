@@ -1,6 +1,7 @@
 #include "DrawShape.h"
 #include "PointCloudOpr.h"
 #include "MathOpr.h"
+#include "MathOpr.cpp"
 
 //ÐÎ×´±ä»»==========================================================
 void PC_ShapeTrans(PC_XYZ::Ptr& pc, cv::Vec6d& shape, int mode)

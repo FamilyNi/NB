@@ -2,8 +2,8 @@
 #include "MathOpr.h"
 
 //三点求圆======================================================================================
-template <typename T>
-void Img_ThreePtsComputeCicle(T& pt1, T& pt2, T& pt3, cv::Vec3d& circle)
+template <typename T1, typename T2>
+void Img_ThreePtsComputeCicle(T1& pt1, T1& pt2, T1& pt3, T2& circle)
 {
 	double B21 = pt2.x * pt2.x + pt2.y * pt2.y - (pt1.x * pt1.x + pt1.y * pt1.y);
 	double B32 = pt3.x * pt3.x + pt3.y * pt3.y - (pt2.x * pt2.x + pt2.y * pt2.y);
@@ -23,8 +23,8 @@ void Img_ThreePtsComputeCicle(T& pt1, T& pt2, T& pt3, cv::Vec3d& circle)
 //==============================================================================================
 
 //随机一致采样算法计算直线======================================================================
-template <typename T>
-void Img_RANSACComputeCircle(vector<T>& pts, cv::Vec3d& circle, vector<T>& inlinerPts, double thres)
+template <typename T1, typename T2>
+void Img_RANSACComputeCircle(vector<T1>& pts, T2& circle, vector<T1>& inlinerPts, double thres)
 {
 	if (pts.size() < 3)
 		return;
@@ -36,17 +36,17 @@ void Img_RANSACComputeCircle(vector<T>& pts, cv::Vec3d& circle, vector<T>& inlin
 	for (int i = 0; i < maxEpo; ++i)
 	{
 		int effetPoints = 0;
-		//随机选择两个点，并计算直线
+		//随机选择三个点计算园
 		int index_1 = rand() % size;
 		int index_2 = rand() % size;
 		int index_3 = rand() % size;
-		cv::Vec3d circle_;
+		T2 circle_;
 		Img_ThreePtsComputeCicle(pts[index_1], pts[index_2], pts[index_3], circle_);
 		//计算局内点的个数
 		for (int j = 0; j < size; ++j)
 		{
-			float diff_x = pts[j].x - circle_[0];
-			float diff_y = pts[j].y - circle_[1];
+			double diff_x = pts[j].x - circle_[0];
+			double diff_y = pts[j].y - circle_[1];
 			float dist = std::sqrt(diff_x * diff_x + diff_y * diff_y);
 			effetPoints += abs(dist - circle_[2]) < thres ? 1 : 0;
 		}
@@ -71,9 +71,9 @@ void Img_RANSACComputeCircle(vector<T>& pts, cv::Vec3d& circle, vector<T>& inlin
 	inlinerPts.reserve(size);
 	for (int i = 0; i < size; ++i)
 	{
-		float diff_x = pts[i].x - circle[0];
-		float diff_y = pts[i].y - circle[1];
-		float dist = std::sqrt(diff_x * diff_x + diff_y * diff_y);
+		double diff_x = pts[i].x - circle[0];
+		double diff_y = pts[i].y - circle[1];
+		double dist = std::sqrt(diff_x * diff_x + diff_y * diff_y);
 		if (abs(dist - circle[2]) < thres)
 			inlinerPts.push_back(pts[i]);
 	}
@@ -81,8 +81,8 @@ void Img_RANSACComputeCircle(vector<T>& pts, cv::Vec3d& circle, vector<T>& inlin
 //==============================================================================================
 
 //最小二乘法拟合园==============================================================================
-template <typename T>
-void Img_OLSFitCircle(vector<T>& pts, vector<double>& weights, cv::Vec3d& circle)
+template <typename T1, typename T2>
+void Img_OLSFitCircle(vector<T1>& pts, vector<double>& weights, T2& circle)
 {
 	double w_sum = 0.0;
 	double w_x_sum = 0.0;
@@ -128,8 +128,8 @@ void Img_OLSFitCircle(vector<T>& pts, vector<double>& weights, cv::Vec3d& circle
 //==============================================================================================
 
 //huber计算权重=================================================================================
-template <typename T>
-void Img_HuberCircleWeights(vector<T>& pts, cv::Vec3d& circle, vector<double>& weights)
+template <typename T1, typename T2>
+void Img_HuberCircleWeights(vector<T1>& pts, T2& circle, vector<double>& weights)
 {
 	double tao = 1.345;
 	for (int i = 0; i < pts.size(); ++i)
@@ -151,8 +151,8 @@ void Img_HuberCircleWeights(vector<T>& pts, cv::Vec3d& circle, vector<double>& w
 //==============================================================================================
 
 //Turkey计算权重================================================================================
-template <typename T>
-void Img_TurkeyCircleWeights(vector<T>& pts, cv::Vec3d& circle, vector<double>& weights)
+template <typename T1, typename T2>
+void Img_TukeyCircleWeights(vector<T1>& pts, T2& circle, vector<double>& weights)
 {
 	vector<double> dists(pts.size());
 	for (int i = 0; i < pts.size(); ++i)
@@ -182,8 +182,8 @@ void Img_TurkeyCircleWeights(vector<T>& pts, cv::Vec3d& circle, vector<double>& 
 //==============================================================================================
 
 //拟合园========================================================================================
-template <typename T>
-void Img_FitCircle(vector<T>& pts, cv::Vec3d& circle, int k, NB_MODEL_FIT_METHOD method)
+template <typename T1, typename T2>
+void Img_FitCircle(vector<T1>& pts, T2& circle, int k, NB_MODEL_FIT_METHOD method)
 {
 	vector<double> weights(pts.size(), 1);
 
@@ -201,8 +201,8 @@ void Img_FitCircle(vector<T>& pts, cv::Vec3d& circle, int k, NB_MODEL_FIT_METHOD
 			case HUBER_FIT:
 				Img_HuberCircleWeights(pts, circle, weights);
 				break;
-			case TURKEY_FIT:
-				Img_TurkeyCircleWeights(pts, circle, weights);
+			case TUKEY_FIT:
+				Img_TukeyCircleWeights(pts, circle, weights);
 				break;
 			default:
 				break;
@@ -243,14 +243,15 @@ void CircleTest()
 	}
 
 	cv::Vec3d circle;
-	//vector<Point> inlinerPts;
-	Img_FitCircle(pts, circle, 5, NB_MODEL_FIT_METHOD::TURKEY_FIT);
+	vector<Point> inlinerPts;
+	Img_RANSACComputeCircle(pts, circle, inlinerPts, 0.2);
+	//Img_FitCircle(pts, circle, 5, NB_MODEL_FIT_METHOD::OLS_FIT);
 	//Mat circleImg(srcImg.size(), srcImg.type(), cv::Scalar(255,255,255));
 	cv::circle(colorImg, cv::Point(circle[0], circle[1]), circle[2], cv::Scalar(0, 255, 0), 2);
 	//cv::imwrite("C:/Users/Administrator/Desktop/testimage/8.bmp", circleImg);
 
-	//for (int i = 0; i < inlinerPts.size(); ++i)
-	//{
-	//	cv::line(colorImg, inlinerPts[i], inlinerPts[i], cv::Scalar(0, 0, 255), 5);
-	//}
+	for (int i = 0; i < inlinerPts.size(); ++i)
+	{
+		cv::line(colorImg, inlinerPts[i], inlinerPts[i], cv::Scalar(0, 0, 255), 5);
+	}
 }

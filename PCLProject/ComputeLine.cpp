@@ -14,8 +14,8 @@ void Img_TwoPtsComputeLine(T& pt1, T& pt2, cv::Vec3d& line)
 //==============================================================================================
 
 //随机一致采样算法计算直线======================================================================
-template <typename T>
-void Img_RANSACComputeLine(vector<T>& pts, cv::Vec3d& line, vector<T>& inlinerPts, double thres)
+template <typename T1, typename T2>
+void Img_RANSACComputeLine(vector<T1>& pts, T2& line, vector<T1>& inlinerPts, double thres)
 {
 	if (pts.size() < 2)
 		return;
@@ -30,7 +30,7 @@ void Img_RANSACComputeLine(vector<T>& pts, cv::Vec3d& line, vector<T>& inlinerPt
 		//随机选择两个点，并计算直线
 		int index_1 = rand() % size;
 		int index_2 = rand() % size;
-		cv::Vec3d line_;
+		T2 line_;
 		Img_TwoPtsComputeLine(pts[index_1], pts[index_2], line_);
 
 		//计算局内点的个数
@@ -68,8 +68,8 @@ void Img_RANSACComputeLine(vector<T>& pts, cv::Vec3d& line, vector<T>& inlinerPt
 //==============================================================================================
 
 //最小二乘法拟合直线============================================================================
-template <typename T>
-void Img_OLSFitLine(vector<T>& pts, vector<double>& weights, cv::Vec3d& line)
+template <typename T1, typename T2>
+void Img_OLSFitLine(vector<T1>& pts, vector<double>& weights, T2& line)
 {
 	double w_sum = 0.0;
 	double w_x_sum = 0.0;
@@ -104,8 +104,8 @@ void Img_OLSFitLine(vector<T>& pts, vector<double>& weights, cv::Vec3d& line)
 //==============================================================================================
 
 //Huber计算权重=================================================================================
-template <typename T>
-void Img_HuberLineWeights(vector<T>& pts, cv::Vec3d& line, vector<double>& weights)
+template <typename T1, typename T2>
+void Img_HuberLineWeights(vector<T1>& pts, T2& line, vector<double>& weights)
 {
 	double tao = 1.345;
 	for (int i = 0; i < pts.size(); ++i)
@@ -123,9 +123,9 @@ void Img_HuberLineWeights(vector<T>& pts, cv::Vec3d& line, vector<double>& weigh
 }
 //==============================================================================================
 
-//Turkey计算权重================================================================================
-template <typename T>
-void Img_TurkeyLineWeights(vector<T>& pts, cv::Vec3d& line, vector<double>& weights)
+//Tukey计算权重================================================================================
+template <typename T1, typename T2>
+void Img_TukeyLineWeights(vector<T1>& pts, T2& line, vector<double>& weights)
 {
 	vector<double> dists(pts.size());
 	for (int i = 0; i < pts.size(); ++i)
@@ -150,8 +150,8 @@ void Img_TurkeyLineWeights(vector<T>& pts, cv::Vec3d& line, vector<double>& weig
 //==============================================================================================
 
 //直线拟合======================================================================================
-template <typename T>
-void Img_FitLine(vector<T>& pts, cv::Vec3d& line, int k, NB_MODEL_FIT_METHOD method)
+template <typename T1, typename T2>
+void Img_FitLine(vector<T1>& pts, T2& line, int k, NB_MODEL_FIT_METHOD method)
 {
 	vector<double> weights(pts.size(), 1);
 	Img_OLSFitLine(pts, weights, line);
@@ -168,8 +168,8 @@ void Img_FitLine(vector<T>& pts, cv::Vec3d& line, int k, NB_MODEL_FIT_METHOD met
 			case HUBER_FIT:
 				Img_HuberLineWeights(pts, line, weights);
 				break;
-			case TURKEY_FIT:
-				Img_TurkeyLineWeights(pts, line, weights);
+			case TUKEY_FIT:
+				Img_TukeyLineWeights(pts, line, weights);
 				break;
 			default:
 				break;
@@ -214,7 +214,8 @@ void LineTest()
 
 	cv::Vec3d line;
 	vector<cv::Point> inlinerPts;
-	Img_FitLine(pts, line, 5, NB_MODEL_FIT_METHOD::HUBER_FIT);
+	//Img_FitLine(pts, line, 15, NB_MODEL_FIT_METHOD::TUKEY_FIT);
+	Img_RANSACComputeLine(pts, line, inlinerPts, 0.1);
 	cv::Point s_pt, e_pt;
 	s_pt.x = 35; s_pt.y = -(line[2] + 35 * line[0]) / line[1];
 	e_pt.x = 800; e_pt.y = -(line[2] + 800 * line[0]) / line[1];

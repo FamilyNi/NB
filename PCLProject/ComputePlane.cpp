@@ -2,8 +2,8 @@
 #include "MathOpr.h"
 
 //三点计算平面==================================================================================
-template <typename T>
-void PC_ThreePtsComputePlane(T& pt1, T& pt2, T& pt3, cv::Vec4d& plane)
+template <typename T1, typename T2>
+void PC_ThreePtsComputePlane(T1& pt1, T1& pt2, T1& pt3, T2& plane)
 {
 	P_XYZ nor_1(pt1.x - pt2.x, pt1.y - pt2.y, pt1.z - pt2.z);
 	P_XYZ nor_2(pt1.x - pt3.x, pt1.y - pt3.y, pt1.z - pt3.z);
@@ -18,8 +18,8 @@ void PC_ThreePtsComputePlane(T& pt1, T& pt2, T& pt3, cv::Vec4d& plane)
 //==============================================================================================
 
 //最小二乘法拟合平面============================================================================
-template <typename T>
-void PC_OLSFitPlane(vector<T>& pts, vector<double>& weights, cv::Vec4d& plane)
+template <typename T1, typename T2>
+void PC_OLSFitPlane(vector<T1>& pts, vector<double>& weights, T2& plane)
 {
 	if (pts.size() < 3)
 		return;
@@ -64,8 +64,8 @@ void PC_OLSFitPlane(vector<T>& pts, vector<double>& weights, cv::Vec4d& plane)
 //==============================================================================================
 
 //Huber计算权重=================================================================================
-template <typename T>
-void PC_HuberPlaneWeights(vector<T>& pts, cv::Vec4d& plane, vector<double>& weights)
+template <typename T1, typename T2>
+void PC_HuberPlaneWeights(vector<T1>& pts, T2& plane, vector<double>& weights)
 {
 	double tao = 1.345;
 	for (int i = 0; i < pts.size(); ++i)
@@ -83,9 +83,9 @@ void PC_HuberPlaneWeights(vector<T>& pts, cv::Vec4d& plane, vector<double>& weig
 }
 //==============================================================================================
 
-//Turkey计算权重================================================================================
-template <typename T>
-void PC_TurkeyPlaneWeights(vector<T>& pts, cv::Vec4d& plane, vector<double>& weights)
+//Tukey计算权重================================================================================
+template <typename T1, typename T2>
+void PC_TukeyPlaneWeights(vector<T1>& pts, T2& plane, vector<double>& weights)
 {
 	vector<double> dists(pts.size());
 	for (int i = 0; i < pts.size(); ++i)
@@ -112,8 +112,8 @@ void PC_TurkeyPlaneWeights(vector<T>& pts, cv::Vec4d& plane, vector<double>& wei
 //==============================================================================================
 
 //平面拟合======================================================================================
-template <typename T>
-void PC_FitPlane(vector<T>& pts, cv::Vec4d& plane, int k, NB_MODEL_FIT_METHOD method)
+template <typename T1, typename T2>
+void PC_FitPlane(vector<T1>& pts, T2& plane, int k, NB_MODEL_FIT_METHOD method)
 {
 	vector<double> weights(pts.size(), 1);
 	PC_OLSFitPlane(pts, weights, plane);
@@ -130,8 +130,8 @@ void PC_FitPlane(vector<T>& pts, cv::Vec4d& plane, int k, NB_MODEL_FIT_METHOD me
 			case HUBER_FIT:
 				PC_HuberPlaneWeights(pts, plane, weights);
 				break;
-			case TURKEY_FIT:
-				PC_TurkeyPlaneWeights(pts, plane, weights);
+			case TUKEY_FIT:
+				PC_TukeyPlaneWeights(pts, plane, weights);
 				break;
 			default:
 				break;

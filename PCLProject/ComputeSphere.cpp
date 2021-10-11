@@ -1,8 +1,21 @@
 #include "ComputeSphere.h"
+#include "DrawShape.h"
+
+//点到园的距离==================================================================================
+template <typename T1, typename T2>
+void PC_PtToShpereDist(T1& pt, T2& sphere, double& dist)
+{
+	double diff_x = pt.x - sphere[0];
+	double diff_y = pt.y - sphere[1];
+	double diff_z = pt.z - sphere[2];
+	dist = std::sqrt(diff_x * diff_x + diff_y * diff_y + diff_z * diff_z);
+	dist = abs(dist - sphere[3]);
+}
+//==============================================================================================
 
 //四点计算球====================================================================================
-template <typename T>
-void PC_FourPtsComputeSphere(vector<T>& pts, cv::Vec4d& sphere)
+template <typename T1, typename T2>
+void PC_FourPtsComputeSphere(vector<T1>& pts, T2& sphere)
 {
 	if (pts.size() != 4)
 		return;
@@ -30,13 +43,68 @@ void PC_FourPtsComputeSphere(vector<T>& pts, cv::Vec4d& sphere)
 	double diff_y = pts[0].y - sphere[1];
 	double diff_z = pts[0].z - sphere[2];
 	sphere[3] = std::sqrt(diff_x * diff_x + diff_y * diff_y + diff_z * diff_z);
-	return;
+}
+//==============================================================================================
+
+//随机一致采样算法计算球========================================================================
+template <typename T1, typename T2>
+void PC_RANSACComputeSphere(vector<T1>& pts, T2& sphere, vector<T1>& inlinerPts, double thres)
+{
+	if (pts.size() < 6)
+		return;
+	int best_model_p = 0;
+	double P = 0.99;  //模型存在的概率
+	double log_P = log(1 - P);
+	int size = pts.size();
+	int maxEpo = 10000;
+	vector<T1> pts_(4);
+	for (int i = 0; i < maxEpo; ++i)
+	{
+		int effetPoints = 0;
+		//随机选择六个个点计算椭圆
+		pts_[0] = pts[rand() % size]; pts_[1] = pts[rand() % size];
+		pts_[2] = pts[rand() % size]; pts_[3] = pts[rand() % size];
+		T2 sphere_;
+		PC_FourPtsComputeSphere(pts_, sphere_);
+		//计算局内点的个数
+		for (int j = 0; j < size; ++j)
+		{
+			double dist = 0.0;
+			PC_PtToShpereDist(pts[j], sphere_, dist);
+			effetPoints += dist < thres ? 1 : 0;
+		}
+		//获取最优模型，并根据概率修改迭代次数
+		if (best_model_p < effetPoints)
+		{
+			best_model_p = effetPoints;
+			sphere = sphere_;
+			double t_P = (double)best_model_p / size;
+			double pow_t_p = t_P * t_P * t_P;
+			maxEpo = log_P / log(1 - pow_t_p) + std::sqrt(1 - pow_t_p) / (pow_t_p);
+		}
+		if (best_model_p > 0.5 * size)
+		{
+			sphere = sphere_;
+			break;
+		}
+	}
+	//提取局内点
+	if (inlinerPts.size() != 0)
+		inlinerPts.resize(0);
+	inlinerPts.reserve(size);
+	for (int i = 0; i < size; ++i)
+	{
+		double dist = 0.0;
+		PC_PtToShpereDist(pts[i], sphere, dist);
+		if (dist < thres)
+			inlinerPts.push_back(pts[i]);
+	}
 }
 //==============================================================================================
 
 //最小二乘法拟合球==============================================================================
-template <typename T>
-void PC_OLSFitSphere(vector<T>& pts, vector<double>& weights, cv::Vec4d& sphere)
+template <typename T1, typename T2>
+void PC_OLSFitSphere(vector<T1>& pts, vector<double>& weights, T2& sphere)
 {
 	double w_sum = 0.0;
 	double w_x_sum = 0.0;
@@ -90,42 +158,36 @@ void PC_OLSFitSphere(vector<T>& pts, vector<double>& weights, cv::Vec4d& sphere)
 }
 //==============================================================================================
 
-//huber计算权重=================================================================================
-template <typename T>
-void PC_HuberSphereWeights(vector<T>& pts, cv::Vec4d& sphere, vector<double>& weights)
+//Huber计算权重=================================================================================
+template <typename T1, typename T2>
+void PC_HuberSphereWeights(vector<T1>& pts, T2& sphere, vector<double>& weights)
 {
 	double tao = 1.345;
 	for (int i = 0; i < pts.size(); ++i)
 	{
-		double diff_x = pts[i].x - sphere[0];
-		double diff_y = pts[i].y - sphere[1];
-		double diff_z = pts[i].z - sphere[2];
-		double distance = std::sqrt(max(diff_x * diff_x + diff_y * diff_y + diff_z * diff_z, EPS));
-		distance = abs(distance - sphere[3]);
-		if (distance <= tao)
+		double dist = 0.0;
+		PC_PtToShpereDist(pts[i], sphere, dist);;
+		if (dist <= tao)
 		{
 			weights[i] = 1;
 		}
 		else
 		{
-			weights[i] = tao / distance;
+			weights[i] = tao / dist;
 		}
 	}
 }
 //==============================================================================================
 
-//Turkey计算权重================================================================================
-template <typename T>
-void PC_TurkeySphereWeights(vector<T>& pts, cv::Vec4d& sphere, vector<double>& weights)
+//Tukey计算权重================================================================================
+template <typename T1, typename T2>
+void PC_TukeySphereWeights(vector<T1>& pts, T2& sphere, vector<double>& weights)
 {
 	vector<double> dists(pts.size());
 	for (int i = 0; i < pts.size(); ++i)
 	{
-		double diff_x = pts[i].x - sphere[0];
-		double diff_y = pts[i].y - sphere[1];
-		double diff_z = pts[i].z - sphere[2];
-		double distance = std::sqrt(max(diff_x * diff_x + diff_y * diff_y + diff_z * diff_z, EPS));
-		distance = abs(distance - sphere[3]);
+		double distance = 0.0;
+		PC_PtToShpereDist(pts[i], sphere, distance);
 		dists[i] = distance;
 	}
 	//求限制条件tao
@@ -147,8 +209,8 @@ void PC_TurkeySphereWeights(vector<T>& pts, cv::Vec4d& sphere, vector<double>& w
 //==============================================================================================
 
 //拟合球========================================================================================
-template <typename T>
-void PC_FitSphere(vector<T>& pts, cv::Vec4d& sphere, int k, NB_MODEL_FIT_METHOD method)
+template <typename T1, typename T2>
+void PC_FitSphere(vector<T1>& pts, T2& sphere, int k, NB_MODEL_FIT_METHOD method)
 {
 	vector<double> weights(pts.size(), 1);
 	PC_OLSFitSphere(pts, weights, sphere);
@@ -165,8 +227,8 @@ void PC_FitSphere(vector<T>& pts, cv::Vec4d& sphere, int k, NB_MODEL_FIT_METHOD 
 			case HUBER_FIT:
 				PC_HuberSphereWeights(pts, sphere, weights);
 				break;
-			case TURKEY_FIT:
-				PC_TurkeySphereWeights(pts, sphere, weights);
+			case TUKEY_FIT:
+				PC_TukeySphereWeights(pts, sphere, weights);
 				break;
 			default:
 				break;
@@ -189,5 +251,26 @@ void PC_SphereTest()
 	}
 
 	cv::Vec4d sphere;
-	PC_FitSphere(pts, sphere, 5, NB_MODEL_FIT_METHOD::TURKEY_FIT);
+	PC_FitSphere(pts, sphere, 5, NB_MODEL_FIT_METHOD::TUKEY_FIT);
+	//vector<P_XYZ> inlinerPts;
+	//PC_RANSACComputeSphere(pts, sphere, inlinerPts, 0.2);
+
+	PC_XYZ::Ptr spherePC(new PC_XYZ);
+	P_XYZ center(sphere[0], sphere[1], sphere[2]);
+	PC_DrawSphere(spherePC, center, sphere[3], 0.1);
+
+	pcl::visualization::PCLVisualizer viewer;
+	viewer.addCoordinateSystem(10);
+	//显示轨迹
+	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> red(srcPC, 255, 0, 0); //设置点云颜色
+	viewer.addPointCloud(srcPC, red, "srcPC");
+	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 8, "srcPC");
+
+	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> write(spherePC, 255, 255, 255); //设置点云颜色
+	viewer.addPointCloud(spherePC, write, "spherePC");
+	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "spherePC");
+	while (!viewer.wasStopped())
+	{
+		viewer.spinOnce();
+	}
 }

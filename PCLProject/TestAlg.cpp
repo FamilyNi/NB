@@ -10,7 +10,6 @@
 #include "WaveLet.h"
 #include "LocalDeforableModel.h"
 #include "DrawShape.h"
-#include "MathOpr.h"
 #include "SiftMatch.h"
 #include "ContourOpr.h"
 #include "ShapeMatch.h"
@@ -18,16 +17,11 @@
 #include "ImageFilter.h"
 #include "ImageEnhance.h"
 #include "ImageSeg.h"
-#include "GrabEdges.h"
-#include "ComputeLine.h"
-#include "ComputeCircle.h"
-#include "ComputeSphere.h"
 #include "ComputePlane.h"
 #include "Compute3DLine.h"
-#include "ComputeEllipse.h"
 
 int main(int argc, char *argv[])
 {
-	DrawShapeTest();
+	PC_3DLineTest();
 	return (0);
 }

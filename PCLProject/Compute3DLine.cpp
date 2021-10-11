@@ -1,22 +1,78 @@
 #include "Compute3DLine.h"
 #include "MathOpr.h"
+#include "MathOpr.cpp"
 
-//空间两点求直线==================================================================================
-template <typename T>
-void PC_OLSFit3DLine(T& pt1, T& pt2, cv::Vec6d& line)
+//两点求线========================================================================================
+template <typename T1, typename T2>
+void PC_TwoPtsComputeLine(T1& pt1, T1& pt2, T2& line)
 {
-	line[0] = pt1.x - pt2.x;
-	line[1] = pt1.y - pt2.y;
-	line[2] = pt1.z - pt2.z;
-	double norm_ = 1.0 / std::max(std::sqrt(line[0] * line[0] + line[1] * line[1] + line[2] * line[2]), EPS);
-	line[0] *= norm_; line[1] *= norm_; line[2] *= norm_;
-	line[3] = pt1.x; line[4] = pt1.y; line[5] = pt1.y;
+	double diff_x = pt2.x - pt1.x;
+	double diff_y = pt2.y - pt1.y;
+	double diff_z = pt2.z - pt1.z;
+	double norm_ = 1.0 / std::sqrt(diff_x * diff_x + diff_y * diff_y + diff_z * diff_z);
+	line[0] = diff_x * norm_; line[1] = diff_y * norm_; line[2] = diff_z * norm_;
+	line[3] = pt1.x; line[4] = pt1.y; line[5] = pt1.z;
+}
+//================================================================================================
+
+//随机一致采样算法计算空间直线====================================================================
+template <typename T1, typename T2>
+void PC_RANSACComputeLine(vector<T1>& pts, T2& line, vector<T1>& inlinerPts, double thres)
+{
+	if (pts.size() < 6)
+		return;
+	int best_model_p = 0;
+	double P = 0.99;  //模型存在的概率
+	double log_P = log(1 - P);
+	int size = pts.size();
+	int maxEpo = 10000;
+	for (int i = 0; i < maxEpo; ++i)
+	{
+		int effetPoints = 0;
+		//随机选择六个个点计算椭圆
+		T1 pt1 = pts[rand() % size]; 
+		T1 pt2 = pts[rand() % size];
+		T2 line_;
+		PC_TwoPtsComputeLine(pt1, pt2, line_);
+		//计算局内点的个数
+		for (int j = 0; j < size; ++j)
+		{
+			double dist = 0.0;
+			PC_PtToLineDist(pts[j], line_, dist);
+			effetPoints += dist < thres ? 1 : 0;
+		}
+		//获取最优模型，并根据概率修改迭代次数
+		if (best_model_p < effetPoints)
+		{
+			best_model_p = effetPoints;
+			line = line_;
+			double t_P = (double)best_model_p / size;
+			double pow_t_p = t_P * t_P * t_P;
+			maxEpo = log_P / log(1 - pow_t_p) + std::sqrt(1 - pow_t_p) / (pow_t_p);
+		}
+		if (best_model_p > 0.5 * size)
+		{
+			line = line_;
+			break;
+		}
+	}
+	//提取局内点
+	if (inlinerPts.size() != 0)
+		inlinerPts.resize(0);
+	inlinerPts.reserve(size);
+	for (int i = 0; i < size; ++i)
+	{
+		double dist = 0.0;
+		PC_PtToLineDist(pts[i], line, dist);
+		if (dist < thres)
+			inlinerPts.push_back(pts[i]);
+	}
 }
 //================================================================================================
 
 //最小二乘法拟合空间直线==========================================================================
-template <typename T>
-void PC_OLSFit3DLine(vector<T>& pts, vector<double>& weights, cv::Vec6d& line)
+template <typename T1, typename T2>
+void PC_OLSFit3DLine(vector<T1>& pts, vector<double>& weights, T2& line)
 {
 	double w_sum = 0.0, w_x_sum = 0.0, w_y_sum = 0.0, w_z_sum = 0.0;
 	double w_xy_sum = 0.0, w_yz_sum = 0.0, w_zx_sum = 0.0;
@@ -58,8 +114,8 @@ void PC_OLSFit3DLine(vector<T>& pts, vector<double>& weights, cv::Vec6d& line)
 //================================================================================================
 
 //Huber计算权重===================================================================================
-template <typename T>
-void PC_Huber3DLineWeights(vector<T>& pts, cv::Vec6d& line, vector<double>& weights)
+template <typename T1, typename T2>
+void PC_Huber3DLineWeights(vector<T1>& pts, T2& line, vector<double>& weights)
 {
 	double tao = 1.345;
 	for (int i = 0; i < pts.size(); ++i)
@@ -78,9 +134,9 @@ void PC_Huber3DLineWeights(vector<T>& pts, cv::Vec6d& line, vector<double>& weig
 }
 //================================================================================================
 
-//Turkey计算权重==================================================================================
-template <typename T>
-void PC_Turkey3DLineWeights(vector<T>& pts, cv::Vec6d& line, vector<double>& weights)
+//Tukey计算权重==================================================================================
+template <typename T1, typename T2>
+void PC_Tukey3DLineWeights(vector<T1>& pts, T2& line, vector<double>& weights)
 {
 	vector<double> dists(pts.size(), 0.0);
 	for (int i = 0; i < pts.size(); ++i)
@@ -106,8 +162,8 @@ void PC_Turkey3DLineWeights(vector<T>& pts, cv::Vec6d& line, vector<double>& wei
 //================================================================================================
 
 //空间直线拟合====================================================================================
-template <typename T>
-void PC_Fit3DLine(vector<T>& pts, cv::Vec6d& line, int k, NB_MODEL_FIT_METHOD method)
+template <typename T1, typename T2>
+void PC_Fit3DLine(vector<T1>& pts, T2& line, int k, NB_MODEL_FIT_METHOD method)
 {
 	vector<double> weights(pts.size(), 1);
 	PC_OLSFit3DLine(pts, weights, line);
@@ -124,8 +180,8 @@ void PC_Fit3DLine(vector<T>& pts, cv::Vec6d& line, int k, NB_MODEL_FIT_METHOD me
 			case HUBER_FIT:
 				PC_Huber3DLineWeights(pts, line, weights);
 				break;
-			case TURKEY_FIT:
-				PC_Turkey3DLineWeights(pts, line, weights);
+			case TUKEY_FIT:
+				PC_Tukey3DLineWeights(pts, line, weights);
 				break;
 			default:
 				break;
@@ -141,22 +197,35 @@ void PC_3DLineTest()
 	PC_XYZ::Ptr srcPC(new PC_XYZ);
 	pcl::io::loadPLYFile("C:/Users/Administrator/Desktop/testimage/噪声直线.ply", *srcPC);
 
-	pcl::visualization::PCLVisualizer viewer;
-	viewer.addCoordinateSystem(10);
-	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> write(srcPC, 255, 255, 255); //设置点云颜色
-	viewer.addPointCloud(srcPC, write, "srcPC");
-	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "srcPC");
-
-	while (!viewer.wasStopped())
-	{
-		viewer.spinOnce();
-	}
-
 	vector<P_XYZ> pts(srcPC->points.size());
 	for (int i = 0; i < srcPC->points.size(); ++i)
 	{
 		pts[i] = srcPC->points[i];
 	}
 	cv::Vec6d line;
-	PC_Fit3DLine(pts, line, 5, NB_MODEL_FIT_METHOD::TURKEY_FIT);
+	vector<P_XYZ> inlinerPts;
+	PC_RANSACComputeLine(pts, line, inlinerPts, 0.2);
+
+	PC_XYZ::Ptr inlinerPC(new PC_XYZ);
+	inlinerPC->points.resize(inlinerPts.size());
+	for (int i = 0; i < inlinerPts.size(); ++i)
+	{
+		inlinerPC->points[i] = inlinerPts[i];
+	}
+
+	pcl::visualization::PCLVisualizer viewer;
+	viewer.addCoordinateSystem(10);
+	//显示轨迹
+	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> red(srcPC, 255, 0, 0); //设置点云颜色
+	viewer.addPointCloud(srcPC, red, "srcPC");
+	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "srcPC");
+
+	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> write(inlinerPC, 255, 255, 255); //设置点云颜色
+	viewer.addPointCloud(inlinerPC, write, "inlinerPC");
+	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "inlinerPC");
+	while (!viewer.wasStopped())
+	{
+		viewer.spinOnce();
+	}
+	//PC_Fit3DLine(pts, line, 10, NB_MODEL_FIT_METHOD::HUBER_FIT);
 }

@@ -1,7 +1,8 @@
 #include "MathOpr.h"
 
 //点到平面的距离==============================================================
-void PC_PtToPlaneDist(P_XYZ& pt, cv::Vec4d& plane, double& dist)
+template <typename T>
+void PC_PtToPlaneDist(T& pt, cv::Vec4d& plane, double& dist)
 {
 	dist = abs(pt.x * plane[0] + pt.y * plane[1] + pt.z * plane[2] + plane[3]);
 }
@@ -17,7 +18,8 @@ void PC_VecNormal(T& p)
 //============================================================================
 
 //点到平面的投影点============================================================
-void PC_PtProjPlanePt(P_XYZ& pt, cv::Vec4d& plane, P_XYZ& projPt)
+template <typename T>
+void PC_PtProjPlanePt(T& pt, cv::Vec4d& plane, T& projPt)
 {
 	float dist = pt.x * plane[0] + pt.y * plane[1] + pt.z * plane[2] + plane[3];
 	projPt = { pt.x - float(dist * plane[0]), float(pt.x - dist * plane[1]),float(pt.x - dist * plane[2]) };
@@ -25,7 +27,8 @@ void PC_PtProjPlanePt(P_XYZ& pt, cv::Vec4d& plane, P_XYZ& projPt)
 //===========================================================================
 
 //空间点到空间直线的距离=====================================================
-void PC_PtToLineDist(P_XYZ& pt, cv::Vec6d& line, double& dist)
+template <typename T1, typename T2>
+void PC_PtToLineDist(T1& pt, T2& line, double& dist)
 {
 	double scale = pt.x * line[0] + pt.y * line[1] + pt.z * line[2] -
 		(line[3] * line[0] + line[4] * line[1] + line[5] * line[2]);
@@ -37,7 +40,8 @@ void PC_PtToLineDist(P_XYZ& pt, cv::Vec6d& line, double& dist)
 //===========================================================================
 
 //空间点到空间直线的投影=====================================================
-void PC_PtProjLinePt(P_XYZ& pt, cv::Vec6d& line, P_XYZ& projPt)
+template <typename T>
+void PC_PtProjLinePt(T& pt, cv::Vec6d& line, T& projPt)
 {
 	float scale = pt.x * line[0] + pt.y * line[1] + pt.z * line[2] -
 		(line[3] * line[0] + line[4] * line[1] + line[5] * line[2]);
@@ -45,61 +49,22 @@ void PC_PtProjLinePt(P_XYZ& pt, cv::Vec6d& line, P_XYZ& projPt)
 	projPt.y = line[4] + scale * line[1]; 
 	projPt.z = line[5] + scale * line[2];
 }
-//==========================================================================
+//===========================================================================
 
-//十进制转二进制============================================================
-void DecToBin(const int dec_num, vector<bool>& bin)
+//三维向量叉乘===============================================================
+template <typename T>
+void PC_VecCross(T& vec1, T& vec2, T& vec, bool isNormal)
 {
-	int a = dec_num;
-	int index = 0;
-	int length = bin.size() - 1;
-	while (a != 0)
+	vec.x = vec1.y * vec2.z - vec1.z * vec2.y;
+	vec.y = vec1.z * vec2.x - vec1.x * vec2.z;
+	vec.z = vec1.x * vec2.y - vec1.y * vec2.x;
+	if (isNormal)
 	{
-		if (index > length)
-			break;
-		bin[index] = a % 2;
-		a /= 2;
-		index++;
+		double norm_ = 1.0 / std::sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z);
+		vec.x *= norm_; vec.y *= norm_; vec.z *= norm_;
 	}
 }
-//==========================================================================
-
-//二进制转十进制============================================================
-void BinToDec(const vector<bool>& bin, int& dec_num)
-{
-	dec_num = 0;
-	for (size_t i = 0; i < bin.size(); ++i)
-	{
-		dec_num += bin[i] * std::pow(2, (int)i);
-	}
-}
-//==========================================================================
-
-//二进制转格雷码============================================================
-void BinToGrayCode(const vector<bool>& bin, vector<bool>& grayCode)
-{
-	int len = bin.size();
-	grayCode.resize(len);
-	for (int i = 0; i < len - 1; ++i)
-	{
-		grayCode[i] = bin[i] ^ bin[i + 1];
-	}
-	grayCode[len - 1] = bin[len - 1];
-}
-//==========================================================================
-
-//格雷码转二进制============================================================
-void GrayCodeToBin(const vector<bool>& grayCode, vector<bool>& bin)
-{
-	int len = grayCode.size();
-	bin.resize(len);
-	bin[len - 1] = grayCode[len - 1];
-	for (int i = len - 2; i > -1; --i)
-	{
-		bin[i] = grayCode[i] ^ bin[i + 1];
-	}
-}
-//==========================================================================
+//=========================================================================
 
 //计算点间距===============================================================
 template <typename T>
@@ -111,3 +76,27 @@ void Img_ComputePPDist(T& pt1, T& pt2, double& dist)
 }
 //=========================================================================
 
+//罗格里格斯公式===========================================================
+template <typename T>
+void RodriguesFormula(T& rotAxis, double rotAng, cv::Mat& rotMat)
+{
+	if (rotMat.size() != cv::Size(3, 3))
+		rotMat = cv::Mat(cv::Size(3, 3), CV_64FC1, cv::Scalar(0.0));
+	double cosVal = std::cos(rotAng);
+	double conVal_ = 1 - cosVal;
+	double sinVal = std::sin(rotAng);
+	double* pRotMat = rotMat.ptr<double>();
+
+	pRotMat[0] = cosVal + rotAxis.x * rotAxis.x * conVal_;
+	pRotMat[1] = rotAxis.x * rotAxis.y * conVal_ - rotAxis.z * sinVal;
+	pRotMat[2] = rotAxis.x * rotAxis.z * conVal_ + rotAxis.y * sinVal;
+
+	pRotMat[3] = rotAxis.y * rotAxis.x * conVal_ + rotAxis.z * sinVal;
+	pRotMat[4] = cosVal + rotAxis.y * rotAxis.y * conVal_;
+	pRotMat[5] = rotAxis.y * rotAxis.z * conVal_ - rotAxis.x * sinVal;
+
+	pRotMat[6] = rotAxis.z * rotAxis.x * conVal_ - rotAxis.y * sinVal;
+	pRotMat[7] = rotAxis.z * rotAxis.y * conVal_ + rotAxis.x * sinVal;
+	pRotMat[8] = cosVal + rotAxis.z * rotAxis.z * conVal_;
+}
+//=========================================================================

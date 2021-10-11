@@ -31,17 +31,17 @@
     <Filter Include="源文件\ImageFile">
       <UniqueIdentifier>{7f5118ed-b12a-4228-b53e-a4c0673b0306}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\BaseOpr">
-      <UniqueIdentifier>{32b31e65-9910-4f06-8eb8-732f917ea5e9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="源文件\BaseOpr">
-      <UniqueIdentifier>{4576f094-200f-44ef-98b1-a8c19ebfcb92}</UniqueIdentifier>
-    </Filter>
     <Filter Include="头文件\ComputeModelFile">
       <UniqueIdentifier>{2d9c3b3e-1d37-49d9-a818-585114870055}</UniqueIdentifier>
     </Filter>
     <Filter Include="源文件\ComputeModelFile">
       <UniqueIdentifier>{46047c80-e8ed-48df-92f9-d7e6d6607662}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\BaseOprFile">
+      <UniqueIdentifier>{32b31e65-9910-4f06-8eb8-732f917ea5e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\BaseOprFile">
+      <UniqueIdentifier>{4576f094-200f-44ef-98b1-a8c19ebfcb92}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -78,9 +78,6 @@
     <ClCompile Include="ShapeModelBase.cpp">
       <Filter>源文件\MatchFile</Filter>
     </ClCompile>
-    <ClCompile Include="DrawShape.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="SiftMatch.cpp">
       <Filter>源文件\MatchFile</Filter>
     </ClCompile>
@@ -103,13 +100,13 @@
       <Filter>源文件\ImageFile</Filter>
     </ClCompile>
     <ClCompile Include="FileOpr.cpp">
-      <Filter>源文件\BaseOpr</Filter>
+      <Filter>源文件\BaseOprFile</Filter>
     </ClCompile>
     <ClCompile Include="MathOpr.cpp">
-      <Filter>源文件\BaseOpr</Filter>
+      <Filter>源文件\BaseOprFile</Filter>
     </ClCompile>
     <ClCompile Include="OpenCV_Utils.cpp">
-      <Filter>源文件\BaseOpr</Filter>
+      <Filter>源文件\BaseOprFile</Filter>
     </ClCompile>
     <ClCompile Include="GrabEdges.cpp">
       <Filter>源文件\ComputeModelFile</Filter>
@@ -135,8 +132,11 @@
     <ClCompile Include="ComputePts.cpp">
       <Filter>源文件\ComputeModelFile</Filter>
     </ClCompile>
+    <ClCompile Include="DrawShape.cpp">
+      <Filter>源文件\BaseOprFile</Filter>
+    </ClCompile>
     <ClCompile Include="ImageGLCM.cpp">
-      <Filter>源文件</Filter>
+      <Filter>源文件\ImageFile</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -173,9 +173,6 @@
     <ClInclude Include="ContourOpr.h">
       <Filter>头文件\MatchFile</Filter>
     </ClInclude>
-    <ClInclude Include="DrawShape.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="SiftMatch.h">
       <Filter>头文件\MatchFile</Filter>
     </ClInclude>
@@ -198,13 +195,13 @@
       <Filter>头文件\ImageFile</Filter>
     </ClInclude>
     <ClInclude Include="MathOpr.h">
-      <Filter>头文件\BaseOpr</Filter>
+      <Filter>头文件\BaseOprFile</Filter>
     </ClInclude>
     <ClInclude Include="FileOpr.h">
-      <Filter>头文件\BaseOpr</Filter>
+      <Filter>头文件\BaseOprFile</Filter>
     </ClInclude>
     <ClInclude Include="OpenCV_Utils.h">
-      <Filter>头文件\BaseOpr</Filter>
+      <Filter>头文件\BaseOprFile</Filter>
     </ClInclude>
     <ClInclude Include="GrabEdges.h">
       <Filter>头文件\ComputeModelFile</Filter>
@@ -230,8 +227,11 @@
     <ClInclude Include="ComputePts.h">
       <Filter>头文件\ComputeModelFile</Filter>
     </ClInclude>
+    <ClInclude Include="DrawShape.h">
+      <Filter>头文件\BaseOprFile</Filter>
+    </ClInclude>
     <ClInclude Include="ImageGLCM.h">
-      <Filter>头文件</Filter>
+      <Filter>头文件\ImageFile</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
