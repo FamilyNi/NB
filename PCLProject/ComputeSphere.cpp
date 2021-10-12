@@ -61,7 +61,7 @@ void PC_RANSACComputeSphere(vector<T1>& pts, T2& sphere, vector<T1>& inlinerPts,
 	for (int i = 0; i < maxEpo; ++i)
 	{
 		int effetPoints = 0;
-		//随机选择六个个点计算椭圆
+		//随机选择六个个点计算球
 		pts_[0] = pts[rand() % size]; pts_[1] = pts[rand() % size];
 		pts_[2] = pts[rand() % size]; pts_[3] = pts[rand() % size];
 		T2 sphere_;

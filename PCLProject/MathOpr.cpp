@@ -1,8 +1,8 @@
 #include "MathOpr.h"
 
 //点到平面的距离==============================================================
-template <typename T>
-void PC_PtToPlaneDist(T& pt, cv::Vec4d& plane, double& dist)
+template <typename T1, typename T2>
+void PC_PtToPlaneDist(T1& pt, T2& plane, double& dist)
 {
 	dist = abs(pt.x * plane[0] + pt.y * plane[1] + pt.z * plane[2] + plane[3]);
 }
@@ -18,8 +18,8 @@ void PC_VecNormal(T& p)
 //============================================================================
 
 //点到平面的投影点============================================================
-template <typename T>
-void PC_PtProjPlanePt(T& pt, cv::Vec4d& plane, T& projPt)
+template <typename T1, typename T2>
+void PC_PtProjPlanePt(T1& pt, T2& plane, T1& projPt)
 {
 	float dist = pt.x * plane[0] + pt.y * plane[1] + pt.z * plane[2] + plane[3];
 	projPt = { pt.x - float(dist * plane[0]), float(pt.x - dist * plane[1]),float(pt.x - dist * plane[2]) };
@@ -40,8 +40,8 @@ void PC_PtToLineDist(T1& pt, T2& line, double& dist)
 //===========================================================================
 
 //空间点到空间直线的投影=====================================================
-template <typename T>
-void PC_PtProjLinePt(T& pt, cv::Vec6d& line, T& projPt)
+template <typename T1, typename T2>
+void PC_PtProjLinePt(T1& pt, T2& line, T1& projPt)
 {
 	float scale = pt.x * line[0] + pt.y * line[1] + pt.z * line[2] -
 		(line[3] * line[0] + line[4] * line[1] + line[5] * line[2]);

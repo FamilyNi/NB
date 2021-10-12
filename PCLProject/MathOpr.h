@@ -6,8 +6,8 @@
 	plane：[in]平面方程
 	dist：[out]输出距离
 */
-template <typename T>
-void PC_PtToPlaneDist(T& pt, cv::Vec4d& plane, double& dist);
+template <typename T1, typename T2>
+void PC_PtToPlaneDist(T1& pt, T2& plane, double& dist);
 
 /*向量归一化*/
 template <typename T>
@@ -18,8 +18,8 @@ void PC_VecNormal(T& p);
 	plane：[in]平面方程
 	projPt：[out]投影点
 */
-template <typename T>
-void PC_PtProjPlanePt(T& pt, cv::Vec4d& plane, T& projPt);
+template <typename T1, typename T2>
+void PC_PtProjPlanePt(T1& pt, T2& plane, T1& projPt);
 
 /*空间点到空间直线的距离
 	pt：[in]输入点
@@ -34,8 +34,8 @@ void PC_PtToLineDist(T1& pt, T2& line, double& dist);
 	line：[in]直线方程
 	projPt：[out]投影点
 */
-template <typename T>
-void PC_PtProjLinePt(T& pt, cv::Vec6d& line, T& projPt);
+template <typename T1, typename T2>
+void PC_PtProjLinePt(T1& pt, T2& line, T1& projPt);
 
 /*三维向量叉乘
 	vec1、vec2：[in]表示向量1、2

@@ -10,19 +10,19 @@
 /*对数增强
 	计算公式：dstImg = c * log(srcImg + 0.5)
 */
-NB_API void Img_LogEnhance(Mat& srcImg, Mat& dstImg, double c);
+void Img_LogEnhance(Mat& srcImg, Mat& dstImg, double c);
 
 /*Gamma变换增强
 	计算公式：dstImg = pow(srcImg / 255.0, gamma) * 255.0
 	gamma < 1：图像整体变亮，对比对降低
 	gamma > 1：图像整体变暗，对比对增加
 */
-NB_API void Img_GammaEnhance(Mat& srcImg, Mat& dstImg, double gamma);
+void Img_GammaEnhance(Mat& srcImg, Mat& dstImg, double gamma);
 
 /*图像增强
 	table：查找表
 */
-NB_API void Img_Enhance(Mat& srcImg, Mat& table, Mat &dstImg);
+void Img_Enhance(Mat& srcImg, Mat& table, Mat &dstImg);
 
 /*haclon中的emphasize算子
 	计算公式：dstImg = (srcImg - mean) * Factor + srcImg
@@ -30,7 +30,7 @@ NB_API void Img_Enhance(Mat& srcImg, Mat& table, Mat &dstImg);
 	ksize：[in]均值滤波的大小
 	factor：[in]比例因子
 */
-NB_API void Img_EmphasizeEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize, double factor);
+void Img_EmphasizeEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize, double factor);
 
 /*halcon中的illuminate算子：
 	计算公式：
@@ -38,11 +38,11 @@ NB_API void Img_EmphasizeEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize, doubl
 	ksize：[in]均值滤波的大小
 	factor：[in]比例因子
 */
-NB_API void Img_IlluminateEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize, double factor);
+void Img_IlluminateEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize, double factor);
 
 /*局部标准差图像增强：
 	计算公式：dstImg = mean(srcImg) + G * (srcImg - mean(srcImg))
 */
-NB_API void Img_LSDEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize);
+void Img_LSDEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize);
 
 void EnhanceTest();

@@ -13,17 +13,13 @@
 	guidImg：[in]引导图像	
 	size：[in]滤波器大小
 */
-NB_API void Img_GuidFilter(Mat& srcImg, Mat& guidImg, Mat& dstImg, int size, float eps);
+void Img_GuidFilter(Mat& srcImg, Mat& guidImg, Mat& dstImg, int size, float eps);
 
 /*自适应Canny滤波
 	size：[in]滤波器大小
 	sigma：[in]高低阈值比例
 */
-NB_API void Img_AdaptiveCannyFilter(Mat& srcImg, Mat& dstImg, int size, double sigma);
-
-/*Gabar滤波
-*/
-NB_API void Img_GabarFilter(Mat& srcImg, Mat& dstImg);
+void Img_AdaptiveCannyFilter(Mat& srcImg, Mat& dstImg, int size, double sigma);
 
 /*频率域滤波
 	srcImg：单通道图像
@@ -33,7 +29,7 @@ NB_API void Img_GabarFilter(Mat& srcImg, Mat& dstImg);
 	passMode：[in]表示低通或者高通--0 表示低通、1 表示高通
 	filterMode：[in]表示滤波器类型
 */
-NB_API void ImgF_FreqFilter(Mat& srcImg, Mat& dstImg, double lr, double hr, int passMode, IMGF_MODE filterMode);
+void ImgF_FreqFilter(Mat& srcImg, Mat& dstImg, double lr, double hr, int passMode, IMGF_MODE filterMode);
 
 /*同泰滤波：
 	radius：[in]滤波半径
@@ -41,6 +37,6 @@ NB_API void ImgF_FreqFilter(Mat& srcImg, Mat& dstImg, double lr, double hr, int 
 	H：[in]高分量
 	c：[in]指数调节系数
 */
-NB_API void ImgF_HomoFilter(Mat& srcImg, Mat& dstImg, double radius, double L, double H, double c);
+void ImgF_HomoFilter(Mat& srcImg, Mat& dstImg, double radius, double L, double H, double c);
 
 void FilterTest();

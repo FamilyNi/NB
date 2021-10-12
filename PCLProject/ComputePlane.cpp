@@ -1,5 +1,6 @@
 #include "ComputePlane.h"
 #include "MathOpr.h"
+#include "MathOpr.cpp"
 
 //三点计算平面==================================================================================
 template <typename T1, typename T2>
@@ -8,12 +9,66 @@ void PC_ThreePtsComputePlane(T1& pt1, T1& pt2, T1& pt3, T2& plane)
 	P_XYZ nor_1(pt1.x - pt2.x, pt1.y - pt2.y, pt1.z - pt2.z);
 	P_XYZ nor_2(pt1.x - pt3.x, pt1.y - pt3.y, pt1.z - pt3.z);
 	P_XYZ norm(0, 0, 0);
-	VecCross_PC(nor_1, nor_2, norm);
+	PC_VecCross(nor_1, nor_2, norm, true);
 	if (abs(norm.x) < EPS && abs(norm.y) < EPS && abs(norm.z) < EPS)
 		return;
-	Normal_PC(norm);
 	plane[0] = norm.x; plane[1] = norm.y; plane[2] = norm.z;
 	plane[3] = -(plane[0] * pt1.x + plane[1] * pt1.y + plane[2] * pt1.z);
+}
+//==============================================================================================
+
+//随机一致采样算法计算平面======================================================================
+template <typename T1, typename T2>
+void PC_RANSACComputePlane(vector<T1>& pts, T2& plane, vector<T1>& inlinerPts, double thres)
+{
+	if (pts.size() < 6)
+		return;
+	int best_model_p = 0;
+	double P = 0.99;  //模型存在的概率
+	double log_P = log(1 - P);
+	int size = pts.size();
+	int maxEpo = 10000;
+	vector<T1> pts_(3);
+	for (int i = 0; i < maxEpo; ++i)
+	{
+		int effetPoints = 0;
+		//随机选择六个个点计算平面
+		pts_[0] = pts[rand() % size]; pts_[1] = pts[rand() % size];	pts_[2] = pts[rand() % size];
+		T2 plane_;
+		PC_ThreePtsComputePlane(pts_[0], pts_[1], pts_[2], plane_);
+		//计算局内点的个数
+		for (int j = 0; j < size; ++j)
+		{
+			double dist = 0.0;
+			PC_PtToPlaneDist(pts[i], plane_, dist);
+			effetPoints += dist < thres ? 1 : 0;
+		}
+		//获取最优模型，并根据概率修改迭代次数
+		if (best_model_p < effetPoints)
+		{
+			best_model_p = effetPoints;
+			plane = plane_;
+			double t_P = (double)best_model_p / size;
+			double pow_t_p = t_P * t_P * t_P;
+			maxEpo = log_P / log(1 - pow_t_p) + std::sqrt(1 - pow_t_p) / (pow_t_p);
+		}
+		if (best_model_p > 0.5 * size)
+		{
+			plane = plane_;
+			break;
+		}
+	}
+	//提取局内点
+	if (inlinerPts.size() != 0)
+		inlinerPts.resize(0);
+	inlinerPts.reserve(size);
+	for (int i = 0; i < size; ++i)
+	{
+		double dist = 0.0;
+		PC_PtToPlaneDist(pts[i], plane, dist);
+		if (dist < thres)
+			inlinerPts.push_back(pts[i]);
+	}
 }
 //==============================================================================================
 
@@ -70,7 +125,8 @@ void PC_HuberPlaneWeights(vector<T1>& pts, T2& plane, vector<double>& weights)
 	double tao = 1.345;
 	for (int i = 0; i < pts.size(); ++i)
 	{
-		double distance = abs(pts[i].x * plane[0] + pts[i].y * plane[1] + pts[i].z * plane[2] + plane[3]);
+		double distance = 0.0;
+		PC_PtToPlaneDist(pts[i], plane, distance);
 		if (distance <= tao)
 		{
 			weights[i] = 1;
@@ -90,7 +146,8 @@ void PC_TukeyPlaneWeights(vector<T1>& pts, T2& plane, vector<double>& weights)
 	vector<double> dists(pts.size());
 	for (int i = 0; i < pts.size(); ++i)
 	{
-		double distance = abs(pts[i].x * plane[0] + pts[i].y * plane[1] + pts[i].z * plane[2] + plane[3]);
+		double distance = 0.0;
+		PC_PtToPlaneDist(pts[i], plane, distance);
 		dists[i] = distance;
 	}
 	//求限制条件tao
@@ -148,22 +205,30 @@ void PC_PlaneTest()
 	PC_XYZ::Ptr srcPC(new PC_XYZ);
 	pcl::io::loadPLYFile("C:/Users/Administrator/Desktop/testimage/噪声平面.ply", *srcPC);
 
-	pcl::visualization::PCLVisualizer viewer;
-	viewer.addCoordinateSystem(10);
-	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> write(srcPC, 255, 255, 255); //设置点云颜色
-	viewer.addPointCloud(srcPC, write, "srcPC");
-	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "srcPC");
-
-	while (!viewer.wasStopped())
-	{
-		viewer.spinOnce();
-	}
-
 	vector<P_XYZ> pts(srcPC->points.size());
 	for (int i = 0; i < srcPC->points.size(); ++i)
 	{
 		pts[i] = srcPC->points[i];
 	}
 	cv::Vec4d plane;
-	PC_FitPlane(pts, plane, 5, NB_MODEL_FIT_METHOD::OLS_FIT);
+	vector<P_XYZ> inlinerPts;
+	PC_RANSACComputePlane(pts, plane, inlinerPts, 0.01);
+
+	PC_XYZ::Ptr inlinerPC(new PC_XYZ);
+	inlinerPC->points.resize(inlinerPts.size());
+	for (int i = 0; i < inlinerPts.size(); ++i)
+	{
+		inlinerPC->points[i] = inlinerPts[i];
+	}
+	pcl::visualization::PCLVisualizer viewer;
+	viewer.addCoordinateSystem(10);
+	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> write(inlinerPC, 255, 255, 255); //设置点云颜色
+	viewer.addPointCloud(inlinerPC, write, "inlinerPC");
+	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "inlinerPC");
+
+	while (!viewer.wasStopped())
+	{
+		viewer.spinOnce();
+	}
+	//PC_FitPlane(pts, plane, 5, NB_MODEL_FIT_METHOD::HUBER_FIT);
 }

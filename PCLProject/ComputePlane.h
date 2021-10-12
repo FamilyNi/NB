@@ -14,6 +14,13 @@
 template <typename T1, typename T2>
 void PC_ThreePtsComputePlane(T1& pt1, T1& pt2, T1& pt3, T2& plane);
 
+/*随机一致采样算法计算平面：
+	inlinerPts：[in]局内点
+	thres：[in]阈值
+*/
+template <typename T1, typename T2>
+void PC_RANSACComputePlane(vector<T1>& pts, T2& plane, vector<T1>& inlinerPts, double thres);
+
 /*最小二乘法拟合平面：
 	weights：[in]权重
 	plane：[out]

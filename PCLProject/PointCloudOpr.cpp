@@ -1,4 +1,6 @@
 #include "PointCloudOpr.h"
+#include "MathOpr.h"
+#include "MathOpr.cpp"
 
 //计算点云的最小包围盒==============================================================
 void PC_ComputeOBB(const PC_XYZ::Ptr& srcPC, PC_XYZ::Ptr& obb)
@@ -55,7 +57,7 @@ void PC_LineProjSmooth(const PC_XYZ::Ptr &srcPC, PC_XYZ::Ptr &dstPC, int size, d
 	size_t length = srcPC->points.size();
 	KdTreeFLANN<P_XYZ> kdtree;
 	kdtree.setInputCloud(srcPC);
-	vector<cv::Point3f> cvp_(size);
+	vector<cv::Point3d> cvp_(size);
 	dstPC->points.resize(length);
 	for (int i = 0; i < length; ++i)
 	{
@@ -71,13 +73,11 @@ void PC_LineProjSmooth(const PC_XYZ::Ptr &srcPC, PC_XYZ::Ptr &dstPC, int size, d
 		}
 		cv::Vec6f line;
 		cv::fitLine(cvp_, line, cv::DIST_L2, 0, 0.01, 0.01);
-		float scale = p_.x * line[0] + p_.y * line[1] + p_.z * line[2] -
-			(line[3] * line[0] + line[4] * line[1] + line[5] * line[2]);
-		P_XYZ v_p;
-		v_p.x = line[3] + scale * line[0]; v_p.y = line[4] + scale * line[1]; v_p.z = line[5] + scale * line[2];
-		float dist = v_p.x * p_.x + v_p.y * p_.y + v_p.z * p_.z;
+		P_XYZ projPt;
+		PC_PtProjLinePt(p_, line, projPt);
+		float dist = std::powf(projPt.x - p_.x, 2) + std::powf(projPt.y - p_.y, 2) + std::powf(projPt.z - p_.z, 2);
 		if (dist > thresVal)
-			dstPC->points[i] = v_p;
+			dstPC->points[i] = projPt;
 		else
 			dstPC->points[i] = p_;
 	}

@@ -1,7 +1,7 @@
 #include "ImageEnhance.h"
 
 //对数增强==================================================================
-NB_API void Img_LogEnhance(Mat& srcImg, Mat& dstImg, double c)
+void Img_LogEnhance(Mat& srcImg, Mat& dstImg, double c)
 {
 	CV_Assert(c > 0);
 	Mat lookUpTable(1, 256, CV_8U);
@@ -13,7 +13,7 @@ NB_API void Img_LogEnhance(Mat& srcImg, Mat& dstImg, double c)
 //==========================================================================
 
 //Gamma变换增强=============================================================
-NB_API void Img_GammaEnhance(Mat& srcImg, Mat& dstImg, double gamma)
+void Img_GammaEnhance(Mat& srcImg, Mat& dstImg, double gamma)
 {
 	CV_Assert(gamma >= 0);
 	Mat lookUpTable(1, 256, CV_8U);
@@ -25,7 +25,7 @@ NB_API void Img_GammaEnhance(Mat& srcImg, Mat& dstImg, double gamma)
 //==========================================================================
 
 //图像增强==================================================================
-NB_API void Img_Enhance(Mat& srcImg, Mat& table, Mat &dstImg)
+void Img_Enhance(Mat& srcImg, Mat& table, Mat &dstImg)
 {
 	dstImg = Mat(srcImg.size(), srcImg.type(), Scalar(0));
 	cv::LUT(srcImg, table, dstImg);
@@ -33,7 +33,7 @@ NB_API void Img_Enhance(Mat& srcImg, Mat& table, Mat &dstImg)
 //=========================================================================
 
 //haclon中的emphasize算子==================================================
-NB_API void Img_EmphasizeEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize, double factor)
+void Img_EmphasizeEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize, double factor)
 {
 	Mat meanImg = Mat(srcImg.size(), srcImg.type(),cv::Scalar(0));
 	boxFilter(srcImg, meanImg, srcImg.type(), ksize);
@@ -45,7 +45,7 @@ NB_API void Img_EmphasizeEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize, doubl
 	uchar* pMean = meanImg.ptr<uchar>();
 	uchar* pDst = dstImg.ptr<uchar>();
 	int step = channel * col;
-#pragma omp parallel for num_threads(4)
+#pragma omp parallel for
 	for (int y = 0; y < row; ++y)
 	{
 		int offset = y * step;
@@ -68,7 +68,7 @@ NB_API void Img_EmphasizeEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize, doubl
 //=========================================================================
 
 //halcon中的illuminate算子=================================================
-NB_API void Img_IlluminateEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize, double factor)
+void Img_IlluminateEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize, double factor)
 {
 	Mat meanImg = Mat(srcImg.size(), srcImg.type(), cv::Scalar(0));
 	boxFilter(srcImg, meanImg, srcImg.type(), ksize);
@@ -103,7 +103,7 @@ NB_API void Img_IlluminateEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize, doub
 //==========================================================================
 
 //局部标准差图像增强=======================================================
-NB_API void Img_LSDEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize)
+void Img_LSDEnhance(Mat &srcImg, Mat &dstImg, cv::Size ksize)
 {
 	dstImg = Mat(srcImg.size(), srcImg.type(), cv::Scalar(0));
 	Mat meanImg(srcImg.size(), srcImg.type(), cv::Scalar(0));

@@ -1,13 +1,10 @@
 #include "ImageFilter.h"
 
 //引导滤波=============================================================================
-NB_API void Img_GuidFilter(Mat& srcImg, Mat& guidImg, Mat& dstImg, int size, float eps)
+void Img_GuidFilter(Mat& srcImg, Mat& guidImg, Mat& dstImg, int size, float eps)
 {
 	if (!dstImg.empty())
 		dstImg.release();
-	//CV_CheckEQ(srcImg.empty(), 1, "原始图像不存在");
-	CV_CheckEQ(srcImg.size(), guidImg.size(), "引导图像错误");
-	CV_CheckTypeEQ(srcImg.type(), guidImg.type(), "引导图像错误");
 	cv::Size imgSize = srcImg.size();
 	dstImg = Mat(imgSize, srcImg.type(), cv::Scalar(0));
 
@@ -59,7 +56,7 @@ NB_API void Img_GuidFilter(Mat& srcImg, Mat& guidImg, Mat& dstImg, int size, flo
 //=====================================================================================
 
 //自适应Canny滤波======================================================================
-NB_API void Img_AdaptiveCannyFilter(Mat& srcImg, Mat& dstImg, int size, double sigma)
+void Img_AdaptiveCannyFilter(Mat& srcImg, Mat& dstImg, int size, double sigma)
 {
 	cv::Scalar midVal = cv::mean(srcImg);
 	double minVal = midVal[0] * (1 - sigma);
@@ -68,16 +65,8 @@ NB_API void Img_AdaptiveCannyFilter(Mat& srcImg, Mat& dstImg, int size, double s
 }
 //=====================================================================================
 
-//Gobar滤波============================================================================
-NB_API void Img_GabarFilter(Mat& srcImg, Mat& dstImg)
-{
-	Mat gabarKernel = cv::getGaborKernel(cv::Size(5, 5), 1.4, 45, 10, 1);
-	cv::filter2D(srcImg, dstImg, srcImg.type(), gabarKernel);
-}
-//=====================================================================================
-
 //频率域滤波===========================================================================
-NB_API void ImgF_FreqFilter(Mat& srcImg, Mat& dstImg, double lr, double hr, int passMode, IMGF_MODE filterMode)
+void ImgF_FreqFilter(Mat& srcImg, Mat& dstImg, double lr, double hr, int passMode, IMGF_MODE filterMode)
 {
 	int imgH = srcImg.rows, imgW = srcImg.cols;
 	int imgH_ = getOptimalDFTSize(imgH);
@@ -115,7 +104,7 @@ NB_API void ImgF_FreqFilter(Mat& srcImg, Mat& dstImg, double lr, double hr, int 
 //=====================================================================================
 
 //同泰滤波=============================================================================
-NB_API void ImgF_HomoFilter(Mat& srcImg, Mat& dstImg, double radius, double L, double H, double c)
+void ImgF_HomoFilter(Mat& srcImg, Mat& dstImg, double radius, double L, double H, double c)
 {
 	int imgH = srcImg.rows, imgW = srcImg.cols;
 	

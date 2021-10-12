@@ -2,7 +2,7 @@
 #include "OpenCV_Utils.h"
 
 //整体阈值分割=============================================================================
-NB_API void Img_Seg(Mat& srcImg, Mat& dstImg, double thresVal, IMG_SEG mode)
+void Img_Seg(Mat& srcImg, Mat& dstImg, double thresVal, IMG_SEG mode)
 {
 	switch (mode)
 	{
@@ -19,7 +19,7 @@ NB_API void Img_Seg(Mat& srcImg, Mat& dstImg, double thresVal, IMG_SEG mode)
 //=========================================================================================
 
 //选择灰度区间=============================================================================
-NB_API void Img_SelectGraySeg(Mat& srcImg, Mat& dstImg, uchar thresVal1, uchar thresVal2, IMG_SEG mode)
+void Img_SelectGraySeg(Mat& srcImg, Mat& dstImg, uchar thresVal1, uchar thresVal2, IMG_SEG mode)
 {
 	Mat lookUpTable(1, 256, CV_8UC1);
 	uchar* p = lookUpTable.ptr();
@@ -42,7 +42,7 @@ NB_API void Img_SelectGraySeg(Mat& srcImg, Mat& dstImg, uchar thresVal1, uchar t
 //=========================================================================================
 
 //熵最大的阈值分割(熵越大系统越不稳定)=====================================================
-NB_API void Img_MaxEntropySeg(Mat &srcImg, Mat &dstImg, IMG_SEG mode)
+void Img_MaxEntropySeg(Mat &srcImg, Mat &dstImg, IMG_SEG mode)
 {
 	Mat hist;
 	Img_ComputeImgHist(srcImg, hist);
@@ -82,7 +82,7 @@ NB_API void Img_MaxEntropySeg(Mat &srcImg, Mat &dstImg, IMG_SEG mode)
 //=========================================================================================
 
 //迭代自适应二值化=========================================================================
-NB_API void Img_IterTresholdSeg(Mat &srcImg, Mat &dstImg, double eps, IMG_SEG mode)
+void Img_IterTresholdSeg(Mat &srcImg, Mat &dstImg, double eps, IMG_SEG mode)
 {
 	Mat hist;
 	Img_ComputeImgHist(srcImg, hist);
@@ -111,7 +111,7 @@ NB_API void Img_IterTresholdSeg(Mat &srcImg, Mat &dstImg, double eps, IMG_SEG mo
 //=========================================================================================
 
 //局部自适应阈值分割=======================================================================
-NB_API void Img_LocAdapThresholdSeg(Mat& srcImg, Mat& dstImg, cv::Size size, double stdDevScale, double absThres, IMG_SEG mode)
+void Img_LocAdapThresholdSeg(Mat& srcImg, Mat& dstImg, cv::Size size, double stdDevScale, double absThres, IMG_SEG mode)
 {
 	dstImg = Mat(srcImg.size(), CV_8UC1, cv::Scalar(0));
 	Mat srcImg_16S = Mat(srcImg.size(), CV_16UC1, Scalar::all(0));
@@ -165,7 +165,7 @@ NB_API void Img_LocAdapThresholdSeg(Mat& srcImg, Mat& dstImg, cv::Size size, dou
 //=========================================================================================
 
 //迟滞分割=================================================================================
-NB_API void Img_HysteresisSeg(Mat& srcImg, Mat& dstImg, double thresVal1, double thresVal2)
+void Img_HysteresisSeg(Mat& srcImg, Mat& dstImg, double thresVal1, double thresVal2)
 {
 	int col = srcImg.cols;
 	int row = srcImg.rows;
@@ -203,7 +203,7 @@ NB_API void Img_HysteresisSeg(Mat& srcImg, Mat& dstImg, double thresVal1, double
 //=========================================================================================
 
 //Halcon中的点检测=========================================================================
-NB_API void Img_DotImgSeg(Mat& srcImg, Mat& dstImg, int size, IMG_SEG mode)
+void Img_DotImgSeg(Mat& srcImg, Mat& dstImg, int size, IMG_SEG mode)
 {
 	int length = size + 2;
 	double center = length / 2;
@@ -255,7 +255,7 @@ NB_API void Img_DotImgSeg(Mat& srcImg, Mat& dstImg, int size, IMG_SEG mode)
 //=========================================================================================
 
 //区域生长=================================================================================
-NB_API void Img_RegionGrowSeg(Mat& srcImg, Mat& labels, int dist_c, int dist_r, int thresVal, int minRegionSize)
+void Img_RegionGrowSeg(Mat& srcImg, Mat& labels, int dist_c, int dist_r, int thresVal, int minRegionSize)
 {
 	if (!labels.empty())
 		labels.release();
@@ -335,50 +335,6 @@ NB_API void Img_RegionGrowSeg(Mat& srcImg, Mat& labels, int dist_c, int dist_r, 
 	}
 }
 //=========================================================================================
-
-//各向异性的图像分割=======================================================================
-void NB_AnisImgSeg(Mat &srcImg, Mat &dstImg, int WS, double C_Thr, int lowThr, int highThr)
-{
-	Mat grad_x, grad_y, grad_xy;
-	Sobel(srcImg, grad_x, CV_32F, 1, 0, 3);
-	Sobel(srcImg, grad_y, CV_32F, 0, 1, 3);
-	grad_xy = grad_x.mul(grad_y);
-
-	Mat grad_xx = grad_x.mul(grad_x);
-	Mat grad_yy = grad_y.mul(grad_y);
-
-	Mat J11, J22, J12;
-	boxFilter(grad_xx, J11, CV_32F, Size(WS, WS));
-	boxFilter(grad_yy, J22, CV_32F, Size(WS, WS));
-	boxFilter(grad_xy, J12, CV_32F, Size(WS, WS));
-
-	Mat tmp1 = J11 + J22;
-	Mat tmp2 = J11 - J22;
-	tmp2 = tmp2.mul(tmp2);
-	Mat tmp3 = J12.mul(J12);
-	Mat tmp4;
-	sqrt(tmp2 + 4.0 * tmp3, tmp4);
-
-	Mat lambda1 = tmp1 + tmp4;
-	Mat lambda2 = tmp1 - tmp4;
-
-	Mat imgCoherency, imgOrientation;
-	divide(lambda1 - lambda2, lambda1 + lambda2, imgCoherency);
-	phase(J22 - J11, 2.0*J12, imgOrientation, true);
-	imgOrientation = 0.5*imgOrientation;
-
-
-	Mat imgCoherencyBin;
-	imgCoherencyBin = imgCoherency > C_Thr;
-	Mat imgOrientationBin;
-	inRange(imgOrientation, Scalar(lowThr), Scalar(highThr), imgOrientationBin);
-	Mat imgBin;
-	imgBin = imgCoherencyBin & imgOrientationBin;
-	normalize(imgCoherency, imgCoherency, 0, 255, NORM_MINMAX);
-	normalize(imgOrientation, imgOrientation, 0, 255, NORM_MINMAX);
-}
-//=========================================================================================
-
 
 void ImgSegTest()
 {
