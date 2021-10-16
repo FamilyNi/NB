@@ -202,58 +202,6 @@ void Img_HysteresisSeg(Mat& srcImg, Mat& dstImg, double thresVal1, double thresV
 }
 //=========================================================================================
 
-//Halcon中的点检测=========================================================================
-void Img_DotImgSeg(Mat& srcImg, Mat& dstImg, int size, IMG_SEG mode)
-{
-	int length = size + 2;
-	double center = length / 2;
-	double radius1_2 = (size / 2.0) * (size / 2.0);
-	double radisu2_2 = (length / 2.0) * (length / 2.0);
-	double positive = 0;
-	double negtive = 0;
-	Mat kenerl = Mat(length, length, CV_32FC1, Scalar(0));
-	float *pKenerl = kenerl.ptr<float>(0);
-	for (int y = 0; y < length; ++y)
-	{
-		double y_2 = (y - center) * (y - center);
-		for (int x = 0; x < length; ++x)
-		{
-			double x_2 = (x - center) * (x - center);
-			if (x_2 + y_2 < radius1_2)
-				positive--;
-			else if (x_2 + y_2 < radisu2_2)
-				negtive++;
-		}
-	}
-	double sum = 0.0f;
-	for (int y = 0; y < length; ++y, pKenerl += length)
-	{
-		double y_2 = (y - center) * (y - center);
-		for (int x = 0; x < length; ++x)
-		{
-			double x_2 = (x - center) * (x - center);
-			if (x_2 + y_2 < radius1_2)
-				pKenerl[x] = negtive;
-			else if (x_2 + y_2 < radisu2_2)
-			{
-				pKenerl[x] = positive;
-				sum -= positive;
-			}
-		}
-	}
-	sum = std::max(sum, EPS);
-	switch (mode)
-	{
-	case IMG_SEG::IMG_SEG_LIGHT:
-		kenerl /= sum; break;
-	case IMG_SEG::IMG_SEG_DARK:
-		kenerl /= -sum; break;
-	}
-	dstImg = Mat(srcImg.size(), CV_8UC1, Scalar(0));
-	cv::filter2D(srcImg, dstImg, CV_8UC1, kenerl);
-}
-//=========================================================================================
-
 //区域生长=================================================================================
 void Img_RegionGrowSeg(Mat& srcImg, Mat& labels, int dist_c, int dist_r, int thresVal, int minRegionSize)
 {

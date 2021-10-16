@@ -1,12 +1,5 @@
 #pragma once
-#include "utils.h"
-
-enum IMGF_MODE{
-	IMGF_IDEAL = 0,
-	IMGF_GAUSSIAN = 1,
-	IMGF_BAND = 2,
-	IMGF_BLPF = 3
-};
+#include "OpenCV_Utils.h"
 
 //ÏÔÊ¾Í¼ÏñÆµÆ×Í¼
 void ImgF_DisplayFreqImg(Mat& fftImg, Mat& freqImg);

@@ -1,17 +1,10 @@
 #pragma once
-#include "utils.h"
+#include "OpenCV_Utils.h"
 
 /*说明：
 	srcImg：[in]被增强图像
 	dstImg：[out]增强后的图像
 */
-
-enum IMG_SEG {
-	IMG_SEG_LIGHT = 0,
-	IMG_SEG_DARK = 1,
-	IMG_SEG_EQUL = 2,
-	IMG_SEG_NOTEQUL = 3
-};
 
 /*整体阈值分割*/
 void Img_Seg(Mat& srcImg, Mat& dstImg, double thres, IMG_SEG mode);
@@ -37,7 +30,7 @@ void Img_MaxEntropySeg(Mat& srcImg, Mat& dstImg, IMG_SEG mode);
 */
 void Img_IterTresholdSeg(Mat& srcImg, Mat& dstImg, double eps, IMG_SEG mode);
 
-/*局部自适应阈值分割
+/*局部自适应阈值分割：halcon中的var_threshold
 	size：[in]滤波器大小
 	stdDevScale：[in]标准差的缩放
 	absThres：[in]绝对阈值
@@ -50,13 +43,6 @@ void Img_LocAdapThresholdSeg(Mat& srcImg, Mat& dstImg, cv::Size size, double std
 	thresVal2：[in]高阈值
 */
 void Img_HysteresisSeg(Mat& srcImg, Mat& dstImg, double thresVal1, double thresVal2);
-
-/*Halcon中的点检测：
-	size：[in]滤波器大小
-	mode：[in]模式---IMG_SEG_LIGHT：选择图像亮的部分
-				IMG_SEG_DARK：选择图像暗的部分
-*/
-void Img_DotImgSeg(Mat& srcImg, Mat& dstImg, int size, IMG_SEG mode);
 
 /*区域生长：
 	dist_c：[in]图像列方向的步长

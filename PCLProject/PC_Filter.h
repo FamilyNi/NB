@@ -37,5 +37,8 @@ void PC_MLSFilter(PC_XYZ::Ptr &srcPC, PC_XYZ::Ptr &dstPC, float radius, int orde
 //平面投影滤波
 void PC_ProjectFilter(PC_XYZ::Ptr &srcPC, PC_XYZ::Ptr &dstPC, float v_x, float v_y, float v_z);
 
+/*导向滤波*/
+void PC_GuideFilter(PC_XYZ::Ptr& srcPC, PC_XYZ::Ptr& dstPC, double radius, double lamda);
+
 //测试程序
 void PC_FitlerTest();

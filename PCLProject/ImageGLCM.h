@@ -1,5 +1,5 @@
 #pragma once
-#include "utils.h"
+#include "OpenCV_Utils.h"
 
 /*图像的灰度共生距*/
 // 枚举灰度共生矩阵的方向

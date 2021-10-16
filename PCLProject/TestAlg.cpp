@@ -14,10 +14,11 @@
 #include "LBPfeatures.h"
 #include "ImageEnhance.h"
 #include "ComputePlane.h"
+#include "ImageFilter.h"
 
 int main(int argc, char *argv[])
 {
-	PC_PlaneTest();
+	FilterTest();
 	//PC_XYZ::Ptr planePC(new PC_XYZ);
 	//cv::Vec6d plane;
 	//plane[0] = 13;

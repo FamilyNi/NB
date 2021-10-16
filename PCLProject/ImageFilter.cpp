@@ -16,24 +16,24 @@ void Img_GuidFilter(Mat& srcImg, Mat& guidImg, Mat& dstImg, int size, float eps)
 
 	cv::Size winSize(size, size);
 	//计算 I*I，I*P
-	Mat img_IP = SrcImg_32f.mul(GuidImg_32f);
-	Mat img_II = GuidImg_32f.mul(GuidImg_32f);
+	Mat img_SG = SrcImg_32f.mul(GuidImg_32f);
+	Mat img_GG = GuidImg_32f.mul(GuidImg_32f);
 
 	//计算均值
-	Mat mean_p, mean_I, mean_IP, mean_II;
-	cv::boxFilter(srcImg, mean_p, CV_32F, winSize);
-	cv::boxFilter(guidImg, mean_I, CV_32F, winSize);
-	cv::boxFilter(img_IP, mean_IP, CV_32F, winSize);
-	cv::boxFilter(img_II, mean_II, CV_32F, winSize);
+	Mat mean_S, mean_G, mean_SG, mean_GG;
+	cv::boxFilter(srcImg, mean_S, CV_32F, winSize);
+	cv::boxFilter(guidImg, mean_G, CV_32F, winSize);
+	cv::boxFilter(img_SG, mean_SG, CV_32F, winSize);
+	cv::boxFilter(img_GG, mean_GG, CV_32F, winSize);
 
 	//计算 IP 的协方差矩阵以及 I 的方差矩阵
-	Mat var_IP = mean_IP - mean_I.mul(mean_p);
-	Mat var_II = mean_II - mean_I.mul(mean_I) + eps;
+	Mat var_IP = mean_SG - mean_G.mul(mean_S);
+	Mat var_II = mean_GG - mean_G.mul(mean_G) + eps * eps;
 
 	//计算 a、b;
 	Mat a, b;
 	cv::divide(var_IP, var_II, a);
-	b = mean_p - a.mul(mean_I);
+	b = mean_S - a.mul(mean_G);
 	//计算 a、b 的均值
 	Mat mean_a, mean_b;
 	cv::boxFilter(a, mean_a, CV_32F, winSize);
@@ -49,7 +49,11 @@ void Img_GuidFilter(Mat& srcImg, Mat& guidImg, Mat& dstImg, int size, float eps)
 	{
 		for (int x = 0; x < step; ++x)
 		{
-			pDstImg[x] = static_cast<uchar>(pMean_a[x] * pFGuidImg[x] + pMean_b[x]);
+			float value = pMean_a[x] * pFGuidImg[x] + pMean_b[x];
+			if (value > 0 && value < 256)
+				pDstImg[x] = value;
+			if (value > 255)
+				pDstImg[x] = 255;
 		}
 	}
 }
@@ -145,10 +149,10 @@ void ImgF_HomoFilter(Mat& srcImg, Mat& dstImg, double radius, double L, double H
 
 void FilterTest()
 {
-	string imgPath = "C:/Users/Administrator/Desktop/2.jpg";
+	string imgPath = "C:/Users/Administrator/Desktop/testimage/halconimg_1.bmp";
 	Mat srcImg = imread(imgPath, 0);
 
 	Mat dstImg;
-	ImgF_FreqFilter(srcImg, dstImg, 100,100, 1, IMGF_MODE::IMGF_GAUSSIAN);
+	Img_GuidFilter(srcImg, srcImg, dstImg, 5,10);
 	Mat t = dstImg.clone();
 }
