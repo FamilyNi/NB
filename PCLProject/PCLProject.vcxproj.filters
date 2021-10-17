@@ -31,17 +31,17 @@
     <Filter Include="源文件\ImageFile">
       <UniqueIdentifier>{7f5118ed-b12a-4228-b53e-a4c0673b0306}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\ComputeModelFile">
-      <UniqueIdentifier>{2d9c3b3e-1d37-49d9-a818-585114870055}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="源文件\ComputeModelFile">
-      <UniqueIdentifier>{46047c80-e8ed-48df-92f9-d7e6d6607662}</UniqueIdentifier>
-    </Filter>
     <Filter Include="头文件\BaseOprFile">
       <UniqueIdentifier>{32b31e65-9910-4f06-8eb8-732f917ea5e9}</UniqueIdentifier>
     </Filter>
     <Filter Include="源文件\BaseOprFile">
       <UniqueIdentifier>{4576f094-200f-44ef-98b1-a8c19ebfcb92}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\FitShapeFile">
+      <UniqueIdentifier>{46047c80-e8ed-48df-92f9-d7e6d6607662}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\FitShapeFile">
+      <UniqueIdentifier>{2d9c3b3e-1d37-49d9-a818-585114870055}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -109,28 +109,28 @@
       <Filter>源文件\BaseOprFile</Filter>
     </ClCompile>
     <ClCompile Include="GrabEdges.cpp">
-      <Filter>源文件\ComputeModelFile</Filter>
+      <Filter>源文件\FitShapeFile</Filter>
     </ClCompile>
     <ClCompile Include="ComputeLine.cpp">
-      <Filter>源文件\ComputeModelFile</Filter>
+      <Filter>源文件\FitShapeFile</Filter>
     </ClCompile>
     <ClCompile Include="ComputeCircle.cpp">
-      <Filter>源文件\ComputeModelFile</Filter>
+      <Filter>源文件\FitShapeFile</Filter>
     </ClCompile>
     <ClCompile Include="ComputePlane.cpp">
-      <Filter>源文件\ComputeModelFile</Filter>
+      <Filter>源文件\FitShapeFile</Filter>
     </ClCompile>
     <ClCompile Include="ComputeSphere.cpp">
-      <Filter>源文件\ComputeModelFile</Filter>
+      <Filter>源文件\FitShapeFile</Filter>
     </ClCompile>
     <ClCompile Include="Compute3DLine.cpp">
-      <Filter>源文件\ComputeModelFile</Filter>
+      <Filter>源文件\FitShapeFile</Filter>
     </ClCompile>
     <ClCompile Include="ComputeEllipse.cpp">
-      <Filter>源文件\ComputeModelFile</Filter>
+      <Filter>源文件\FitShapeFile</Filter>
     </ClCompile>
     <ClCompile Include="ComputePts.cpp">
-      <Filter>源文件\ComputeModelFile</Filter>
+      <Filter>源文件\FitShapeFile</Filter>
     </ClCompile>
     <ClCompile Include="DrawShape.cpp">
       <Filter>源文件\BaseOprFile</Filter>
@@ -204,28 +204,28 @@
       <Filter>头文件\BaseOprFile</Filter>
     </ClInclude>
     <ClInclude Include="GrabEdges.h">
-      <Filter>头文件\ComputeModelFile</Filter>
+      <Filter>头文件\FitShapeFile</Filter>
     </ClInclude>
     <ClInclude Include="ComputeLine.h">
-      <Filter>头文件\ComputeModelFile</Filter>
+      <Filter>头文件\FitShapeFile</Filter>
     </ClInclude>
     <ClInclude Include="ComputeCircle.h">
-      <Filter>头文件\ComputeModelFile</Filter>
+      <Filter>头文件\FitShapeFile</Filter>
     </ClInclude>
     <ClInclude Include="ComputePlane.h">
-      <Filter>头文件\ComputeModelFile</Filter>
+      <Filter>头文件\FitShapeFile</Filter>
     </ClInclude>
     <ClInclude Include="ComputeSphere.h">
-      <Filter>头文件\ComputeModelFile</Filter>
+      <Filter>头文件\FitShapeFile</Filter>
     </ClInclude>
     <ClInclude Include="Compute3DLine.h">
-      <Filter>头文件\ComputeModelFile</Filter>
+      <Filter>头文件\FitShapeFile</Filter>
     </ClInclude>
     <ClInclude Include="ComputeEllipse.h">
-      <Filter>头文件\ComputeModelFile</Filter>
+      <Filter>头文件\FitShapeFile</Filter>
     </ClInclude>
     <ClInclude Include="ComputePts.h">
-      <Filter>头文件\ComputeModelFile</Filter>
+      <Filter>头文件\FitShapeFile</Filter>
     </ClInclude>
     <ClInclude Include="DrawShape.h">
       <Filter>头文件\BaseOprFile</Filter>
