@@ -15,10 +15,11 @@
 #include "ImageEnhance.h"
 #include "ComputePlane.h"
 #include "ImageFilter.h"
+#include "ComputeLine.h"
 
 int main(int argc, char *argv[])
 {
-	FilterTest();
+	DrawShapeTest();
 	//PC_XYZ::Ptr planePC(new PC_XYZ);
 	//cv::Vec6d plane;
 	//plane[0] = 13;

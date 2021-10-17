@@ -1,4 +1,6 @@
 #include "ComputeLine.h"
+#include "ContourOpr.h"
+#include "ContourOpr.cpp"
 
 //两点计算直线==================================================================================
 template <typename T>
@@ -196,7 +198,7 @@ void LineTest()
 	//	cv::drawContours(colorImg, contours, i, cv::Scalar(0, 255, 0), 2);
 	//}
 
-	vector<cv::Point> pts(contours.size());
+	vector<cv::Point2f> pts(contours.size());
 	for (int i = 0; i < contours.size(); ++i)
 	{
 		int len = contours[i].size();
@@ -213,16 +215,20 @@ void LineTest()
 	}
 
 	cv::Vec3d line;
-	vector<cv::Point> inlinerPts;
+	vector<cv::Point2f> inlinerPts;
 	//Img_FitLine(pts, line, 15, NB_MODEL_FIT_METHOD::TUKEY_FIT);
 	Img_RANSACComputeLine(pts, line, inlinerPts, 0.1);
 	cv::Point s_pt, e_pt;
 	s_pt.x = 35; s_pt.y = -(line[2] + 35 * line[0]) / line[1];
 	e_pt.x = 800; e_pt.y = -(line[2] + 800 * line[0]) / line[1];
 
-	for (int i = 0; i < inlinerPts.size(); ++i)
+	vector<cv::Point2f> smoothContour;
+	Img_SmoothContour(pts, smoothContour, 9, 0.01);
+	for (int i = 0; i < pts.size(); ++i)
 	{
-		cv::line(colorImg, inlinerPts[i], inlinerPts[i], cv::Scalar(0, 0, 255), 10);
+		cv::line(colorImg, pts[i], pts[i], cv::Scalar(0, 0, 255), 3);
+
+		cv::line(colorImg, smoothContour[i], smoothContour[i], cv::Scalar(0, 255, 0), 3);
 		//cv::drawContours(colorImg, lines, i, cv::Scalar(0, 0, 255), 1);
 	}
 	cv::line(colorImg, s_pt, e_pt, cv::Scalar(0, 255, 0), 3);

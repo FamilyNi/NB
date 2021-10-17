@@ -1,5 +1,6 @@
 #include "ShapeMatch.h"
 #include <omp.h>
+#include "ContourOpr.cpp"
 
 //´´½¨Ä£°å=============================================================================
 bool CreateShapeModel(Mat &modImg, ShapeModel* &model, SPAPLEMODELINFO &shapeModelInfo)

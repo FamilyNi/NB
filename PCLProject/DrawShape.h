@@ -6,7 +6,7 @@
 	shape：[in]形状参数
 	mode：[in] 0--表示直线、1--表示平面
 */
-void PC_ShapeTrans(PC_XYZ::Ptr& pc, cv::Vec6d& shape, int mode);
+void PC_ShapeTrans(PC_XYZ::Ptr& pc, cv::Vec6d& shape, cv::Point3d& vec);
 
 /*绘制直线：
 	linePC：[out]输出直线
@@ -49,6 +49,13 @@ void PC_DrawEllipsoid(PC_XYZ::Ptr& ellipsoidPC, P_XYZ& center, double a, double 
 	step：[in]角度步长
 */
 void Img_DrawEllipse(Mat& ellipseImg, cv::Point2d& center, double rotAng, double a, double b, double step);
+
+/*绘制立方体（空心）：
+	rectPC：[out]输出平面
+	rect：[in]平面参数
+	step：[in]步长
+*/
+void PC_DrawCube(PC_XYZ::Ptr& rectPC, cv::Vec6d& cube, double step);
 
 /*添加噪声：
 	srcPC：[in]原始点云

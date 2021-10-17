@@ -1,5 +1,6 @@
 #include "ShapeModelBase.h"
 #include "ContourOpr.h"
+#include "ContourOpr.cpp"
 #include <map>
 
 //计算非极大值抑制的长宽==============================================================

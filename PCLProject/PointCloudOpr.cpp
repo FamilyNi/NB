@@ -76,10 +76,7 @@ void PC_LineProjSmooth(const PC_XYZ::Ptr &srcPC, PC_XYZ::Ptr &dstPC, int size, d
 		P_XYZ projPt;
 		PC_PtProjLinePt(p_, line, projPt);
 		float dist = std::powf(projPt.x - p_.x, 2) + std::powf(projPt.y - p_.y, 2) + std::powf(projPt.z - p_.z, 2);
-		if (dist > thresVal)
-			dstPC->points[i] = projPt;
-		else
-			dstPC->points[i] = p_;
+		dstPC->points[i] = dist > thresVal ? projPt : p_;
 	}
 }
 //===================================================================================

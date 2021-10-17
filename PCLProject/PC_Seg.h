@@ -11,9 +11,6 @@ void PC_RANSACSeg(PC_XYZ::Ptr &srcPC, PC_XYZ::Ptr &dstPC, int mode, float thresV
 /*基于欧式距离分割方法*/
 void PC_EuclideanSeg(PC_XYZ::Ptr &srcPC, std::vector<P_IDX> clusters, float distThresVal);
 
-//区域生长
-void PC_RegionGrowing(PC_XYZ::Ptr &srcPC, std::vector<vector<uint>> &indexs, float radius);
-
 /*DBSCAN分割：
 	indexs：[out]输出的点云索引
 	radius：[in]搜索的邻域半径
@@ -24,8 +21,13 @@ void PC_RegionGrowing(PC_XYZ::Ptr &srcPC, std::vector<vector<uint>> &indexs, flo
 void PC_DBSCANSeg(PC_XYZ::Ptr& srcPC, vector<vector<int>>& indexs, 
 	double radius, int n, int minGroup, int maxGroup);
 
-//Different Of Normal分割
-void DONSeg(PC_XYZ::Ptr &srcPC, float large_r, float small_r, float thresVal);
+/*DOG分割：
+	indexs：[out]输出的点云索引
+	large_r：[in]大半径
+	small_r：[in]小半径
+	thresVal：[in]两法向量之间的差
+*/
+void PC_DONSeg(PC_XYZ::Ptr &srcPC, vector<int>& indexs, double large_r, double small_r, double thresVal);
 
 /*根据平面分割：
 	plane：[in]参考平面
@@ -34,6 +36,14 @@ void DONSeg(PC_XYZ::Ptr &srcPC, float large_r, float small_r, float thresVal);
 	orit：[in]方向---0表示取平面上方的点、1表示取平面下方的点
 */
 void PC_SegBaseOnPlane(PC_XYZ::Ptr& srcPC, Plane3D& plane, vector<int>& index, double thresVal, int orit);
+
+/*根据曲率分割点云分割：
+	normals：[in]点云的法向量
+	indexs：[out]输出的点云索引
+	H_Thres：[in]高阈值
+	L_Thres：[in]低阈值
+*/
+void PC_CurvatureSeg(PC_XYZ::Ptr &srcPC, PC_N::Ptr& normals, vector<int>& indexs, double H_Thres, double L_Thres);
 
 /*点云分割测试程序*/
 void PC_SegTest();

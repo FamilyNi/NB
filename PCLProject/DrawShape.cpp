@@ -3,23 +3,17 @@
 #include "MathOpr.h"
 #include "MathOpr.cpp"
 
-//形状变换==========================================================
-void PC_ShapeTrans(PC_XYZ::Ptr& pc, cv::Vec6d& shape, int mode)
+//形状变换===============================================================================
+void PC_ShapeTrans(PC_XYZ::Ptr& pc, cv::Vec6d& shape, cv::Point3d& vec)
 {
 	double norm_ = std::sqrt(shape[0] * shape[0] +
 		shape[1] * shape[1] + shape[2] * shape[2]);
 	cv::Point3d norm_1(shape[0] / norm_, shape[1] / norm_, shape[2] / norm_);
-	cv::Point3d norm_2(1.0f, 0.0f, 0.0f);
-	double rotAng = std::acos(norm_1.x);
-	if (mode == 1)
-	{
-		norm_2 = cv::Point3d(0.0f, 0.0f, 1.0f);
-		rotAng = std::acos(norm_1.z);
-	}
-	cv::Point3d normal_p;
-	PC_VecCross(norm_1, norm_2, normal_p, true);
+	double rotAng = std::acos(norm_1.x * vec.x + norm_1.y * vec.y + norm_1.z * vec.z);
+	cv::Point3d rotAxis;
+	PC_VecCross(norm_1, vec, rotAxis, true);
 	cv::Mat rotMat;
-	RodriguesFormula(normal_p, rotAng, rotMat);
+	RodriguesFormula(rotAxis, rotAng, rotMat);
 	Eigen::Matrix4f transMat = Eigen::Matrix4f::Identity();
 	for (int i = 0; i < 3; ++i)
 	{
@@ -32,9 +26,9 @@ void PC_ShapeTrans(PC_XYZ::Ptr& pc, cv::Vec6d& shape, int mode)
 	transMat(0, 3) = shape[3]; transMat(1, 3) = shape[4]; transMat(2, 3) = shape[5];
 	pcl::transformPointCloud(*pc, *pc, transMat);
 }
-//==================================================================
+//=======================================================================================
 
-//绘制直线==========================================================
+//绘制直线===============================================================================
 void PC_DrawLine(PC_XYZ::Ptr& linePC, cv::Vec6d& line, double length, double step)
 {
 	step = step < 1e-5 ? 1 : step;
@@ -42,11 +36,12 @@ void PC_DrawLine(PC_XYZ::Ptr& linePC, cv::Vec6d& line, double length, double ste
 	{
 		linePC->points.push_back({(float)x, 0.0f, 0.0f});
 	}
-	PC_ShapeTrans(linePC, line, 0);
+	cv::Point3d vec(1.0, 0.0, 0.0);
+	PC_ShapeTrans(linePC, line, vec);
 }
-//==================================================================
+//=======================================================================================
 
-//绘制平面==========================================================
+//绘制平面===============================================================================
 void PC_DrawPlane(PC_XYZ::Ptr& planePC, cv::Vec6d& plane, double length, double width, double step)
 {
 	step = step < 1e-5 ? 1 : step;
@@ -57,11 +52,12 @@ void PC_DrawPlane(PC_XYZ::Ptr& planePC, cv::Vec6d& plane, double length, double 
 			planePC->points.push_back({ (float)x,float(y), 0.0f });
 		}
 	}
-	PC_ShapeTrans(planePC, plane, 1);
+	cv::Point3d vec(0.0, 0.0, 1.0);
+	PC_ShapeTrans(planePC, plane, vec);
 }
-//==================================================================
+//=======================================================================================
 
-//绘制球============================================================
+//绘制球=================================================================================
 void PC_DrawSphere(PC_XYZ::Ptr& spherePC, P_XYZ& center, double raduis, double step)
 {
 	double step_z = CV_PI / (int(CV_PI / step));
@@ -80,9 +76,9 @@ void PC_DrawSphere(PC_XYZ::Ptr& spherePC, P_XYZ& center, double raduis, double s
 		}
 	}
 }
-//==================================================================
+//=======================================================================================
 
-//绘制椭球面========================================================
+//绘制椭球面=============================================================================
 void PC_DrawEllipsoid(PC_XYZ::Ptr& ellipsoid, P_XYZ& center, double a, double b, double c, double step)
 {
 	double step_z = CV_PI / (int(CV_PI / step));
@@ -104,9 +100,9 @@ void PC_DrawEllipsoid(PC_XYZ::Ptr& ellipsoid, P_XYZ& center, double a, double b,
 		}
 	}
 }
-//==================================================================
+//=======================================================================================
 
-//绘制椭圆==========================================================
+//绘制椭圆===============================================================================
 void Img_DrawEllipse(Mat& ellipseImg, cv::Point2d& center, double rotAng, double a, double b, double step)
 {
 	if (ellipseImg.empty())
@@ -123,9 +119,49 @@ void Img_DrawEllipse(Mat& ellipseImg, cv::Point2d& center, double rotAng, double
 		cv::line(ellipseImg, p_, p_, cv::Scalar(0), 3);
 	}
 }
-//==================================================================
+//=======================================================================================
 
-//添加噪声==========================================================
+//绘制立方体（空心）=====================================================================
+void PC_DrawCube(PC_XYZ::Ptr& rectPC, cv::Vec6d& cube, double step)
+{
+	step = step < 1e-5 ? 1 : step;
+	for (double x = -cube[3] / 2.0; x <= cube[3] / 2.0; x += cube[3])
+	{
+		for (double y = -cube[4] / 2.0; y < cube[4] / 2.0; y += step)
+		{
+			for (double z = -cube[5] / 2.0; z < cube[5] / 2.0; z += step)
+			{
+				rectPC->points.push_back({ (float)x,float(y), (float)z });
+			}
+		}
+	}
+	for (double y = -cube[4] / 2.0; y <= cube[4] / 2.0; y += cube[4])
+	{
+		for (double x = -cube[3] / 2.0; x < cube[3] / 2.0; x += step)
+		{
+			for (double z = -cube[5] / 2.0; z < cube[5] / 2.0; z += step)
+			{
+				rectPC->points.push_back({ (float)x,float(y), (float)z });
+			}
+		}
+	}
+	for (double z = -cube[5] / 2.0; z <= cube[5] / 2.0; z += cube[5])
+	{
+		for (double x = -cube[3] / 2.0; x < cube[3] / 2.0; x += step)
+		{
+			for (double y = -cube[4] / 2.0; y < cube[4] / 2.0; y += step)
+			{
+				rectPC->points.push_back({ (float)x,float(y), (float)z });
+			}
+		}
+	}
+	double norm_ = std::sqrt(cube[3] * cube[3] + cube[4] * cube[4] + cube[5] * cube[5]);
+	cv::Point3d vec(cube[3] / norm_, cube[4] / norm_, cube[5] / norm_);
+	PC_ShapeTrans(rectPC, cube, vec);
+}
+//=======================================================================================
+
+//添加噪声===============================================================================
 void PC_AddNoise(PC_XYZ::Ptr& srcPC, PC_XYZ::Ptr& noisePC, int range, int step)
 {
 	PC_XYZ::Ptr noise_(new PC_XYZ);
@@ -146,19 +182,30 @@ void PC_AddNoise(PC_XYZ::Ptr& srcPC, PC_XYZ::Ptr& noisePC, int range, int step)
 	}
 	*noisePC = *srcPC + *noise_;
 }
-//==================================================================
+//=======================================================================================
 
-//测试程序==========================================================
+//测试程序===============================================================================
 void DrawShapeTest()
 {
-	PC_XYZ::Ptr linePC(new PC_XYZ);
-	cv::Vec6d line;
-	line[0] = 12;
-	line[1] = 25;
-	line[2] = 8;
-	line[3] = 106;
-	line[4] = 69;
-	line[5] = 903;
-	PC_DrawLine(linePC, line, 20, 0.5);
+	PC_XYZ::Ptr shapePC(new PC_XYZ);
+	cv::Vec6d shape;
+	shape[0] = 12;
+	shape[1] = 25;
+	shape[2] = 8;
+	shape[3] = 53;
+	shape[4] = 35;
+	shape[5] = 86;
+	PC_DrawCube(shapePC, shape, 0.2);
+
+	pcl::visualization::PCLVisualizer viewer;
+	viewer.addCoordinateSystem(10);
+	//显示轨迹
+	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> red(shapePC, 255, 0, 0); //设置点云颜色
+	viewer.addPointCloud(shapePC, red, "shapePC");
+	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "shapePC");
+	while (!viewer.wasStopped())
+	{
+		viewer.spinOnce();
+	}
 }
-//==================================================================
+//=======================================================================================

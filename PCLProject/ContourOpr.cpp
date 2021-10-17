@@ -1,8 +1,11 @@
 #include "ContourOpr.h"
 #include <opencv2/flann.hpp>
+#include "MathOpr.h"
+#include "MathOpr.cpp"
 
 //提取轮廓======================================================================
-void ExtractContour(Mat &srcImg, vector<vector<Point>> &contours, float lowVal, float highVal, int mode)
+template <typename T>
+void ExtractContour(Mat &srcImg, vector<vector<T>> &contours, float lowVal, float highVal, int mode)
 {
 	Mat dstImg = Mat(srcImg.size(), srcImg.type(), Scalar(0));
 	if (mode == 0)
@@ -17,7 +20,8 @@ void ExtractContour(Mat &srcImg, vector<vector<Point>> &contours, float lowVal, 
 //==============================================================================
 
 //计算轮廓的重心================================================================
-void GetContourGravity(vector<Point2f> &contour, Point2f &gravity)
+template <typename T1, typename T2>
+void GetContourGravity(vector<T1> &contour, T2 &gravity)
 {
 	int len = contour.size();
 	if (len == 0)
@@ -34,7 +38,8 @@ void GetContourGravity(vector<Point2f> &contour, Point2f &gravity)
 //==============================================================================
 
 //平移轮廓======================================================================
-void TranContour(vector<Point2f> &contour, Point2f &gravity)
+template <typename T1, typename T2>
+void TranContour(vector<T1> &contour, T2 &gravity)
 {
 	for (int i = 0; i < contour.size(); ++i)
 	{
@@ -45,7 +50,8 @@ void TranContour(vector<Point2f> &contour, Point2f &gravity)
 //==============================================================================
 
 //获得最长轮廓==================================================================
-void GetMaxLenContuor(vector<vector<Point>> &contours, int &maxLenIndex)
+template <typename T>
+void GetMaxLenContuor(vector<vector<T>> &contours, int &maxLenIndex)
 {
 	int len = contours.size();
 	if (len == 0)
@@ -63,7 +69,8 @@ void GetMaxLenContuor(vector<vector<Point>> &contours, int &maxLenIndex)
 //==============================================================================
 
 //获得最短轮廓==================================================================
-void GetMinLenContuor(vector<vector<Point>> &contours, int &minLenIndex)
+template <typename T>
+void GetMinLenContuor(vector<vector<T>> &contours, int &minLenIndex)
 {
 	int len = contours.size();
 	if (len == 0)
@@ -81,7 +88,8 @@ void GetMinLenContuor(vector<vector<Point>> &contours, int &minLenIndex)
 //==============================================================================
 
 //根据长度选择轮廓==============================================================
-void SelContourLen(vector<vector<Point>> &contours, vector<vector<Point>> &selContours, int minLen, int maxLen)
+template <typename T>
+void SelContourLen(vector<vector<T>> &contours, vector<vector<T>> &selContours, int minLen, int maxLen)
 {
 	selContours.resize(0);
 	if (contours.size() == 0)
@@ -95,7 +103,8 @@ void SelContourLen(vector<vector<Point>> &contours, vector<vector<Point>> &selCo
 //==============================================================================
 
 //选择包围面积最大的轮廓========================================================
-void GetMaxAreaContour(vector<vector<Point>> &contours, int &maxIndex)
+template <typename T>
+void GetMaxAreaContour(vector<vector<T>> &contours, int &maxIndex)
 {
 	int len = contours.size();
 	if (len == 0)
@@ -114,7 +123,8 @@ void GetMaxAreaContour(vector<vector<Point>> &contours, int &maxIndex)
 //==============================================================================
 
 //选择包围面积最小的轮廓========================================================
-void GetMinAreaContour(vector<vector<Point>> &contours, int &minIndex)
+template <typename T>
+void GetMinAreaContour(vector<vector<T>> &contours, int &minIndex)
 {
 	int len = contours.size();
 	if (len == 0)
@@ -133,7 +143,8 @@ void GetMinAreaContour(vector<vector<Point>> &contours, int &minIndex)
 //==============================================================================
 
 //根据面积选择轮廓==============================================================
-void SelContourArea(vector<vector<Point>> &contours, vector<vector<Point>> &selContours, int minArea, int maxArea)
+template <typename T>
+void SelContourArea(vector<vector<T>> &contours, vector<vector<T>> &selContours, int minArea, int maxArea)
 {
 	selContours.resize(0);
 	if (contours.size() == 0)
@@ -148,7 +159,8 @@ void SelContourArea(vector<vector<Point>> &contours, vector<vector<Point>> &selC
 //==============================================================================
 
 //填充轮廓======================================================================
-void FillContour(Mat &srcImg, vector<Point> &contour, Scalar color)
+template <typename T>
+void FillContour(Mat &srcImg, vector<T> &contour, Scalar color)
 {
 	if (srcImg.empty() || contour.size() == 0)
 		return;
@@ -157,7 +169,8 @@ void FillContour(Mat &srcImg, vector<Point> &contour, Scalar color)
 //==============================================================================
 
 //多边形近似轮廓================================================================
-void PolyFitContour(vector<Point> &contour, vector<Point> &poly, double distThres)
+template <typename T>
+void PolyFitContour(vector<T> &contour, vector<T> &poly, double distThres)
 {
 	poly.resize(0);
 	if (contour.size() == 0)
@@ -167,7 +180,8 @@ void PolyFitContour(vector<Point> &contour, vector<Point> &poly, double distThre
 //==============================================================================
 
 //合并轮廓======================================================================
-void MergeContour(vector<vector<Point>> &contours, vector<Point> &contour)
+template <typename T>
+void MergeContour(vector<vector<T>> &contours, vector<T> &contour)
 {
 	contour.resize(0);
 	if (contours.size() == 0)
@@ -180,36 +194,39 @@ void MergeContour(vector<vector<Point>> &contours, vector<Point> &contour)
 //==============================================================================
 
 //轮廓平滑======================================================================
-void SmoothContour(vector<cv::Point2f>& srcContour, vector<cv::Point2f>& dstContour, int size, double thresVal)
+template <typename T1, typename T2>
+void Img_SmoothContour(vector<T1>& srcContour, vector<T2>& dstContour, int size, double thresVal)
 {
-	dstContour.resize(srcContour.size());
-	cv::Mat source = cv::Mat(srcContour).reshape(1);
+	int pts_num = srcContour.size();
+	dstContour.resize(pts_num);
+	cv::Mat source(cv::Size(2, pts_num), CV_32FC1, cv::Scalar(0));
+	for (int i = 0; i < pts_num; ++i)
+	{
+		float *pSource = source.ptr<float>(i);
+		pSource[0] = srcContour[i].x; pSource[1] = srcContour[i].y;
+	}
 	cv::flann::KDTreeIndexParams indexParams(2);
 	cv::flann::Index kdtree(source, indexParams);
+
+	vector<T1> pts_(size);
+	vector<float> vecQuery(2);//存放查询点
+	vector<int> vecIndex(size);//存放返回的点索引
+	vector<float> vecDist(size);//存放距离
+	cv::Vec4d line;
 	for (int i = 0; i < srcContour.size(); ++i)
 	{
-		vector<float> vecQuery(2);//存放查询点
 		vecQuery[0] = srcContour[i].x; //查询点x坐标
 		vecQuery[1] = srcContour[i].y; //查询点y坐标
-		vector<int> vecIndex(size);//存放返回的点索引
-		vector<float> vecDist(size);//存放距离
-		cv::flann::SearchParams params(32);//设置knnSearch搜索参数
-		kdtree.knnSearch(vecQuery, vecIndex, vecDist, size, params);
-		vector<cv::Point2f> pts_(size);
+		kdtree.knnSearch(vecQuery, vecIndex, vecDist, size);
 		for (int j = 0; j < size; ++j)
 		{
 			pts_[j] = srcContour[vecIndex[j]];
 		}
-		cv::Vec4d line;
 		cv::fitLine(pts_, line, cv::DIST_L2, 0, 0.01, 0.01);
-		float scale = srcContour[i].x * line[0] + srcContour[i].y * line[1] - (line[2] * line[0] + line[3] * line[1]);
-		cv::Point2f v_p;
-		v_p.x = line[2] + scale * line[0]; v_p.y = line[3] + scale * line[1];
+		T2 v_p;
+		Img_PtProjLinePt(srcContour[i], line, v_p);
 		double dist = std::powf(v_p.x - srcContour[i].x, 2) + std::powf(v_p.y - srcContour[i].y, 2);
-		if (dist > thresVal)
-			dstContour[i] = v_p;
-		else
-			dstContour[i] = srcContour[i];
+		dstContour[i] = dist > thresVal ? v_p : srcContour[i];
 	}
 }
 //==============================================================================

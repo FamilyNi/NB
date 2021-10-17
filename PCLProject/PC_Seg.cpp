@@ -49,71 +49,6 @@ void PC_EuclideanSeg(PC_XYZ::Ptr &srcPC, std::vector<P_IDX> clusters, float dist
 }
 //==================================================================================
 
-//区域生长实现点云分割==============================================================
-void PC_RegionGrowing(PC_XYZ::Ptr &srcPC, std::vector<vector<uint>> &indexs, float radius)
-{
-	size_t length = srcPC->points.size();
-	vector<bool> isLabeled(length, 0);
-
-	pcl::KdTreeFLANN<P_XYZ> kdtree;
-	kdtree.setInputCloud(srcPC);
-
-	vector<bool> isSand(length, false);
-	for (size_t i = 0; i < length; ++i)
-	{
-		if (isSand[i])
-		{
-			continue;
-		}
-		queue<uint> local_sandp;
-		vector<uint> cluster(0);
-		cluster.push_back(i);
-		local_sandp.push(i);
-		isLabeled[i] = true;
-		isSand[i] = true;
-		float ref_z = srcPC->points[i].z;
-		while (!local_sandp.empty())
-		{
-			P_XYZ& ref_p = srcPC->points[local_sandp.front()];
-			vector<int> PIdx(0);
-			vector<float> DistIdx(0);
-			kdtree.radiusSearch(ref_p, radius, PIdx, DistIdx);
-			for (size_t j = 1; j < PIdx.size(); ++j)
-			{
-				float z_ = abs(ref_z - srcPC->points[PIdx[j]].z);
-				if (z_ < 2.0f)
-				{
-					if (!isLabeled[PIdx[j]])
-					{
-						cluster.push_back(PIdx[j]);
-						isLabeled[PIdx[j]] = true;
-					}
-					if (!isSand[PIdx[j]])
-					{
-						local_sandp.push(PIdx[j]);
-						isSand[PIdx[j]] = true;
-					}
-				}
-			}
-			local_sandp.pop();
-		}
-		indexs.push_back(cluster);
-
-		PC_XYZ::Ptr dstPC(new PC_XYZ);
-		dstPC->points.resize(cluster.size());
-		for (int m = 0; m < cluster.size(); ++m)
-		{
-			dstPC->points[m] = srcPC->points[cluster[m]];
-		}
-	}
-	uint sum_ = 0;
-	for (size_t i = 0; i < indexs.size(); ++i)
-	{
-		sum_ += indexs[i].size();
-	}
-}
-//====================================================================================
-
 //DBSCAN分割==========================================================================
 void PC_DBSCANSeg(PC_XYZ::Ptr& srcPC, vector<vector<int>>& indexs,
 	double radius, int n, int minGroup, int maxGroup)
@@ -175,7 +110,7 @@ void PC_DBSCANSeg(PC_XYZ::Ptr& srcPC, vector<vector<int>>& indexs,
 //===================================================================================
 
 //Different Of Normal分割============================================================
-void DONSeg(PC_XYZ::Ptr &srcPC, float large_r, float small_r, float thresVal)
+void PC_DONSeg(PC_XYZ::Ptr &srcPC, vector<int>& indexs, double large_r, double small_r, double thresVal)
 {
 	size_t length = srcPC->points.size();
 	pcl::search::Search<P_XYZ>::Ptr tree;
@@ -190,7 +125,7 @@ void DONSeg(PC_XYZ::Ptr &srcPC, float large_r, float small_r, float thresVal)
 	ne.setRadiusSearch(large_r);
 	ne.compute(*normals_large_scale);
 
-	PC_XYZ::Ptr dstPC(new PC_XYZ);
+	indexs.reserve(length);
 	for (size_t i = 0; i < length; ++i)
 	{
 		P_N l_pn = normals_large_scale->points[i];
@@ -200,7 +135,7 @@ void DONSeg(PC_XYZ::Ptr &srcPC, float large_r, float small_r, float thresVal)
 		float diff_z = std::fabs(abs(l_pn.normal_z) - abs(s_pn.normal_z)) * 0.5;
 		if (diff_x > thresVal || diff_y > thresVal || diff_z > thresVal)
 		{
-			dstPC->points.push_back(srcPC->points[i]);
+			indexs.push_back(i);
 		}
 	}
 }
@@ -221,6 +156,22 @@ void PC_SegBaseOnPlane(PC_XYZ::Ptr& srcPC, Plane3D& plane, vector<int>& index, d
 		if (dist > thresVal && orit == 1)
 		{
 			index.push_back(i);
+		}
+	}
+}
+//===================================================================================
+
+//根据曲率分割点云分割===============================================================
+void PC_CurvatureSeg(PC_XYZ::Ptr &srcPC, PC_N::Ptr& normals, vector<int>& indexs, double H_Thres, double L_Thres)
+{
+	int pts_nun = srcPC->points.size();
+	indexs.reserve(pts_nun);
+	for (int i = 0; i < pts_nun; ++i)
+	{
+		double curvature = normals->points[i].curvature;
+		if (curvature > L_Thres && curvature < H_Thres)
+		{
+			indexs.push_back(i);
 		}
 	}
 }

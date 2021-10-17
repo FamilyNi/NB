@@ -18,11 +18,13 @@ void PC_VecNormal(T& p)
 //============================================================================
 
 //点到平面的投影点============================================================
-template <typename T1, typename T2>
-void PC_PtProjPlanePt(T1& pt, T2& plane, T1& projPt)
+template <typename T1, typename T2, typename T3>
+void PC_PtProjPlanePt(T1& pt, T2& plane, T3& projPt)
 {
 	float dist = pt.x * plane[0] + pt.y * plane[1] + pt.z * plane[2] + plane[3];
-	projPt = { pt.x - float(dist * plane[0]), float(pt.x - dist * plane[1]),float(pt.x - dist * plane[2]) };
+	projPt.x = pt.x - dist * plane[0];
+	projPt.y = pt.y - dist * plane[1];
+	projPt.z = pt.z - dist * plane[2];
 }
 //===========================================================================
 
@@ -40,8 +42,8 @@ void PC_PtToLineDist(T1& pt, T2& line, double& dist)
 //===========================================================================
 
 //空间点到空间直线的投影=====================================================
-template <typename T1, typename T2>
-void PC_PtProjLinePt(T1& pt, T2& line, T1& projPt)
+template <typename T1, typename T2, typename T3>
+void PC_PtProjLinePt(T1& pt, T2& line, T3& projPt)
 {
 	float scale = pt.x * line[0] + pt.y * line[1] + pt.z * line[2] -
 		(line[3] * line[0] + line[4] * line[1] + line[5] * line[2]);
@@ -52,8 +54,8 @@ void PC_PtProjLinePt(T1& pt, T2& line, T1& projPt)
 //===========================================================================
 
 //三维向量叉乘===============================================================
-template <typename T>
-void PC_VecCross(T& vec1, T& vec2, T& vec, bool isNormal)
+template <typename T1, typename T2, typename T3>
+void PC_VecCross(T1& vec1, T2& vec2, T3& vec, bool isNormal)
 {
 	vec.x = vec1.y * vec2.z - vec1.z * vec2.y;
 	vec.y = vec1.z * vec2.x - vec1.x * vec2.z;
@@ -67,12 +69,21 @@ void PC_VecCross(T& vec1, T& vec2, T& vec, bool isNormal)
 //=========================================================================
 
 //计算点间距===============================================================
-template <typename T>
-void Img_ComputePPDist(T& pt1, T& pt2, double& dist)
+template <typename T1, typename T2>
+void Img_ComputePPDist(T1& pt1, T2& pt2, double& dist)
 {
 	double diff_x = pt1.x - pt2.x;
 	double diff_y = pt1.y - pt2.y;
 	return std::sqrt(max(diff_x * diff_x + diff_y * diff_y, EPS));
+}
+//=========================================================================
+
+//平面上点到直线的投影=====================================================
+template <typename T1, typename T2, typename T3>
+void Img_PtProjLinePt(T1& pt, T2& line, T3& projPt)
+{
+	float scale = pt.x * line[0] + pt.y * line[1] - (line[2] * line[0] + line[3] * line[1]);
+	projPt.x = line[2] + scale * line[0]; projPt.y = line[3] + scale * line[1];
 }
 //=========================================================================
 
