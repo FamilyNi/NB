@@ -39,7 +39,7 @@ void PC_DrawSphere(PC_XYZ::Ptr& spherePC, P_XYZ& center, double raduis, double s
 	a、b、c：[in]分别为x、y、z轴的轴长
 	step：[in]角度步长
 */
-void PC_DrawEllipsoid(PC_XYZ::Ptr& ellipsoidPC, P_XYZ& center, double a, double b, double c, double step);
+void PC_DrawEllipsoid(PC_XYZ::Ptr& ellipsoidPC, cv::Vec6d& ellipsoid, double a, double b, double c, double step);
 
 /*绘制椭圆：
 	ellipseImg：[out]输出的椭圆
@@ -52,10 +52,18 @@ void Img_DrawEllipse(Mat& ellipseImg, cv::Point2d& center, double rotAng, double
 
 /*绘制立方体（空心）：
 	rectPC：[out]输出平面
-	rect：[in]平面参数
+	cube：[in]立方体参数
 	step：[in]步长
 */
-void PC_DrawCube(PC_XYZ::Ptr& rectPC, cv::Vec6d& cube, double step);
+void PC_DrawCube(PC_XYZ::Ptr& rectPC, cv::Vec6d& cube, double a, double b, double c, double step);
+
+/*绘制空间园：
+	circlePC：[out]输出平面
+	circle：[in]空间园参数
+	r：[in]空间园半径
+	step：[in]步长
+*/
+void PC_DrawCircle(PC_XYZ::Ptr& circlePC, cv::Vec6d& circle, double r, double step);
 
 /*添加噪声：
 	srcPC：[in]原始点云

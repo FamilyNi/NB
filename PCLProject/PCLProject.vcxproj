@@ -163,6 +163,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Compute3DCircle.cpp" />
     <ClCompile Include="Compute3DLine.cpp" />
     <ClCompile Include="ComputeCircle.cpp" />
     <ClCompile Include="ComputeEllipse.cpp" />
@@ -196,6 +197,7 @@
     <ClCompile Include="WaveLet.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Compute3DCircle.h" />
     <ClInclude Include="Compute3DLine.h" />
     <ClInclude Include="ComputeCircle.h" />
     <ClInclude Include="ComputeEllipse.h" />

@@ -1,7 +1,7 @@
 #include "ComputeSphere.h"
 #include "DrawShape.h"
 
-//点到园的距离==================================================================================
+//点到球的距离==================================================================================
 template <typename T1, typename T2>
 void PC_PtToShpereDist(T1& pt, T2& sphere, double& dist)
 {

@@ -50,5 +50,5 @@ void PC_TukeyPlaneWeights(vector<T1>& pts, T2& plane, vector<double>& weights);
 template <typename T1, typename T2>
 void PC_FitPlane(vector<T1>& pts,T2& plane, int k, NB_MODEL_FIT_METHOD method);
 
-
+template <typename T1, typename T2>
 void PC_PlaneTest();

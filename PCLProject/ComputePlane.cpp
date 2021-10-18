@@ -199,7 +199,7 @@ void PC_FitPlane(vector<T1>& pts, T2& plane, int k, NB_MODEL_FIT_METHOD method)
 }
 //==============================================================================================
 
-
+template <typename T1, typename T2>
 void PC_PlaneTest()
 {
 	PC_XYZ::Ptr srcPC(new PC_XYZ);

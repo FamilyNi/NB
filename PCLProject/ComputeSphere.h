@@ -8,7 +8,7 @@
 	sphere：圆---[0]：a、[1]：b、[2]：c、[3]：r
 */
 
-/*点到园的距离*/
+/*点到球的距离*/
 template <typename T1, typename T2>
 void PC_PtToShpereDist(T1& pt, T2& sphere, double& dist);
 

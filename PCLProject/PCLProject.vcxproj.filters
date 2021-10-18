@@ -138,6 +138,9 @@
     <ClCompile Include="ImageGLCM.cpp">
       <Filter>源文件\ImageFile</Filter>
     </ClCompile>
+    <ClCompile Include="Compute3DCircle.cpp">
+      <Filter>源文件\FitShapeFile</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="utils.h">
@@ -232,6 +235,9 @@
     </ClInclude>
     <ClInclude Include="ImageGLCM.h">
       <Filter>头文件\ImageFile</Filter>
+    </ClInclude>
+    <ClInclude Include="Compute3DCircle.h">
+      <Filter>头文件\FitShapeFile</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
