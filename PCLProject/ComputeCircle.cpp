@@ -22,7 +22,7 @@ void Img_ThreePtsComputeCicle(T1& pt1, T1& pt2, T1& pt3, T2& circle)
 }
 //==============================================================================================
 
-//随机一致采样算法计算直线======================================================================
+//随机一致采样算法计算园========================================================================
 template <typename T1, typename T2>
 void Img_RANSACComputeCircle(vector<T1>& pts, T2& circle, vector<T1>& inlinerPts, double thres)
 {
@@ -36,7 +36,7 @@ void Img_RANSACComputeCircle(vector<T1>& pts, T2& circle, vector<T1>& inlinerPts
 	for (int i = 0; i < maxEpo; ++i)
 	{
 		int effetPoints = 0;
-		//随机选择三个点计算园
+		//随机选择三个点计算园---注意：这里可能需要特殊处理防止点相同
 		int index_1 = rand() % size;
 		int index_2 = rand() % size;
 		int index_3 = rand() % size;

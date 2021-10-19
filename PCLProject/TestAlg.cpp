@@ -16,11 +16,12 @@
 #include "ComputePlane.h"
 #include "ImageFilter.h"
 #include "ComputeLine.h"
-#include "Compute3DCircle.h"
+#include "ComputeSphere.h"
+
 
 int main(int argc, char *argv[])
 {
-	PC_CircleTest();
+	PC_SphereTest();
 	//PC_XYZ::Ptr planePC(new PC_XYZ);
 	//cv::Vec6d plane;
 	//plane[0] = 13;

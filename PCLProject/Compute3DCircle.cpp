@@ -1,6 +1,7 @@
 #include "Compute3DCircle.h"
 #include "ComputePlane.h"
-#include "ComputePlane.cpp"
+#include "MathOpr.h"
+#include "MathOpr.cpp"
 
 //点到圆的距离====================================================================================
 template <typename T1, typename T2>
@@ -11,6 +12,92 @@ void PC_PtToCircleDist(T1& pt, T2& circle, double& dist)
 	double diff_z = pt.z - circle[2];
 	dist = std::sqrt(diff_x * diff_x + diff_y * diff_y + diff_z * diff_z);
 	dist = abs(dist - circle[3]);
+}
+//================================================================================================
+
+//三点计算园======================================================================================
+template <typename T1, typename T2>
+void PC_ThreePtsComputeCircle(T1& pt1, T1& pt2, T1& pt3, T2& circle)
+{
+	//首先计算3点所在平面的法向量
+	P_XYZ nor_1(pt1.x - pt2.x, pt1.y - pt2.y, pt1.z - pt2.z);
+	P_XYZ nor_2(pt1.x - pt3.x, pt1.y - pt3.y, pt1.z - pt3.z);
+	P_XYZ norm(0, 0, 0);
+	PC_VecCross(nor_1, nor_2, norm, true);
+
+	//这个地方不想手动解方程组了，交给opencv了
+	Mat A(cv::Size(3, 3), CV_64FC1, cv::Scalar(0));
+	double* pA = A.ptr<double>(0);
+	pA[0] = 2.0 * (pt1.x - pt2.x); pA[1] = 2.0 * (pt1.y - pt2.y); pA[2] = 2.0 * (pt1.z - pt2.z);
+	pA[3] = 2.0 * (pt2.x - pt3.x); pA[4] = 2.0 * (pt2.y - pt3.y); pA[5] = 2.0 * (pt2.z - pt3.z);
+	pA[6] = norm.x; pA[7] = norm.y; pA[8] = norm.z;
+	Mat B(cv::Size(1, 3), CV_64FC1, cv::Scalar(0));
+	double* pB = B.ptr<double>(0); 
+	pB[0] = pt1.x * pt1.x - pt2.x * pt2.x + pt1.y * pt1.y - pt2.y * pt2.y + pt1.z * pt1.z - pt2.z * pt2.z;
+	pB[1] = pt2.x * pt2.x - pt3.x * pt3.x + pt2.y * pt2.y - pt3.y * pt3.y + pt2.z * pt2.z - pt3.z * pt3.z;
+	pB[2] = norm.x * pt1.x + norm.y * pt1.y + norm.z * pt1.z;
+	Mat C = A.inv() * B;
+	double* pC = C.ptr<double>(0);
+	circle[0] = pC[0]; circle[1] = pC[1]; circle[2] = pC[2];
+	double diff_x = pt1.x - pC[0], diff_y = pt1.y - pC[1], diff_z = pt1.z - pC[2];
+	circle[3] = std::sqrt(diff_x * diff_x + diff_y * diff_y + diff_z * diff_z);
+	circle[4] = norm.x; circle[5] = norm.y; circle[6] = norm.z;
+}
+//================================================================================================
+
+//随机一致采样算法计算园==========================================================================
+template <typename T1, typename T2>
+void PC_RANSACComputeCircle(vector<T1>& pts, T2& circle, vector<T1>& inlinerPts, double thres)
+{
+	if (pts.size() < 3)
+		return;
+	int best_model_p = 0;
+	double P = 0.99;  //模型存在的概率
+	double log_P = log(1 - P);
+	int size = pts.size();
+	int maxEpo = 10000;
+	for (int i = 0; i < maxEpo; ++i)
+	{
+		int effetPoints = 0;
+		//随机选择三个点计算园---注意：这里可能需要特殊处理防止点相同
+		int index_1 = rand() % size;
+		int index_2 = rand() % size;
+		int index_3 = rand() % size;
+		T2 circle_(7);
+		PC_ThreePtsComputeCircle(pts[index_1], pts[index_2], pts[index_3], circle_);
+		//计算局内点的个数
+		for (int j = 0; j < size; ++j)
+		{
+			double dist = 0.0;
+			PC_PtToCircleDist(pts[j], circle_, dist);
+			effetPoints += dist < thres ? 1 : 0;
+		}
+		//获取最优模型，并根据概率修改迭代次数
+		if (best_model_p < effetPoints)
+		{
+			best_model_p = effetPoints;
+			circle = circle_;
+			double t_P = (double)best_model_p / size;
+			double pow_t_p = t_P * t_P * t_P;
+			maxEpo = log_P / log(1 - pow_t_p) + std::sqrt(1 - pow_t_p) / (pow_t_p);
+		}
+		if (best_model_p > 0.5 * size)
+		{
+			circle = circle_;
+			break;
+		}
+	}
+	//提取局内点
+	if (inlinerPts.size() != 0)
+		inlinerPts.resize(0);
+	inlinerPts.reserve(size);
+	for (int i = 0; i < size; ++i)
+	{
+		double dist = 0.0;
+		PC_PtToCircleDist(pts[i], circle, dist);
+		if (dist < thres)
+			inlinerPts.push_back(pts[i]);
+	}
 }
 //================================================================================================
 
@@ -158,17 +245,19 @@ void PC_FitSphere(vector<T1>& pts, T2& circle, int k, NB_MODEL_FIT_METHOD method
 void PC_CircleTest()
 {
 	PC_XYZ::Ptr srcPC(new PC_XYZ);
-	pcl::io::loadPLYFile("C:/Users/Administrator/Desktop/testimage/噪声圆.ply", *srcPC);
+	pcl::io::loadPLYFile("C:/Users/Administrator/Desktop/testimage/八分之一噪声圆.ply", *srcPC);
 
 	vector<P_XYZ> pts(srcPC->points.size());
 	for (int i = 0; i < srcPC->points.size(); ++i)
 	{
 		pts[i] = srcPC->points[i];
 	}
-
+	std::random_shuffle(pts.begin(), pts.end());
 	vector<double> circle(7,0.0);
-	vector<double> weights(pts.size(), 1.0);
-	PC_FitSphere(pts, circle, 5, NB_MODEL_FIT_METHOD::TUKEY_FIT);
+	vector<P_XYZ> inlinerPts;
+	PC_RANSACComputeCircle(pts, circle, inlinerPts, 0.2);
+	//vector<double> weights(pts.size(), 1.0);
+	//PC_FitSphere(pts, circle, 30, NB_MODEL_FIT_METHOD::HUBER_FIT);
 	//vector<P_XYZ> inlinerPts;
 	//PC_RANSACComputeSphere(pts, sphere, inlinerPts, 0.2);
 

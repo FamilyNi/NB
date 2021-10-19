@@ -169,7 +169,7 @@ void PC_DrawCube(PC_XYZ::Ptr& rectPC, cv::Vec6d& cube, double a, double b, doubl
 void PC_DrawCircle(PC_XYZ::Ptr& circlePC, cv::Vec6d& circle, double r, double step)
 {
 	step = step < 1e-5 ? 0.1 : step;
-	for (double alpha = 0; alpha < CV_2PI; alpha += step)
+	for (double alpha = 0; alpha < CV_2PI / 8; alpha += step)
 	{
 		float x = r * std::cos(alpha);
 		float y = r * std::sin(alpha);
@@ -217,9 +217,9 @@ void DrawShapeTest()
 	PC_DrawCircle(shapePC, shape, 60, 0.01);
 
 	PC_XYZ::Ptr noisePC(new PC_XYZ);
-	PC_AddNoise(shapePC, noisePC, 7, 2);
+	PC_AddNoise(shapePC, noisePC, 10, 2);
 
-	pcl::io::savePLYFile("C:/Users/Administrator/Desktop/testimage/ÔëÉùÔ².ply", *noisePC, true);
+	pcl::io::savePLYFile("C:/Users/Administrator/Desktop/testimage/ËÄ·ÖÖ®Ò»ÔëÉùÔ².ply", *noisePC, true);
 	pcl::visualization::PCLVisualizer viewer;
 	viewer.addCoordinateSystem(10);
 	//ÏÔÊ¾¹ì¼£

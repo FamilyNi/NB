@@ -92,7 +92,7 @@ void Img_RANSACComputeCircle(vector<T1>& pts, T2& ellipse, vector<T1>& inlinerPt
 	for (int i = 0; i < maxEpo; ++i)
 	{
 		int effetPoints = 0;
-		//随机选择六个个点计算椭圆---注意哦这里可能需要特殊处理防止点相同
+		//随机选择六个个点计算椭圆---注意：这里可能需要特殊处理防止点相同
 		pts_[0] = pts[rand() % size]; pts_[1] = pts[rand() % size];	pts_[2] = pts[rand() % size];
 		pts_[3] = pts[rand() % size]; pts_[4] = pts[rand() % size];	pts_[5] = pts[rand() % size];
 		T2 ellipse_, normEllipse;

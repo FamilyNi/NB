@@ -29,7 +29,7 @@ void Img_RANSACComputeLine(vector<T1>& pts, T2& line, vector<T1>& inlinerPts, do
 	for (int i = 0; i < maxEpo; ++i)
 	{
 		int effetPoints = 0;
-		//随机选择两个点，并计算直线
+		//随机选择两个点计算直线---注意：这里可能需要特殊处理防止点相同
 		int index_1 = rand() % size;
 		int index_2 = rand() % size;
 		T2 line_;

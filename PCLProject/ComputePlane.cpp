@@ -32,7 +32,7 @@ void PC_RANSACComputePlane(vector<T1>& pts, T2& plane, vector<T1>& inlinerPts, d
 	for (int i = 0; i < maxEpo; ++i)
 	{
 		int effetPoints = 0;
-		//随机选择六个个点计算平面
+		//随机选择三个点计算平面---注意：这里可能需要特殊处理防止点相同
 		pts_[0] = pts[rand() % size]; pts_[1] = pts[rand() % size];	pts_[2] = pts[rand() % size];
 		T2 plane_;
 		PC_ThreePtsComputePlane(pts_[0], pts_[1], pts_[2], plane_);
@@ -199,7 +199,6 @@ void PC_FitPlane(vector<T1>& pts, T2& plane, int k, NB_MODEL_FIT_METHOD method)
 }
 //==============================================================================================
 
-template <typename T1, typename T2>
 void PC_PlaneTest()
 {
 	PC_XYZ::Ptr srcPC(new PC_XYZ);
@@ -210,6 +209,8 @@ void PC_PlaneTest()
 	{
 		pts[i] = srcPC->points[i];
 	}
+
+	std::random_shuffle(pts.begin(), pts.end());
 	cv::Vec4d plane;
 	vector<P_XYZ> inlinerPts;
 	PC_RANSACComputePlane(pts, plane, inlinerPts, 0.01);

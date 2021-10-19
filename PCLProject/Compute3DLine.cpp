@@ -29,7 +29,7 @@ void PC_RANSACComputeLine(vector<T1>& pts, T2& line, vector<T1>& inlinerPts, dou
 	for (int i = 0; i < maxEpo; ++i)
 	{
 		int effetPoints = 0;
-		//随机选择六个个点计算椭圆
+		//随机选择两个点拟合直线---注意：这里可能需要特殊处理防止点相同
 		T1 pt1 = pts[rand() % size]; 
 		T1 pt2 = pts[rand() % size];
 		T2 line_;
@@ -202,6 +202,8 @@ void PC_3DLineTest()
 	{
 		pts[i] = srcPC->points[i];
 	}
+	std::random_shuffle(pts.begin(), pts.end());
+
 	cv::Vec6d line;
 	vector<P_XYZ> inlinerPts;
 	PC_RANSACComputeLine(pts, line, inlinerPts, 0.2);

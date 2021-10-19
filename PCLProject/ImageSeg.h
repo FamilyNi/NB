@@ -17,7 +17,7 @@ void Img_Seg(Mat& srcImg, Mat& dstImg, double thres, IMG_SEG mode);
 */
 void Img_SelectGraySeg(Mat& srcImg, Mat& dstImg, uchar thresVal1, uchar thresVal2, IMG_SEG mode);
 
-/*熵最大的阈值分割(熵越大系统越不稳定)：
+/*熵最大的阈值分割：
 	mode：[in]二值化模式---IMG_SEG_LIGHT：选择图像亮的部分
 					   IMG_SEG_DARK：选择图像暗的部分
 */

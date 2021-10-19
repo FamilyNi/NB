@@ -8,6 +8,7 @@
 #include <string>
 #include <conio.h>
 #include <vector>
+#include <random> 
 
 #include <pcl/point_types.h>
 #include <pcl/io/ply_io.h>

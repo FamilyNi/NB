@@ -61,7 +61,7 @@ void PC_RANSACComputeSphere(vector<T1>& pts, T2& sphere, vector<T1>& inlinerPts,
 	for (int i = 0; i < maxEpo; ++i)
 	{
 		int effetPoints = 0;
-		//随机选择六个个点计算球
+		//随机选择四个点计算球---注意：这里可能需要特殊处理防止点相同
 		pts_[0] = pts[rand() % size]; pts_[1] = pts[rand() % size];
 		pts_[2] = pts[rand() % size]; pts_[3] = pts[rand() % size];
 		T2 sphere_;
@@ -249,11 +249,11 @@ void PC_SphereTest()
 	{
 		pts[i] = srcPC->points[i];
 	}
-
+	std::random_shuffle(pts.begin(), pts.end());
 	cv::Vec4d sphere;
-	PC_FitSphere(pts, sphere, 5, NB_MODEL_FIT_METHOD::TUKEY_FIT);
-	//vector<P_XYZ> inlinerPts;
-	//PC_RANSACComputeSphere(pts, sphere, inlinerPts, 0.2);
+	//PC_FitSphere(pts, sphere, 5, NB_MODEL_FIT_METHOD::TUKEY_FIT);
+	vector<P_XYZ> inlinerPts;
+	PC_RANSACComputeSphere(pts, sphere, inlinerPts, 0.2);
 
 	PC_XYZ::Ptr spherePC(new PC_XYZ);
 	P_XYZ center(sphere[0], sphere[1], sphere[2]);
