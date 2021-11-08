@@ -44,27 +44,6 @@ enum NB_MODEL_FIT_METHOD {
 	TUKEY_FIT = 2
 };
 
-struct Plane3D
-{
-	double a;
-	double b;
-	double c;
-	double d;
-	Plane3D() :a(0), b(0), c(0), d(0)
-	{}
-};
-
-struct Sphere
-{
-	double c_x;
-	double c_y;
-	double c_z;
-	double r;
-	Sphere() :c_x(0), c_y(0), c_z(0), r(0)
-	{}
-};
-
-
 using namespace std;
 using namespace pcl;
 using namespace cv;
@@ -78,3 +57,124 @@ typedef pcl::PointCloud<pcl::PointXYZI> PC_XYZI;
 typedef pcl::PointXYZI P_XYZI;
 typedef pcl::Normal P_N;
 typedef pcl::PointIndices P_IDX;
+
+//直线
+typedef struct Line2D
+{
+	double a;
+	double b;
+	double c;
+}Line2D;
+
+//圆
+typedef struct Circle2D
+{
+	double x;
+	double y;
+	double r;
+}Circle2D;
+
+//椭圆-----中心坐标：(x, y)，与x轴夹角：angle，长短轴：(a, b)
+typedef struct Ellipse2D
+{
+	double x;
+	double y;
+	double angle;
+	double a;
+	double b;
+}Ellipse2D;
+
+//平面
+typedef struct Plane3D
+{
+	double a;
+	double b;
+	double c;
+	double d;
+}Plane3D;
+
+//空间园----中心坐标：(x, y, z)， 半径：r，原所在平面法向量：(a, b, c)
+typedef struct Circle3D
+{
+	double x;
+	double y;
+	double z;
+	double r;
+	double a;
+	double b;
+	double c;
+}Circle3D;
+
+//球
+typedef struct Sphere3D
+{
+	double x;
+	double y;
+	double z;
+	double r;
+}Sphere3D;
+
+//空间直线----直线的方向向量：(a, b, c)，直线上的坐标：(x, y, z)
+typedef struct Line3D
+{
+	double a;
+	double b;
+	double c;
+	double x;
+	double y;
+	double z;
+}Line3D;
+
+class NB_Array2D
+{
+public:
+	template<typename _Tp> NB_Array2D(const _Tp& vec)
+	{
+		m_Size = vec.size();
+		m_vData.resize(m_Size);
+		//这个地方弄成传指针，而不是拷贝数据（差评）
+		for (int i = 0; i < m_Size; ++i)
+		{
+			m_vData[i].x = vec[i].x; m_vData[i].y = vec[i].y;
+		}
+	}
+	Point2d& operator[](int n)
+	{
+		return m_vData[n];
+	}
+	int size()
+	{
+		return m_Size;
+	}
+
+private:
+	vector<Point2d> m_vData;
+	int m_Size;
+};
+
+class NB_Array3D
+{
+public:
+	template<typename _Tp> NB_Array3D(const _Tp& vec)
+	{
+		m_Size = vec.size();
+		m_vData.resize(m_Size);
+		//这个地方弄成传指针，而不是拷贝数据（差评）
+		for (int i = 0; i < m_Size; ++i)
+		{
+			m_vData[i].x = vec[i].x; m_vData[i].y = vec[i].y; m_vData[i].z = vec[i].z;
+		}
+	}
+	Point3d& operator[](int n)
+	{
+		return m_vData[n];
+	}
+	int size()
+	{
+		return m_Size;
+	}
+
+private:
+	vector<Point3d> m_vData;
+	int m_Size;
+};

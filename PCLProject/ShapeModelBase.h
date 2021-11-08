@@ -10,11 +10,14 @@ struct SPAPLEMODELINFO
 	int highVal;   //轮廓提取高阈值
 	int extContouMode;  //轮廓提取模式
 	int step;   //选点步长
-	float startAng;
-	float endAng;
-	float angStep;
-	SPAPLEMODELINFO() :pyrNumber(1), minContourLen(0), maxContourLen(1e9),
-		lowVal(15), highVal(30), step(3), extContouMode(0)
+	double startAng;
+	double endAng;
+	double angStep;
+	double minScale;
+	double maxScale;
+	SPAPLEMODELINFO() :pyrNumber(1), minContourLen(0),
+		maxContourLen(1e9),	lowVal(15), highVal(30),
+		step(3), extContouMode(0), minScale(1.0), maxScale(1.0)
 	{}
 };
 

@@ -1,11 +1,11 @@
-#include "ComputeEllipse.h"
+#include "Img_FitEllipse.h"
+#include "ComputeModels.h"
 #include "DrawShape.h"
 
 //椭圆方程标准化========================================================================
-template <typename T>
-void Img_EllipseNormalization(T& ellipse_, T& normEllipse)
+void Img_EllipseNormalization(vector<double>& ellipse_, Ellipse2D& normEllipse)
 {
-	normEllipse[2] = -0.5*atan2(ellipse_[1], ellipse_[2] - ellipse_[0]);
+	normEllipse.angle = -0.5*atan2(ellipse_[1], ellipse_[2] - ellipse_[0]);
 
 	double A = ellipse_[0];
 	double B = ellipse_[1] / 2.0;
@@ -17,35 +17,35 @@ void Img_EllipseNormalization(T& ellipse_, T& normEllipse)
 	double tmp2 = sqrt((A - C)*(A - C) + 4 * B * B);
 	double tmp3 = A * E * E + C * D * D + F * B * B - 2.0 * B * D * E - A * C * F;
 	
-	normEllipse[3] = sqrt(2 * tmp3 / (tmp1 * (tmp2 - A - C)));
-	normEllipse[4] = sqrt(2 * tmp3 / (tmp1 * (-tmp2 - A - C)));
+	normEllipse.a = sqrt(2 * tmp3 / (tmp1 * (tmp2 - A - C)));
+	normEllipse.b = sqrt(2 * tmp3 / (tmp1 * (-tmp2 - A - C)));
 
-	normEllipse[0] = (C * D - B * E) / tmp1;
-	normEllipse[1] = (A * E - B * D) / tmp1;
+	normEllipse.x = (C * D - B * E) / tmp1;
+	normEllipse.y = (A * E - B * D) / tmp1;
 
-	if (normEllipse[3] < normEllipse[4])
+	if (normEllipse.a < normEllipse.b)
 	{
-		double temp = normEllipse[3];
-		normEllipse[3] = normEllipse[4];
-		normEllipse[4] = temp;
-		normEllipse[2] += M_PI_2;
+		double temp = normEllipse.a;
+		normEllipse.a = normEllipse.b;
+		normEllipse.b = temp;
+		normEllipse.angle += M_PI_2;
 	}
 }
 //======================================================================================
 
 //点到椭圆的距离--超简单版，不建议采用==================================================
-template <typename T1, typename T2>
-void Img_PtsToEllipseDist(T1& pt, T2& ellipse, double& dist)
+template <typename T1>
+void Img_PtsToEllipseDist(T1& pt, Ellipse2D& ellipse, double& dist)
 {
-	double cosVal = std::cos(-ellipse[2]);
-	double sinVal = std::sin(-ellipse[2]);
-	double x_ = pt.x - ellipse[0];
-	double y_ = pt.y - ellipse[1];
+	double cosVal = std::cos(-ellipse.angle);
+	double sinVal = std::sin(-ellipse.angle);
+	double x_ = pt.x - ellipse.x;
+	double y_ = pt.y - ellipse.y;
 	double x = cosVal * x_ - sinVal * y_;
 	double y = cosVal * y_ + sinVal * x_;
 	double k = y / x;
-	double a_2 = ellipse[3] * ellipse[3];
-	double b_2 = ellipse[4] * ellipse[4];
+	double a_2 = ellipse.a * ellipse.a;
+	double b_2 = ellipse.b * ellipse.b;
 	double coeff = a_2 * b_2 / (b_2 + a_2 * k * k);
 	double x0 = -std::sqrt(coeff);
 	double y0 = k * x0;
@@ -58,28 +58,9 @@ void Img_PtsToEllipseDist(T1& pt, T2& ellipse, double& dist)
 }
 //======================================================================================
 
-//六点求椭圆============================================================================
-template <typename T1, typename T2>
-void Img_SixPtsComputeEllipse(vector<T1>& pts, T2& ellipse)
-{
-	if (pts.size() < 6)
-		return;
-	Mat coeffMat(cv::Size(6, 6), CV_64FC1, cv::Scalar(1.0f));
-	double* pCoeff = coeffMat.ptr<double>();
-	for (int i = 0; i < pts.size(); ++i)
-	{
-		int idx = 6 * i;
-		double x = pts[i].x, y = pts[i].y;
-		pCoeff[idx] = x * x; pCoeff[idx + 1] = x * y; pCoeff[idx + 2] = y * y;
-		pCoeff[idx+3] = x; pCoeff[idx + 4] = y;
-	}
-	SVD::solveZ(coeffMat, ellipse);
-}
-//======================================================================================
-
 //随机一致采样算法计算椭圆圆============================================================
-template <typename T1, typename T2>
-void Img_RANSACComputeCircle(vector<T1>& pts, T2& ellipse, vector<T1>& inlinerPts, double thres)
+//template <typename T1, typename T2>
+void Img_RANSACFitEllipse(NB_Array2D pts, Ellipse2D& ellipse, vector<int>& inliners, double thres)
 {
 	if (pts.size() < 6)
 		return;
@@ -88,15 +69,16 @@ void Img_RANSACComputeCircle(vector<T1>& pts, T2& ellipse, vector<T1>& inlinerPt
 	double log_P = log(1 - P);
 	int size = pts.size();
 	int maxEpo = 10000;
-	vector<T1> pts_(6);
+	vector<Point2d> pts_(6);
+	vector<double> ellipse_(6);
 	for (int i = 0; i < maxEpo; ++i)
 	{
 		int effetPoints = 0;
 		//随机选择六个个点计算椭圆---注意：这里可能需要特殊处理防止点相同
 		pts_[0] = pts[rand() % size]; pts_[1] = pts[rand() % size];	pts_[2] = pts[rand() % size];
 		pts_[3] = pts[rand() % size]; pts_[4] = pts[rand() % size];	pts_[5] = pts[rand() % size];
-		T2 ellipse_, normEllipse;
 		Img_SixPtsComputeEllipse(pts_, ellipse_);
+		Ellipse2D normEllipse;
 		Img_EllipseNormalization(ellipse_, normEllipse);
 		//计算局内点的个数
 		for (int j = 0; j < size; ++j)
@@ -121,25 +103,26 @@ void Img_RANSACComputeCircle(vector<T1>& pts, T2& ellipse, vector<T1>& inlinerPt
 		}
 	}
 	//提取局内点
-	if (inlinerPts.size() != 0)
-		inlinerPts.resize(0);
-	inlinerPts.reserve(size);
+	if (inliners.size() != 0)
+		inliners.resize(0);
+	inliners.reserve(size);
 	for (int i = 0; i < size; ++i)
 	{
 		double dist = 0.0f;
 		Img_PtsToEllipseDist(pts[i], ellipse, dist);
 		if (dist < thres)
-			inlinerPts.push_back(pts[i]);
+			inliners.push_back(i);
 	}
 }
 //======================================================================================
 
 //最小二乘法拟合椭圆====================================================================
-template <typename T1, typename T2>
-void Img_OLSFitEllipse(vector<T1>& pts, vector<double>& weights, T2& ellipse)
+void Img_OLSFitEllipse(NB_Array2D pts, vector<double>& weights, Ellipse2D& ellipse)
 {
 	if (pts.size() < 6)
 		return;
+
+	vector<double> ellipse_(6);
 	Mat C(3, 3, CV_64FC1, cv::Scalar(0));
 	C.at<double>(0, 2) = -2;
 	C.at<double>(1,1) = 1;
@@ -193,21 +176,22 @@ void Img_OLSFitEllipse(vector<T1>& pts, vector<double>& weights, T2& ellipse)
 	for (int i = 0; i < 3; ++i)
 	{
 		pA1[i] = pEigenVec[i];
-		ellipse[i] = pEigenVec[i];
+		ellipse_[i] = pEigenVec[i];
 	}
 
 	Mat a2 = (-S4.inv()) * S3 * a1;
 	double* pA2 = a2.ptr<double>(0);
 	for (int i = 0; i < 3; ++i)
 	{
-		ellipse[i + 3] = pA2[i];
+		ellipse_[i + 3] = pA2[i];
 	}
+
+	Img_EllipseNormalization(ellipse_, ellipse);
 }
 //======================================================================================
 
 //Huber计算权重=========================================================================
-template <typename T1, typename T2>
-void Img_HuberEllipseWeights(vector<T1>& pts, T2& ellipse, vector<double>& weights)
+void Img_HuberEllipseWeights(NB_Array2D pts, Ellipse2D& ellipse, vector<double>& weights)
 {
 	double tao = 1.345;
 	for (int i = 0; i < pts.size(); ++i)
@@ -226,9 +210,9 @@ void Img_HuberEllipseWeights(vector<T1>& pts, T2& ellipse, vector<double>& weigh
 }
 //======================================================================================
 
-//Turkey计算权重========================================================================
-template <typename T1, typename T2>
-void Img_TukeyEllipseWeights(vector<T1>& pts, T2& ellipse, vector<double>& weights)
+//Tukey计算权重=========================================================================
+
+void Img_TukeyEllipseWeights(NB_Array2D pts, Ellipse2D& ellipse, vector<double>& weights)
 {
 	vector<double> dists(pts.size());
 	for (int i = 0; i < pts.size(); ++i)
@@ -254,14 +238,10 @@ void Img_TukeyEllipseWeights(vector<T1>& pts, T2& ellipse, vector<double>& weigh
 //======================================================================================
 
 //拟合椭圆==============================================================================
-template <typename T1, typename T2>
-void Img_FitEllipse(vector<T1>& pts, T2& ellipse, int k, NB_MODEL_FIT_METHOD method)
+void Img_FitEllipse(NB_Array2D pts, Ellipse2D& ellipse, int k, NB_MODEL_FIT_METHOD method)
 {
-	T2 ellipse_;
 	vector<double> weights(pts.size(), 1);
-
-	Img_OLSFitEllipse(pts, weights, ellipse_);
-	Img_EllipseNormalization(ellipse_, ellipse);
+	Img_OLSFitEllipse(pts, weights, ellipse);
 	if (method == NB_MODEL_FIT_METHOD::OLS_FIT)
 	{	
 		return;
@@ -281,19 +261,14 @@ void Img_FitEllipse(vector<T1>& pts, T2& ellipse, int k, NB_MODEL_FIT_METHOD met
 			default:
 				break;
 			}
-			Img_OLSFitEllipse(pts, weights, ellipse_);
-			Img_EllipseNormalization(ellipse_, ellipse);
-
-			Mat ellipseImg(cv::Size(1152, 648), CV_8UC1, cv::Scalar(255));
-			cv::Point2d center(ellipse[0], ellipse[1]);
-			Img_DrawEllipse(ellipseImg, center, ellipse[2], ellipse[3], ellipse[4], 0.2);
+			Img_OLSFitEllipse(pts, weights, ellipse);
 		}
 	}
 }
 //======================================================================================
 
-
-void Img_EllipseTest()
+//椭圆拟合测试================================================================================
+void Img_FitEllipseTest()
 {
 	string imgPath = "C:/Users/Administrator/Desktop/testimage/椭圆.bmp";
 	cv::Mat srcImg = cv::imread(imgPath, 0);
@@ -302,15 +277,10 @@ void Img_EllipseTest()
 	vector<vector<cv::Point>> contours;
 	cv::findContours(binImg, contours, RetrievalModes::RETR_LIST, ContourApproximationModes::CHAIN_APPROX_NONE);
 
-	Mat colorImg;
-	cv::cvtColor(srcImg, colorImg, cv::COLOR_GRAY2BGR);
-
-	vector<cv::Point> pts(contours.size());
+	vector<cv::Point2f> pts(contours.size());
 	for (int i = 0; i < contours.size(); ++i)
 	{
 		int len = contours[i].size();
-		if (len == 0)
-			return;
 		double sum_x = 0.0, sum_y = 0.0;
 		for (int j = 0; j < len; ++j)
 		{
@@ -321,20 +291,20 @@ void Img_EllipseTest()
 		pts[i].y = sum_y / len;
 	}
 
-	cv::Vec6d ellipse;
-	//vector<cv::Point> inlinerPts;
-	//Img_RANSACComputeCircle(pts, ellipse, inlinerPts, 1);
-	Img_FitEllipse(pts, ellipse, 5, NB_MODEL_FIT_METHOD::TUKEY_FIT);
+	Ellipse2D ellipse;
+	//Img_FitEllipse(pts, ellipse, 5, NB_MODEL_FIT_METHOD::OLS_FIT);
 
-	//for (int i = 0; i < inlinerPts.size(); ++i)
-	//{
-	//	cv::line(colorImg, inlinerPts[i], inlinerPts[i], cv::Scalar(0, 0, 255), 2);
-
-	//}
-
-	cv::RotatedRect rect = cv::fitEllipse(pts);
+	vector<int> inliners;
+	Img_RANSACFitEllipse(pts, ellipse, inliners, 2);
 
 	Mat ellipseImg(srcImg.size(), CV_8UC1, cv::Scalar(255));
-	cv::Point2d center(ellipse[0], ellipse[1]);
-	Img_DrawEllipse(ellipseImg, center, ellipse[2], ellipse[3], ellipse[4], 0.2);
+	cv::Point2d center(ellipse.x, ellipse.y);
+	Img_DrawEllipse(ellipseImg, center, ellipse.angle, ellipse.a, ellipse.b, 0.2);
+	Mat colorImg;
+	cv::cvtColor(srcImg, colorImg, cv::COLOR_GRAY2BGR);
+	for (int i = 0; i < inliners.size(); ++i)
+	{
+		cv::line(colorImg, pts[inliners[i]], pts[inliners[i]], cv::Scalar(0, 0, 255), 5);
+	}
 }
+//============================================================================================

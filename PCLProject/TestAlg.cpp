@@ -13,15 +13,16 @@
 #include "ContourOpr.h"
 #include "LBPfeatures.h"
 #include "ImageEnhance.h"
-#include "ComputePlane.h"
 #include "ImageFilter.h"
-#include "ComputeLine.h"
-#include "ComputeSphere.h"
+#include "PC_FitPlane.h"
+#include "PC_FitLine.h"
+#include "PC_FitSphere.h"
 
 
 int main(int argc, char *argv[])
 {
-	PC_SphereTest();
+	PC_FitSphereTest();
+	LocalDeforModelTest();
 	//PC_XYZ::Ptr planePC(new PC_XYZ);
 	//cv::Vec6d plane;
 	//plane[0] = 13;

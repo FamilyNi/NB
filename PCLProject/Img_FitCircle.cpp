@@ -1,30 +1,9 @@
-#include "ComputeCircle.h"
+#include "Img_FitCircle.h"
 #include "MathOpr.h"
-
-//三点求圆======================================================================================
-template <typename T1, typename T2>
-void Img_ThreePtsComputeCicle(T1& pt1, T1& pt2, T1& pt3, T2& circle)
-{
-	double B21 = pt2.x * pt2.x + pt2.y * pt2.y - (pt1.x * pt1.x + pt1.y * pt1.y);
-	double B32 = pt3.x * pt3.x + pt3.y * pt3.y - (pt2.x * pt2.x + pt2.y * pt2.y);
-
-	double X21 = pt2.x - pt1.x;
-	double Y21 = pt2.y - pt1.y;
-	double X32 = pt3.x - pt2.x;
-	double Y32 = pt3.y - pt2.y;
-
-	circle[0] = 0.5 * (B21 * Y32 - B32 * Y21) / (X21 * Y32 - X32 * Y21);
-	circle[1] = 0.5 * (B21 * X32 - B32 * X21) / (Y21 * X32 - Y32 * X21);
-
-	double diff_x = pt1.x - circle[0];
-	double diff_y = pt1.y - circle[1];
-	circle[2] = std::sqrt(diff_x * diff_x + diff_y * diff_y);
-}
-//==============================================================================================
+#include "ComputeModels.h"
 
 //随机一致采样算法计算园========================================================================
-template <typename T1, typename T2>
-void Img_RANSACComputeCircle(vector<T1>& pts, T2& circle, vector<T1>& inlinerPts, double thres)
+void Img_RANSACFitCircle(NB_Array2D pts, Circle2D& circle, vector<int>& inliners, double thres)
 {
 	if (pts.size() < 3)
 		return;
@@ -40,15 +19,15 @@ void Img_RANSACComputeCircle(vector<T1>& pts, T2& circle, vector<T1>& inlinerPts
 		int index_1 = rand() % size;
 		int index_2 = rand() % size;
 		int index_3 = rand() % size;
-		T2 circle_;
+		Circle2D circle_;
 		Img_ThreePtsComputeCicle(pts[index_1], pts[index_2], pts[index_3], circle_);
 		//计算局内点的个数
 		for (int j = 0; j < size; ++j)
 		{
-			double diff_x = pts[j].x - circle_[0];
-			double diff_y = pts[j].y - circle_[1];
+			double diff_x = pts[j].x - circle_.x;
+			double diff_y = pts[j].y - circle_.y;
 			float dist = std::sqrt(diff_x * diff_x + diff_y * diff_y);
-			effetPoints += abs(dist - circle_[2]) < thres ? 1 : 0;
+			effetPoints += abs(dist - circle_.r) < thres ? 1 : 0;
 		}
 		//获取最优模型，并根据概率修改迭代次数
 		if (best_model_p < effetPoints)
@@ -66,23 +45,22 @@ void Img_RANSACComputeCircle(vector<T1>& pts, T2& circle, vector<T1>& inlinerPts
 		}
 	}
 	//提取局内点
-	if (inlinerPts.size() != 0)
-		inlinerPts.resize(0);
-	inlinerPts.reserve(size);
+	if (inliners.size() != 0)
+		inliners.resize(0);
+	inliners.reserve(size);
 	for (int i = 0; i < size; ++i)
 	{
-		double diff_x = pts[i].x - circle[0];
-		double diff_y = pts[i].y - circle[1];
+		double diff_x = pts[i].x - circle.x;
+		double diff_y = pts[i].y - circle.y;
 		double dist = std::sqrt(diff_x * diff_x + diff_y * diff_y);
-		if (abs(dist - circle[2]) < thres)
-			inlinerPts.push_back(pts[i]);
+		if (abs(dist - circle.r) < thres)
+			inliners.push_back(i);
 	}
 }
 //==============================================================================================
 
 //最小二乘法拟合园==============================================================================
-template <typename T1, typename T2>
-void Img_OLSFitCircle(vector<T1>& pts, vector<double>& weights, T2& circle)
+void Img_OLSFitCircle(NB_Array2D pts, vector<double>& weights, Circle2D& circle)
 {
 	double w_sum = 0.0;
 	double w_x_sum = 0.0;
@@ -120,24 +98,23 @@ void Img_OLSFitCircle(vector<T1>& pts, vector<double>& weights, T2& circle)
 	
 	Mat C = (A.inv()) * B;
 	double* pC = C.ptr<double>(0);
-	circle[0] = -pC[0] / 2.0;
-	circle[1] = -pC[1] / 2.0;
+	circle.x = -pC[0] / 2.0;
+	circle.y = -pC[1] / 2.0;
 	double c = -(pC[0] * w_x_mean + pC[1] * w_y_mean + w_x2y2_mean);
-	circle[2] = std::sqrt(std::max(circle[0] * circle[0] + circle[1] * circle[1] - c, EPS));
+	circle.r = std::sqrt(std::max(circle.x * circle.x + circle.y * circle.y - c, EPS));
 }
 //==============================================================================================
 
 //huber计算权重=================================================================================
-template <typename T1, typename T2>
-void Img_HuberCircleWeights(vector<T1>& pts, T2& circle, vector<double>& weights)
+void Img_HuberCircleWeights(NB_Array2D pts, Circle2D& circle, vector<double>& weights)
 {
 	double tao = 1.345;
 	for (int i = 0; i < pts.size(); ++i)
 	{
-		double diff_x = pts[i].x - circle[0];
-		double diff_y = pts[i].y - circle[1];
+		double diff_x = pts[i].x - circle.x;
+		double diff_y = pts[i].y - circle.y;
 		double distance = std::sqrt(max(diff_x * diff_x + diff_y * diff_y, EPS));
-		distance = abs(distance - circle[2]);
+		distance = abs(distance - circle.r);
 		if (distance <= tao)
 		{
 			weights[i] = 1;
@@ -150,17 +127,16 @@ void Img_HuberCircleWeights(vector<T1>& pts, T2& circle, vector<double>& weights
 }
 //==============================================================================================
 
-//Turkey计算权重================================================================================
-template <typename T1, typename T2>
-void Img_TukeyCircleWeights(vector<T1>& pts, T2& circle, vector<double>& weights)
+//Tukey计算权重================================================================================
+void Img_TukeyCircleWeights(NB_Array2D pts, Circle2D& circle, vector<double>& weights)
 {
 	vector<double> dists(pts.size());
 	for (int i = 0; i < pts.size(); ++i)
 	{
-		double diff_x = pts[i].x - circle[0];
-		double diff_y = pts[i].y - circle[1];
+		double diff_x = pts[i].x - circle.x;
+		double diff_y = pts[i].y - circle.y;
 		double distance = std::sqrt(max(diff_x * diff_x + diff_y * diff_y, EPS));
-		distance = abs(distance - circle[2]);
+		distance = abs(distance - circle.r);
 		dists[i] = distance;
 	}
 	//求限制条件tao
@@ -182,8 +158,7 @@ void Img_TukeyCircleWeights(vector<T1>& pts, T2& circle, vector<double>& weights
 //==============================================================================================
 
 //拟合园========================================================================================
-template <typename T1, typename T2>
-void Img_FitCircle(vector<T1>& pts, T2& circle, int k, NB_MODEL_FIT_METHOD method)
+void Img_FitCircle(NB_Array2D pts, Circle2D& circle, int k, NB_MODEL_FIT_METHOD method)
 {
 	vector<double> weights(pts.size(), 1);
 
@@ -213,8 +188,8 @@ void Img_FitCircle(vector<T1>& pts, T2& circle, int k, NB_MODEL_FIT_METHOD metho
 }
 //==============================================================================================
 
-
-void CircleTest()
+//二维圆拟合测试==============================================================================
+void Img_FitCircleTest()
 {
 	string imgPath = "C:/Users/Administrator/Desktop/testimage/8.bmp";
 	cv::Mat srcImg = cv::imread(imgPath, 0);
@@ -226,12 +201,10 @@ void CircleTest()
 	Mat colorImg;
 	cv::cvtColor(srcImg, colorImg, cv::COLOR_GRAY2BGR);
 
-	vector<cv::Point> pts(contours.size());
+	vector<cv::Point2f> pts(contours.size());
 	for (int i = 0; i < contours.size(); ++i)
 	{
 		int len = contours[i].size();
-		if (len == 0)
-			return;
 		float sum_x = 0.0f, sum_y = 0.0f;
 		for (int j = 0; j < len; ++j)
 		{
@@ -242,16 +215,15 @@ void CircleTest()
 		pts[i].y = sum_y / len;
 	}
 
-	cv::Vec3d circle;
-	vector<Point> inlinerPts;
-	Img_RANSACComputeCircle(pts, circle, inlinerPts, 0.2);
-	//Img_FitCircle(pts, circle, 5, NB_MODEL_FIT_METHOD::OLS_FIT);
-	//Mat circleImg(srcImg.size(), srcImg.type(), cv::Scalar(255,255,255));
-	cv::circle(colorImg, cv::Point(circle[0], circle[1]), circle[2], cv::Scalar(0, 255, 0), 2);
-	//cv::imwrite("C:/Users/Administrator/Desktop/testimage/8.bmp", circleImg);
-
-	for (int i = 0; i < inlinerPts.size(); ++i)
+	Circle2D circle;
+	vector<int> inliners;
+	//Img_RANSACFitCircle(pts, circle, inliners, 0.2);
+	Img_FitCircle(pts, circle, 5, NB_MODEL_FIT_METHOD::HUBER_FIT);
+	cv::circle(colorImg, cv::Point(circle.x, circle.y), circle.r, cv::Scalar(0, 255, 0), 2);
+	for (int i = 0; i < inliners.size(); ++i)
 	{
-		cv::line(colorImg, inlinerPts[i], inlinerPts[i], cv::Scalar(0, 0, 255), 5);
+		cv::line(colorImg, pts[inliners[i]], pts[inliners[i]], cv::Scalar(0, 0, 255), 5);
 	}
 }
+//============================================================================================
+

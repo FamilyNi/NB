@@ -1,23 +1,9 @@
-#include "ComputeLine.h"
+#include "Img_FitLine.h"
 #include "ContourOpr.h"
-#include "ContourOpr.cpp"
-
-//两点计算直线==================================================================================
-template <typename T>
-void Img_TwoPtsComputeLine(T& pt1, T& pt2, cv::Vec3d& line)
-{
-	double vec_x = pt2.x - pt1.x;
-	double vec_y = pt2.y - pt1.y;
-	double norm_ = 1 / std::sqrt(vec_x * vec_x + vec_y * vec_y);
-	line[0] = -vec_y * norm_;
-	line[1] = vec_x * norm_;
-	line[2] = -(line[0] * pt1.x + line[1] * pt1.y);
-}
-//==============================================================================================
+#include "ComputeModels.h"
 
 //随机一致采样算法计算直线======================================================================
-template <typename T1, typename T2>
-void Img_RANSACComputeLine(vector<T1>& pts, T2& line, vector<T1>& inlinerPts, double thres)
+void Img_RANSACFitLine(NB_Array2D pts, Line2D& line, vector<int>& inliners, double thres)
 {
 	if (pts.size() < 2)
 		return;
@@ -32,13 +18,13 @@ void Img_RANSACComputeLine(vector<T1>& pts, T2& line, vector<T1>& inlinerPts, do
 		//随机选择两个点计算直线---注意：这里可能需要特殊处理防止点相同
 		int index_1 = rand() % size;
 		int index_2 = rand() % size;
-		T2 line_;
+		Line2D line_;
 		Img_TwoPtsComputeLine(pts[index_1], pts[index_2], line_);
 
 		//计算局内点的个数
 		for (int j = 0; j < size; ++j)
 		{
-			float dist = abs(line_[0] * pts[j].x + line_[1] * pts[j].y + line_[2]);
+			float dist = abs(line_.a * pts[j].x + line_.b * pts[j].y + line_.c);
 			effetPoints += dist < thres ? 1 : 0;
 		}
 		//获取最优模型，并根据概率修改迭代次数
@@ -58,20 +44,19 @@ void Img_RANSACComputeLine(vector<T1>& pts, T2& line, vector<T1>& inlinerPts, do
 	}
 
 	//提取局内点
-	if (inlinerPts.size() != 0)
-		inlinerPts.resize(0);
-	inlinerPts.reserve(size);
+	if (inliners.size() != 0)
+		inliners.resize(0);
+	inliners.reserve(size);
 	for (int i = 0; i < size; ++i)
 	{
-		if (abs(line[0] * pts[i].x + line[1] * pts[i].y + line[2]) < thres)
-			inlinerPts.push_back(pts[i]);
+		if (abs(line.a * pts[i].x + line.b * pts[i].y + line.c) < thres)
+			inliners.push_back(i);
 	}
 }
 //==============================================================================================
 
 //最小二乘法拟合直线============================================================================
-template <typename T1, typename T2>
-void Img_OLSFitLine(vector<T1>& pts, vector<double>& weights, T2& line)
+void Img_OLSFitLine(NB_Array2D pts, vector<double>& weights, Line2D& line)
 {
 	double w_sum = 0.0;
 	double w_x_sum = 0.0;
@@ -99,20 +84,19 @@ void Img_OLSFitLine(vector<T1>& pts, vector<double>& weights, T2& line)
 	Mat eigenVal, eigenVec;
 	eigenNonSymmetric(A, eigenVal, eigenVec);
 	double* pEigenVec = eigenVec.ptr<double>(1);
-	line[0] = pEigenVec[0];
-	line[1] = pEigenVec[1];
-	line[2] = -(w_x_mean * line[0] + w_y_mean * line[1]);
+	line.a = pEigenVec[0];
+	line.b = pEigenVec[1];
+	line.c = -(w_x_mean * line.a + w_y_mean * line.b);
 }
 //==============================================================================================
 
 //Huber计算权重=================================================================================
-template <typename T1, typename T2>
-void Img_HuberLineWeights(vector<T1>& pts, T2& line, vector<double>& weights)
+void Img_HuberLineWeights(NB_Array2D pts, Line2D& line, vector<double>& weights)
 {
 	double tao = 1.345;
 	for (int i = 0; i < pts.size(); ++i)
 	{
-		double distance = abs(pts[i].x * line[0] + pts[i].y * line[1] + line[2]);
+		double distance = abs(pts[i].x * line.a + pts[i].y * line.b + line.c);
 		if (distance <= tao)
 		{
 			weights[i] = 1;
@@ -126,13 +110,12 @@ void Img_HuberLineWeights(vector<T1>& pts, T2& line, vector<double>& weights)
 //==============================================================================================
 
 //Tukey计算权重================================================================================
-template <typename T1, typename T2>
-void Img_TukeyLineWeights(vector<T1>& pts, T2& line, vector<double>& weights)
+void Img_TukeyLineWeights(NB_Array2D pts, Line2D& line, vector<double>& weights)
 {
 	vector<double> dists(pts.size());
 	for (int i = 0; i < pts.size(); ++i)
 	{
-		double distance = abs(pts[i].x * line[0] + pts[i].y * line[1] + line[2]);
+		double distance = abs(pts[i].x * line.a + pts[i].y * line.b + line.c);
 		dists[i] = distance;
 	}
 	vector<double> disttanceSort = dists;
@@ -152,8 +135,7 @@ void Img_TukeyLineWeights(vector<T1>& pts, T2& line, vector<double>& weights)
 //==============================================================================================
 
 //直线拟合======================================================================================
-template <typename T1, typename T2>
-void Img_FitLine(vector<T1>& pts, T2& line, int k, NB_MODEL_FIT_METHOD method)
+void Img_FitLine(NB_Array2D pts, Line2D& line, int k, NB_MODEL_FIT_METHOD method)
 {
 	vector<double> weights(pts.size(), 1);
 	Img_OLSFitLine(pts, weights, line);
@@ -182,7 +164,8 @@ void Img_FitLine(vector<T1>& pts, T2& line, int k, NB_MODEL_FIT_METHOD method)
 }
 //==============================================================================================
 
-void LineTest()
+//二维直线拟合测试============================================================================
+void Img_FitLineTest()
 {
 	string imgPath = "C:/Users/Administrator/Desktop/testimage/7.bmp";
 	cv::Mat srcImg = cv::imread(imgPath, 0);
@@ -191,19 +174,10 @@ void LineTest()
 	vector<vector<cv::Point>> contours;
 	cv::findContours(binImg, contours, RetrievalModes::RETR_LIST, ContourApproximationModes::CHAIN_APPROX_NONE);
 
-	Mat colorImg;
-	cv::cvtColor(srcImg, colorImg, cv::COLOR_GRAY2BGR);
-	//for (int i = 0; i < contours.size(); ++i)
-	//{
-	//	cv::drawContours(colorImg, contours, i, cv::Scalar(0, 255, 0), 2);
-	//}
-
 	vector<cv::Point2f> pts(contours.size());
 	for (int i = 0; i < contours.size(); ++i)
 	{
 		int len = contours[i].size();
-		if (len == 0)
-			return;
 		float sum_x = 0.0f, sum_y = 0.0f;
 		for (int j = 0; j < len; ++j)
 		{
@@ -214,22 +188,20 @@ void LineTest()
 		pts[i].y = sum_y / len;
 	}
 
-	cv::Vec3d line;
-	vector<cv::Point2f> inlinerPts;
-	//Img_FitLine(pts, line, 15, NB_MODEL_FIT_METHOD::TUKEY_FIT);
-	Img_RANSACComputeLine(pts, line, inlinerPts, 0.1);
+	Line2D line;
+	vector<int> inliners;
+	Img_RANSACFitLine(pts, line, inliners, 2);
+	//Img_FitLine(pts, line, 5, NB_MODEL_FIT_METHOD::TUKEY_FIT);
 	cv::Point s_pt, e_pt;
-	s_pt.x = 35; s_pt.y = -(line[2] + 35 * line[0]) / line[1];
-	e_pt.x = 800; e_pt.y = -(line[2] + 800 * line[0]) / line[1];
+	s_pt.x = 35; s_pt.y = -(line.c + 35 * line.a) / line.b;
+	e_pt.x = 800; e_pt.y = -(line.c + 800 * line.a) / line.b;
 
-	vector<cv::Point2f> smoothContour;
-	Img_SmoothContour(pts, smoothContour, 9, 0.01);
-	for (int i = 0; i < pts.size(); ++i)
-	{
-		cv::line(colorImg, pts[i], pts[i], cv::Scalar(0, 0, 255), 3);
-
-		cv::line(colorImg, smoothContour[i], smoothContour[i], cv::Scalar(0, 255, 0), 3);
-		//cv::drawContours(colorImg, lines, i, cv::Scalar(0, 0, 255), 1);
-	}
+	Mat colorImg;
+	cv::cvtColor(srcImg, colorImg, cv::COLOR_GRAY2BGR);
 	cv::line(colorImg, s_pt, e_pt, cv::Scalar(0, 255, 0), 3);
+	for (int i = 0; i < inliners.size(); ++i)
+	{
+		cv::line(colorImg, pts[inliners[i]], pts[inliners[i]], cv::Scalar(0, 0, 255), 5);
+	}
 }
+//============================================================================================

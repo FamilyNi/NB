@@ -1,4 +1,5 @@
 #include "ImageFilter.h"
+#include "omp.h"
 
 //引导滤波=============================================================================
 void Img_GuidFilter(Mat& srcImg, Mat& guidImg, Mat& dstImg, int size, float eps)
@@ -147,12 +148,56 @@ void ImgF_HomoFilter(Mat& srcImg, Mat& dstImg, double radius, double L, double H
 }
 //=====================================================================================
 
+//各项异性平滑=========================================================================
+void Img_AnisotropicFilter(Mat& srcImg, Mat& dstImg, double lamda, double step_t, int iter_k)
+{
+	dstImg = srcImg.clone();
+	int row = srcImg.rows;
+	int col = srcImg.cols;
+	int channel = srcImg.channels();
+	int step = col * srcImg.channels();
+
+	double lamda_ = 1.0 / lamda * 1.0 / lamda;
+	for (int i = 0; i < iter_k; ++i)
+	{
+#pragma omp parallel for
+		for (int y = 1; y < row-1; ++y)
+		{
+			uchar* pDstUp = dstImg.ptr<uchar>(y-1);
+			uchar* pDst = dstImg.ptr<uchar>(y);
+			uchar* pDstDown = dstImg.ptr<uchar>(y+1);
+			for (int x = 1; x < step - channel; x += channel)
+			{
+				for (int c = 0; c < channel; ++c)
+				{
+					int x_ = x + c;
+					double dstVal = (double)pDst[x_];
+					double dxUp = ((double)pDstUp[x_] - dstVal);
+					double dxDown = ((double)pDstDown[x_] - dstVal);
+					double dyLeft = ((double)pDst[x_ - channel] - dstVal);
+					double dyRight = ((double)pDst[x_ + channel] - dstVal);
+
+					double dxUpz_2 = dxUp * std::exp(-dxUp * dxUp * lamda_);
+					double dxDown_2 = dxDown * std::exp(-dxDown * dxDown * lamda_);
+					double dyLeft_2 = dyLeft * std::exp(-dyLeft * dyLeft * lamda_);
+					double dyRight_2 = dyRight * std::exp(-dyRight * dyRight * lamda_);
+
+					double value = dstVal + step_t * (dxUpz_2 + dxDown_2 + dyLeft_2 + dyRight_2);
+					if (value > 0 && value < 256)
+						pDst[x_] = value;
+				}
+			}
+		}
+	}
+}
+//=====================================================================================
+
 void FilterTest()
 {
-	string imgPath = "C:/Users/Administrator/Desktop/testimage/halconimg_1.bmp";
-	Mat srcImg = imread(imgPath, 0);
+	string imgPath = "C:/Users/Administrator/Desktop/testimage/halconimg_2.bmp";
+	Mat srcImg = imread(imgPath, 1);
 
 	Mat dstImg;
-	Img_GuidFilter(srcImg, srcImg, dstImg, 5,10);
+	Img_AnisotropicFilter(srcImg, dstImg, 3, 1.0, 3);
 	Mat t = dstImg.clone();
 }

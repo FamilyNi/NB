@@ -1,54 +1,20 @@
-#include "ComputeSphere.h"
-#include "DrawShape.h"
+#include "PC_FitSphere.h"
+#include "ComputeModels.h"
 
 //点到球的距离==================================================================================
-template <typename T1, typename T2>
-void PC_PtToShpereDist(T1& pt, T2& sphere, double& dist)
+template <typename T>
+void PC_PtToShpereDist(T& pt, Sphere3D& sphere, double& dist)
 {
-	double diff_x = pt.x - sphere[0];
-	double diff_y = pt.y - sphere[1];
-	double diff_z = pt.z - sphere[2];
+	double diff_x = pt.x - sphere.x;
+	double diff_y = pt.y - sphere.y;
+	double diff_z = pt.z - sphere.z;
 	dist = std::sqrt(diff_x * diff_x + diff_y * diff_y + diff_z * diff_z);
-	dist = abs(dist - sphere[3]);
-}
-//==============================================================================================
-
-//四点计算球====================================================================================
-template <typename T1, typename T2>
-void PC_FourPtsComputeSphere(vector<T1>& pts, T2& sphere)
-{
-	if (pts.size() != 4)
-		return;
-	cv::Mat XYZ(cv::Size(3, 3), CV_64FC1, cv::Scalar(0));
-	double* pXYZ = XYZ.ptr<double>();
-	cv::Mat m(cv::Size(1, 3), CV_64FC1, cv::Scalar(0));
-	double* pM = m.ptr<double>();
-	for (int i = 0; i < pts.size() - 1; ++i)
-	{
-		int idx = 3 * i;
-		pXYZ[idx] = pts[i].x - pts[i + 1].x;
-		pXYZ[idx + 1] = pts[i].y - pts[i + 1].y;
-		pXYZ[idx + 2] = pts[i].z - pts[i + 1].z;
-
-		double pt0_d = pts[i].x * pts[i].x + pts[i].y * pts[i].y + pts[i].z * pts[i].z;
-		double pt1_d = pts[i + 1].x * pts[i + 1].x + pts[i + 1].y * pts[i + 1].y + pts[i + 1].z * pts[i + 1].z;
-		pM[i] = (pt0_d - pt1_d) / 2.0;
-	}
-
-	cv::Mat center = (XYZ.inv()) * m;
-	sphere[0] = center.ptr<double>(0)[0];
-	sphere[1] = center.ptr<double>(0)[1];
-	sphere[2] = center.ptr<double>(0)[2];
-	double diff_x = pts[0].x - sphere[0];
-	double diff_y = pts[0].y - sphere[1];
-	double diff_z = pts[0].z - sphere[2];
-	sphere[3] = std::sqrt(diff_x * diff_x + diff_y * diff_y + diff_z * diff_z);
+	dist = abs(dist - sphere.r);
 }
 //==============================================================================================
 
 //随机一致采样算法计算球========================================================================
-template <typename T1, typename T2>
-void PC_RANSACComputeSphere(vector<T1>& pts, T2& sphere, vector<T1>& inlinerPts, double thres)
+void PC_RANSACFitSphere(NB_Array3D pts, Sphere3D& sphere, vector<int>& inliners, double thres)
 {
 	if (pts.size() < 6)
 		return;
@@ -57,14 +23,14 @@ void PC_RANSACComputeSphere(vector<T1>& pts, T2& sphere, vector<T1>& inlinerPts,
 	double log_P = log(1 - P);
 	int size = pts.size();
 	int maxEpo = 10000;
-	vector<T1> pts_(4);
+	vector<Point3d> pts_(4);
 	for (int i = 0; i < maxEpo; ++i)
 	{
 		int effetPoints = 0;
 		//随机选择四个点计算球---注意：这里可能需要特殊处理防止点相同
 		pts_[0] = pts[rand() % size]; pts_[1] = pts[rand() % size];
 		pts_[2] = pts[rand() % size]; pts_[3] = pts[rand() % size];
-		T2 sphere_;
+		Sphere3D sphere_;
 		PC_FourPtsComputeSphere(pts_, sphere_);
 		//计算局内点的个数
 		for (int j = 0; j < size; ++j)
@@ -89,22 +55,21 @@ void PC_RANSACComputeSphere(vector<T1>& pts, T2& sphere, vector<T1>& inlinerPts,
 		}
 	}
 	//提取局内点
-	if (inlinerPts.size() != 0)
-		inlinerPts.resize(0);
-	inlinerPts.reserve(size);
+	if (inliners.size() != 0)
+		inliners.resize(0);
+	inliners.reserve(size);
 	for (int i = 0; i < size; ++i)
 	{
 		double dist = 0.0;
 		PC_PtToShpereDist(pts[i], sphere, dist);
 		if (dist < thres)
-			inlinerPts.push_back(pts[i]);
+			inliners.push_back(i);
 	}
 }
 //==============================================================================================
 
 //最小二乘法拟合球==============================================================================
-template <typename T1, typename T2>
-void PC_OLSFitSphere(vector<T1>& pts, vector<double>& weights, T2& sphere)
+void PC_OLSFitSphere(NB_Array3D pts, vector<double>& weights, Sphere3D& sphere)
 {
 	double w_sum = 0.0;
 	double w_x_sum = 0.0;
@@ -150,17 +115,16 @@ void PC_OLSFitSphere(vector<T1>& pts, vector<double>& weights, T2& sphere)
 
 	Mat C = (A.inv()) * B;
 	double* pC = C.ptr<double>(0);
-	sphere[0] = -pC[0] / 2.0;
-	sphere[1] = -pC[1] / 2.0;
-	sphere[2] = -pC[2] / 2.0;
+	sphere.x = -pC[0] / 2.0;
+	sphere.y = -pC[1] / 2.0;
+	sphere.z = -pC[2] / 2.0;
 	double c = -(pC[0] * w_x_mean + pC[1] * w_y_mean + pC[2] * w_z_mean + w_x2y2z2_mean);
-	sphere[3] = std::sqrt(std::max(sphere[0] * sphere[0] + sphere[1] * sphere[1] + sphere[2] * sphere[2] - c, EPS));
+	sphere.r = std::sqrt(sphere.x * sphere.x + sphere.y * sphere.y + sphere.z * sphere.z - c);
 }
 //==============================================================================================
 
 //Huber计算权重=================================================================================
-template <typename T1, typename T2>
-void PC_HuberSphereWeights(vector<T1>& pts, T2& sphere, vector<double>& weights)
+void PC_HuberSphereWeights(NB_Array3D pts, Sphere3D& sphere, vector<double>& weights)
 {
 	double tao = 1.345;
 	for (int i = 0; i < pts.size(); ++i)
@@ -180,8 +144,7 @@ void PC_HuberSphereWeights(vector<T1>& pts, T2& sphere, vector<double>& weights)
 //==============================================================================================
 
 //Tukey计算权重================================================================================
-template <typename T1, typename T2>
-void PC_TukeySphereWeights(vector<T1>& pts, T2& sphere, vector<double>& weights)
+void PC_TukeySphereWeights(NB_Array3D pts, Sphere3D& sphere, vector<double>& weights)
 {
 	vector<double> dists(pts.size());
 	for (int i = 0; i < pts.size(); ++i)
@@ -209,8 +172,7 @@ void PC_TukeySphereWeights(vector<T1>& pts, T2& sphere, vector<double>& weights)
 //==============================================================================================
 
 //拟合球========================================================================================
-template <typename T1, typename T2>
-void PC_FitSphere(vector<T1>& pts, T2& sphere, int k, NB_MODEL_FIT_METHOD method)
+void PC_FitSphere(NB_Array3D pts, Sphere3D& sphere, int k, NB_MODEL_FIT_METHOD method)
 {
 	vector<double> weights(pts.size(), 1);
 	PC_OLSFitSphere(pts, weights, sphere);
@@ -239,7 +201,8 @@ void PC_FitSphere(vector<T1>& pts, T2& sphere, int k, NB_MODEL_FIT_METHOD method
 }
 //==============================================================================================
 
-void PC_SphereTest()
+//空间求拟合测试==============================================================================
+void PC_FitSphereTest()
 {
 	PC_XYZ::Ptr srcPC(new PC_XYZ);
 	pcl::io::loadPLYFile("C:/Users/Administrator/Desktop/testimage/噪声球.ply", *srcPC);
@@ -250,14 +213,17 @@ void PC_SphereTest()
 		pts[i] = srcPC->points[i];
 	}
 	std::random_shuffle(pts.begin(), pts.end());
-	cv::Vec4d sphere;
-	//PC_FitSphere(pts, sphere, 5, NB_MODEL_FIT_METHOD::TUKEY_FIT);
-	vector<P_XYZ> inlinerPts;
-	PC_RANSACComputeSphere(pts, sphere, inlinerPts, 0.2);
+	Sphere3D sphere;
+	//PC_FitSphere(pts, sphere, 5, NB_MODEL_FIT_METHOD::OLS_FIT);
 
-	PC_XYZ::Ptr spherePC(new PC_XYZ);
-	P_XYZ center(sphere[0], sphere[1], sphere[2]);
-	PC_DrawSphere(spherePC, center, sphere[3], 0.1);
+	vector<int> inliners;
+	PC_RANSACFitSphere(pts, sphere, inliners, 0.2);
+	PC_XYZ::Ptr inlinerPC(new PC_XYZ);
+	inlinerPC->points.resize(inliners.size());
+	for (int i = 0; i < inliners.size(); ++i)
+	{
+		inlinerPC->points[i] = pts[inliners[i]];
+	}
 
 	pcl::visualization::PCLVisualizer viewer;
 	viewer.addCoordinateSystem(10);
@@ -266,11 +232,12 @@ void PC_SphereTest()
 	viewer.addPointCloud(srcPC, red, "srcPC");
 	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 8, "srcPC");
 
-	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> write(spherePC, 255, 255, 255); //设置点云颜色
-	viewer.addPointCloud(spherePC, write, "spherePC");
+	pcl::visualization::PointCloudColorHandlerCustom<P_XYZ> write(inlinerPC, 255, 255, 255); //设置点云颜色
+	viewer.addPointCloud(inlinerPC, write, "spherePC");
 	viewer.setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "spherePC");
 	while (!viewer.wasStopped())
 	{
 		viewer.spinOnce();
 	}
 }
+//============================================================================================

@@ -1,6 +1,5 @@
 #include "PointCloudOpr.h"
 #include "MathOpr.h"
-#include "MathOpr.cpp"
 
 //计算点云的最小包围盒==============================================================
 void PC_ComputeOBB(const PC_XYZ::Ptr& srcPC, PC_XYZ::Ptr& obb)

@@ -102,31 +102,10 @@
     <ClCompile Include="FileOpr.cpp">
       <Filter>源文件\BaseOprFile</Filter>
     </ClCompile>
-    <ClCompile Include="MathOpr.cpp">
-      <Filter>源文件\BaseOprFile</Filter>
-    </ClCompile>
     <ClCompile Include="OpenCV_Utils.cpp">
       <Filter>源文件\BaseOprFile</Filter>
     </ClCompile>
     <ClCompile Include="GrabEdges.cpp">
-      <Filter>源文件\FitShapeFile</Filter>
-    </ClCompile>
-    <ClCompile Include="ComputeLine.cpp">
-      <Filter>源文件\FitShapeFile</Filter>
-    </ClCompile>
-    <ClCompile Include="ComputeCircle.cpp">
-      <Filter>源文件\FitShapeFile</Filter>
-    </ClCompile>
-    <ClCompile Include="ComputePlane.cpp">
-      <Filter>源文件\FitShapeFile</Filter>
-    </ClCompile>
-    <ClCompile Include="ComputeSphere.cpp">
-      <Filter>源文件\FitShapeFile</Filter>
-    </ClCompile>
-    <ClCompile Include="Compute3DLine.cpp">
-      <Filter>源文件\FitShapeFile</Filter>
-    </ClCompile>
-    <ClCompile Include="ComputeEllipse.cpp">
       <Filter>源文件\FitShapeFile</Filter>
     </ClCompile>
     <ClCompile Include="ComputePts.cpp">
@@ -138,7 +117,28 @@
     <ClCompile Include="ImageGLCM.cpp">
       <Filter>源文件\ImageFile</Filter>
     </ClCompile>
-    <ClCompile Include="Compute3DCircle.cpp">
+    <ClCompile Include="PC_FitCircle.cpp">
+      <Filter>源文件\FitShapeFile</Filter>
+    </ClCompile>
+    <ClCompile Include="PC_FitLine.cpp">
+      <Filter>源文件\FitShapeFile</Filter>
+    </ClCompile>
+    <ClCompile Include="Img_FitCircle.cpp">
+      <Filter>源文件\FitShapeFile</Filter>
+    </ClCompile>
+    <ClCompile Include="Img_FitLine.cpp">
+      <Filter>源文件\FitShapeFile</Filter>
+    </ClCompile>
+    <ClCompile Include="PC_FitPlane.cpp">
+      <Filter>源文件\FitShapeFile</Filter>
+    </ClCompile>
+    <ClCompile Include="PC_FitSphere.cpp">
+      <Filter>源文件\FitShapeFile</Filter>
+    </ClCompile>
+    <ClCompile Include="TestFitShape.cpp">
+      <Filter>源文件\FitShapeFile</Filter>
+    </ClCompile>
+    <ClCompile Include="Img_FitEllipse.cpp">
       <Filter>源文件\FitShapeFile</Filter>
     </ClCompile>
   </ItemGroup>
@@ -209,24 +209,6 @@
     <ClInclude Include="GrabEdges.h">
       <Filter>头文件\FitShapeFile</Filter>
     </ClInclude>
-    <ClInclude Include="ComputeLine.h">
-      <Filter>头文件\FitShapeFile</Filter>
-    </ClInclude>
-    <ClInclude Include="ComputeCircle.h">
-      <Filter>头文件\FitShapeFile</Filter>
-    </ClInclude>
-    <ClInclude Include="ComputePlane.h">
-      <Filter>头文件\FitShapeFile</Filter>
-    </ClInclude>
-    <ClInclude Include="ComputeSphere.h">
-      <Filter>头文件\FitShapeFile</Filter>
-    </ClInclude>
-    <ClInclude Include="Compute3DLine.h">
-      <Filter>头文件\FitShapeFile</Filter>
-    </ClInclude>
-    <ClInclude Include="ComputeEllipse.h">
-      <Filter>头文件\FitShapeFile</Filter>
-    </ClInclude>
     <ClInclude Include="ComputePts.h">
       <Filter>头文件\FitShapeFile</Filter>
     </ClInclude>
@@ -236,7 +218,31 @@
     <ClInclude Include="ImageGLCM.h">
       <Filter>头文件\ImageFile</Filter>
     </ClInclude>
-    <ClInclude Include="Compute3DCircle.h">
+    <ClInclude Include="PC_FitCircle.h">
+      <Filter>头文件\FitShapeFile</Filter>
+    </ClInclude>
+    <ClInclude Include="PC_FitLine.h">
+      <Filter>头文件\FitShapeFile</Filter>
+    </ClInclude>
+    <ClInclude Include="Img_FitCircle.h">
+      <Filter>头文件\FitShapeFile</Filter>
+    </ClInclude>
+    <ClInclude Include="Img_FitLine.h">
+      <Filter>头文件\FitShapeFile</Filter>
+    </ClInclude>
+    <ClInclude Include="PC_FitPlane.h">
+      <Filter>头文件\FitShapeFile</Filter>
+    </ClInclude>
+    <ClInclude Include="PC_FitSphere.h">
+      <Filter>头文件\FitShapeFile</Filter>
+    </ClInclude>
+    <ClInclude Include="TestFitShape.h">
+      <Filter>头文件\FitShapeFile</Filter>
+    </ClInclude>
+    <ClInclude Include="Img_FitEllipse.h">
+      <Filter>头文件\FitShapeFile</Filter>
+    </ClInclude>
+    <ClInclude Include="ComputeModels.h">
       <Filter>头文件\FitShapeFile</Filter>
     </ClInclude>
   </ItemGroup>

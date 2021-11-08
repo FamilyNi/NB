@@ -1,23 +1,9 @@
-#include "Compute3DLine.h"
+#include "PC_FitLine.h"
 #include "MathOpr.h"
-#include "MathOpr.cpp"
-
-//两点求线========================================================================================
-template <typename T1, typename T2>
-void PC_TwoPtsComputeLine(T1& pt1, T1& pt2, T2& line)
-{
-	double diff_x = pt2.x - pt1.x;
-	double diff_y = pt2.y - pt1.y;
-	double diff_z = pt2.z - pt1.z;
-	double norm_ = 1.0 / std::sqrt(diff_x * diff_x + diff_y * diff_y + diff_z * diff_z);
-	line[0] = diff_x * norm_; line[1] = diff_y * norm_; line[2] = diff_z * norm_;
-	line[3] = pt1.x; line[4] = pt1.y; line[5] = pt1.z;
-}
-//================================================================================================
+#include "ComputeModels.h"
 
 //随机一致采样算法计算空间直线====================================================================
-template <typename T1, typename T2>
-void PC_RANSACComputeLine(vector<T1>& pts, T2& line, vector<T1>& inlinerPts, double thres)
+void PC_RANSACFitLine(NB_Array3D pts, Line3D& line, vector<int>& inliners, double thres)
 {
 	if (pts.size() < 6)
 		return;
@@ -30,9 +16,9 @@ void PC_RANSACComputeLine(vector<T1>& pts, T2& line, vector<T1>& inlinerPts, dou
 	{
 		int effetPoints = 0;
 		//随机选择两个点拟合直线---注意：这里可能需要特殊处理防止点相同
-		T1 pt1 = pts[rand() % size]; 
-		T1 pt2 = pts[rand() % size];
-		T2 line_;
+		Point3d pt1 = pts[rand() % size]; 
+		Point3d pt2 = pts[rand() % size];
+		Line3D line_;
 		PC_TwoPtsComputeLine(pt1, pt2, line_);
 		//计算局内点的个数
 		for (int j = 0; j < size; ++j)
@@ -57,22 +43,22 @@ void PC_RANSACComputeLine(vector<T1>& pts, T2& line, vector<T1>& inlinerPts, dou
 		}
 	}
 	//提取局内点
-	if (inlinerPts.size() != 0)
-		inlinerPts.resize(0);
-	inlinerPts.reserve(size);
+	if (inliners.size() != 0)
+		inliners.resize(0);
+	inliners.reserve(size);
 	for (int i = 0; i < size; ++i)
 	{
 		double dist = 0.0;
 		PC_PtToLineDist(pts[i], line, dist);
 		if (dist < thres)
-			inlinerPts.push_back(pts[i]);
+			inliners.push_back(i);
 	}
 }
 //================================================================================================
 
 //最小二乘法拟合空间直线==========================================================================
-template <typename T1, typename T2>
-void PC_OLSFit3DLine(vector<T1>& pts, vector<double>& weights, T2& line)
+//template <typename T1, typename T2>
+void PC_OLSFit3DLine(NB_Array3D pts, vector<double>& weights, Line3D& line)
 {
 	double w_sum = 0.0, w_x_sum = 0.0, w_y_sum = 0.0, w_z_sum = 0.0;
 	double w_xy_sum = 0.0, w_yz_sum = 0.0, w_zx_sum = 0.0;
@@ -107,15 +93,14 @@ void PC_OLSFit3DLine(vector<T1>& pts, vector<double>& weights, T2& line)
 	cv::Mat eigenVal, eigenVec;
 	cv::eigen(A, eigenVal, eigenVec);
 	double* pEigenVec = eigenVec.ptr<double>(2);
-	for (int i = 0; i < 3; ++i)
-		line[i] = pEigenVec[i];
-	line[3] = w_x_mean; line[4] = w_y_mean; line[5] = w_z_mean;
+	line.a = pEigenVec[0]; line.b = pEigenVec[1]; line.c = pEigenVec[2];
+	line.x = w_x_mean; line.y = w_y_mean; line.z = w_z_mean;
 }
 //================================================================================================
 
 //Huber计算权重===================================================================================
-template <typename T1, typename T2>
-void PC_Huber3DLineWeights(vector<T1>& pts, T2& line, vector<double>& weights)
+//template <typename T1, typename T2>
+void PC_Huber3DLineWeights(NB_Array3D pts, Line3D& line, vector<double>& weights)
 {
 	double tao = 1.345;
 	for (int i = 0; i < pts.size(); ++i)
@@ -135,8 +120,8 @@ void PC_Huber3DLineWeights(vector<T1>& pts, T2& line, vector<double>& weights)
 //================================================================================================
 
 //Tukey计算权重==================================================================================
-template <typename T1, typename T2>
-void PC_Tukey3DLineWeights(vector<T1>& pts, T2& line, vector<double>& weights)
+//template <typename T1, typename T2>
+void PC_Tukey3DLineWeights(NB_Array3D pts, Line3D& line, vector<double>& weights)
 {
 	vector<double> dists(pts.size(), 0.0);
 	for (int i = 0; i < pts.size(); ++i)
@@ -162,8 +147,8 @@ void PC_Tukey3DLineWeights(vector<T1>& pts, T2& line, vector<double>& weights)
 //================================================================================================
 
 //空间直线拟合====================================================================================
-template <typename T1, typename T2>
-void PC_Fit3DLine(vector<T1>& pts, T2& line, int k, NB_MODEL_FIT_METHOD method)
+//template <typename T1, typename T2>
+void PC_Fit3DLine(NB_Array3D pts, Line3D& line, int k, NB_MODEL_FIT_METHOD method)
 {
 	vector<double> weights(pts.size(), 1);
 	PC_OLSFit3DLine(pts, weights, line);
@@ -192,7 +177,8 @@ void PC_Fit3DLine(vector<T1>& pts, T2& line, int k, NB_MODEL_FIT_METHOD method)
 }
 //==============================================================================================
 
-void PC_3DLineTest()
+//空间三位直线拟合测试========================================================================
+void PC_FitLineTest()
 {
 	PC_XYZ::Ptr srcPC(new PC_XYZ);
 	pcl::io::loadPLYFile("C:/Users/Administrator/Desktop/testimage/噪声直线.ply", *srcPC);
@@ -204,15 +190,17 @@ void PC_3DLineTest()
 	}
 	std::random_shuffle(pts.begin(), pts.end());
 
-	cv::Vec6d line;
-	vector<P_XYZ> inlinerPts;
-	PC_RANSACComputeLine(pts, line, inlinerPts, 0.2);
+	Line3D line;
+	//PC_Fit3DLine(pts, line, 5, NB_MODEL_FIT_METHOD::TUKEY_FIT);
+
+	vector<int> inliners;
+	PC_RANSACFitLine(pts, line, inliners, 0.2);
 
 	PC_XYZ::Ptr inlinerPC(new PC_XYZ);
-	inlinerPC->points.resize(inlinerPts.size());
-	for (int i = 0; i < inlinerPts.size(); ++i)
+	inlinerPC->points.resize(inliners.size());
+	for (int i = 0; i < inliners.size(); ++i)
 	{
-		inlinerPC->points[i] = inlinerPts[i];
+		inlinerPC->points[i] = pts[inliners[i]];
 	}
 
 	pcl::visualization::PCLVisualizer viewer;
@@ -229,5 +217,5 @@ void PC_3DLineTest()
 	{
 		viewer.spinOnce();
 	}
-	//PC_Fit3DLine(pts, line, 10, NB_MODEL_FIT_METHOD::HUBER_FIT);
 }
+//============================================================================================

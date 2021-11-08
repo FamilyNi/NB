@@ -8,6 +8,8 @@ void ExtractContour(Mat &srcImg, vector<vector<T>> &contours, float lowVal, floa
 /*计算轮廓的重心*/
 template <typename T1, typename T2>
 void GetContourGravity(vector<T1> &contour, T2 &gravity);
+template <typename T1, typename T2>
+void GetIdxContourGravity(vector<T1>& contour, vector<int>& idxes, T2& gravity);
 
 /*平移轮廓*/
 template <typename T1, typename T2>

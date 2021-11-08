@@ -1,25 +1,9 @@
-#include "ComputePlane.h"
+#include "PC_FitPlane.h"
 #include "MathOpr.h"
-#include "MathOpr.cpp"
-
-//三点计算平面==================================================================================
-template <typename T1, typename T2>
-void PC_ThreePtsComputePlane(T1& pt1, T1& pt2, T1& pt3, T2& plane)
-{
-	P_XYZ nor_1(pt1.x - pt2.x, pt1.y - pt2.y, pt1.z - pt2.z);
-	P_XYZ nor_2(pt1.x - pt3.x, pt1.y - pt3.y, pt1.z - pt3.z);
-	P_XYZ norm(0, 0, 0);
-	PC_VecCross(nor_1, nor_2, norm, true);
-	if (abs(norm.x) < EPS && abs(norm.y) < EPS && abs(norm.z) < EPS)
-		return;
-	plane[0] = norm.x; plane[1] = norm.y; plane[2] = norm.z;
-	plane[3] = -(plane[0] * pt1.x + plane[1] * pt1.y + plane[2] * pt1.z);
-}
-//==============================================================================================
+#include "ComputeModels.h"
 
 //随机一致采样算法计算平面======================================================================
-template <typename T1, typename T2>
-void PC_RANSACComputePlane(vector<T1>& pts, T2& plane, vector<T1>& inlinerPts, double thres)
+void PC_RANSACFitPlane(NB_Array3D pts, Plane3D& plane, vector<int>& inliners, double thres)
 {
 	if (pts.size() < 6)
 		return;
@@ -28,13 +12,13 @@ void PC_RANSACComputePlane(vector<T1>& pts, T2& plane, vector<T1>& inlinerPts, d
 	double log_P = log(1 - P);
 	int size = pts.size();
 	int maxEpo = 10000;
-	vector<T1> pts_(3);
+	vector<Point3d> pts_(3);
 	for (int i = 0; i < maxEpo; ++i)
 	{
 		int effetPoints = 0;
 		//随机选择三个点计算平面---注意：这里可能需要特殊处理防止点相同
 		pts_[0] = pts[rand() % size]; pts_[1] = pts[rand() % size];	pts_[2] = pts[rand() % size];
-		T2 plane_;
+		Plane3D plane_;
 		PC_ThreePtsComputePlane(pts_[0], pts_[1], pts_[2], plane_);
 		//计算局内点的个数
 		for (int j = 0; j < size; ++j)
@@ -59,22 +43,21 @@ void PC_RANSACComputePlane(vector<T1>& pts, T2& plane, vector<T1>& inlinerPts, d
 		}
 	}
 	//提取局内点
-	if (inlinerPts.size() != 0)
-		inlinerPts.resize(0);
-	inlinerPts.reserve(size);
+	if (inliners.size() != 0)
+		inliners.resize(0);
+	inliners.reserve(size);
 	for (int i = 0; i < size; ++i)
 	{
 		double dist = 0.0;
 		PC_PtToPlaneDist(pts[i], plane, dist);
 		if (dist < thres)
-			inlinerPts.push_back(pts[i]);
+			inliners.push_back(i);
 	}
 }
 //==============================================================================================
 
 //最小二乘法拟合平面============================================================================
-template <typename T1, typename T2>
-void PC_OLSFitPlane(vector<T1>& pts, vector<double>& weights, T2& plane)
+void PC_OLSFitPlane(NB_Array3D pts, vector<double>& weights, Plane3D& plane)
 {
 	if (pts.size() < 3)
 		return;
@@ -112,15 +95,13 @@ void PC_OLSFitPlane(vector<T1>& pts, vector<double>& weights, T2& plane)
 	cv::Mat eigenVal, eigenVec;
 	cv::eigen(A, eigenVal, eigenVec);
 	double* pEigenVec = eigenVec.ptr<double>(2);
-	for (int i = 0; i < 3; ++i)
-		plane[i] = pEigenVec[i];
-	plane[3] = -(plane[0] * w_x_mean + plane[1] * w_y_mean + plane[2] * w_z_mean);
+	plane.a = pEigenVec[0]; plane.b = pEigenVec[1]; plane.c = pEigenVec[2];
+	plane.d = -(plane.a * w_x_mean + plane.b * w_y_mean + plane.c * w_z_mean);
 }
 //==============================================================================================
 
 //Huber计算权重=================================================================================
-template <typename T1, typename T2>
-void PC_HuberPlaneWeights(vector<T1>& pts, T2& plane, vector<double>& weights)
+void PC_HuberPlaneWeights(NB_Array3D pts, Plane3D& plane, vector<double>& weights)
 {
 	double tao = 1.345;
 	for (int i = 0; i < pts.size(); ++i)
@@ -140,8 +121,7 @@ void PC_HuberPlaneWeights(vector<T1>& pts, T2& plane, vector<double>& weights)
 //==============================================================================================
 
 //Tukey计算权重================================================================================
-template <typename T1, typename T2>
-void PC_TukeyPlaneWeights(vector<T1>& pts, T2& plane, vector<double>& weights)
+void PC_TukeyPlaneWeights(NB_Array3D pts, Plane3D& plane, vector<double>& weights)
 {
 	vector<double> dists(pts.size());
 	for (int i = 0; i < pts.size(); ++i)
@@ -169,8 +149,8 @@ void PC_TukeyPlaneWeights(vector<T1>& pts, T2& plane, vector<double>& weights)
 //==============================================================================================
 
 //平面拟合======================================================================================
-template <typename T1, typename T2>
-void PC_FitPlane(vector<T1>& pts, T2& plane, int k, NB_MODEL_FIT_METHOD method)
+//template <typename T1, typename T2>
+void PC_FitPlane(NB_Array3D pts, Plane3D& plane, int k, NB_MODEL_FIT_METHOD method)
 {
 	vector<double> weights(pts.size(), 1);
 	PC_OLSFitPlane(pts, weights, plane);
@@ -199,7 +179,8 @@ void PC_FitPlane(vector<T1>& pts, T2& plane, int k, NB_MODEL_FIT_METHOD method)
 }
 //==============================================================================================
 
-void PC_PlaneTest()
+//空间平面拟合测试==============================================================================
+void PC_FitPlaneTest()
 {
 	PC_XYZ::Ptr srcPC(new PC_XYZ);
 	pcl::io::loadPLYFile("C:/Users/Administrator/Desktop/testimage/噪声平面.ply", *srcPC);
@@ -211,15 +192,17 @@ void PC_PlaneTest()
 	}
 
 	std::random_shuffle(pts.begin(), pts.end());
-	cv::Vec4d plane;
-	vector<P_XYZ> inlinerPts;
-	PC_RANSACComputePlane(pts, plane, inlinerPts, 0.01);
+	Plane3D plane;
+	vector<int> inliners;
+	//PC_FitPlane(pts, plane, 5, NB_MODEL_FIT_METHOD::TUKEY_FIT);
+
+	PC_RANSACFitPlane(pts, plane, inliners, 0.01);
 
 	PC_XYZ::Ptr inlinerPC(new PC_XYZ);
-	inlinerPC->points.resize(inlinerPts.size());
-	for (int i = 0; i < inlinerPts.size(); ++i)
+	inlinerPC->points.resize(inliners.size());
+	for (int i = 0; i < inliners.size(); ++i)
 	{
-		inlinerPC->points[i] = inlinerPts[i];
+		inlinerPC->points[i] = pts[inliners[i]];
 	}
 	pcl::visualization::PCLVisualizer viewer;
 	viewer.addCoordinateSystem(10);
@@ -231,5 +214,5 @@ void PC_PlaneTest()
 	{
 		viewer.spinOnce();
 	}
-	//PC_FitPlane(pts, plane, 5, NB_MODEL_FIT_METHOD::HUBER_FIT);
 }
+//============================================================================================

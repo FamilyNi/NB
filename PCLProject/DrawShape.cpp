@@ -1,7 +1,6 @@
 #include "DrawShape.h"
 #include "PointCloudOpr.h"
 #include "MathOpr.h"
-#include "MathOpr.cpp"
 
 //形状变换===============================================================================
 void PC_ShapeTrans(PC_XYZ::Ptr& pc, cv::Vec6d& shape, cv::Point3d& vec)
@@ -169,7 +168,7 @@ void PC_DrawCube(PC_XYZ::Ptr& rectPC, cv::Vec6d& cube, double a, double b, doubl
 void PC_DrawCircle(PC_XYZ::Ptr& circlePC, cv::Vec6d& circle, double r, double step)
 {
 	step = step < 1e-5 ? 0.1 : step;
-	for (double alpha = 0; alpha < CV_2PI / 8; alpha += step)
+	for (double alpha = 0; alpha < CV_2PI; alpha += step)
 	{
 		float x = r * std::cos(alpha);
 		float y = r * std::sin(alpha);
@@ -219,7 +218,7 @@ void DrawShapeTest()
 	PC_XYZ::Ptr noisePC(new PC_XYZ);
 	PC_AddNoise(shapePC, noisePC, 10, 2);
 
-	pcl::io::savePLYFile("C:/Users/Administrator/Desktop/testimage/四分之一噪声圆.ply", *noisePC, true);
+	//pcl::io::savePLYFile("C:/Users/Administrator/Desktop/testimage/四分之一噪声圆.ply", *noisePC, true);
 	pcl::visualization::PCLVisualizer viewer;
 	viewer.addCoordinateSystem(10);
 	//显示轨迹

@@ -1,7 +1,6 @@
 #include "ContourOpr.h"
 #include <opencv2/flann.hpp>
 #include "MathOpr.h"
-#include "MathOpr.cpp"
 
 //ÌáÈ¡ÂÖÀª======================================================================
 template <typename T>
@@ -29,8 +28,23 @@ void GetContourGravity(vector<T1> &contour, T2 &gravity)
 	float sum_x = 0.0f, sum_y = 0.0f;
 	for (int i = 0; i < len; ++i)
 	{
-		sum_x += contour[i].x;
+		sum_x += contour[i].x; 
 		sum_y += contour[i].y;
+	}
+	gravity.x = sum_x / len;
+	gravity.y = sum_y / len;
+}
+template <typename T1, typename T2>
+void GetIdxContourGravity(vector<T1>& contour, vector<int>& idxes, T2& gravity)
+{
+	int len = idxes.size();
+	if (len == 0)
+		return;
+	float sum_x = 0.0f, sum_y = 0.0f;
+	for (int i = 0; i < len; ++i)
+	{
+		sum_x += contour[idxes[i]].x;
+		sum_y += contour[idxes[i]].y;
 	}
 	gravity.x = sum_x / len;
 	gravity.y = sum_y / len;

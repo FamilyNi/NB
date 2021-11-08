@@ -163,14 +163,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Compute3DCircle.cpp" />
-    <ClCompile Include="Compute3DLine.cpp" />
-    <ClCompile Include="ComputeCircle.cpp" />
-    <ClCompile Include="ComputeEllipse.cpp" />
-    <ClCompile Include="ComputeLine.cpp" />
-    <ClCompile Include="ComputePlane.cpp" />
+    <ClCompile Include="PC_FitCircle.cpp" />
+    <ClCompile Include="PC_FitLine.cpp" />
+    <ClCompile Include="Img_FitCircle.cpp" />
+    <ClCompile Include="Img_FitEllipse.cpp" />
+    <ClCompile Include="Img_FitLine.cpp" />
+    <ClCompile Include="PC_FitPlane.cpp" />
     <ClCompile Include="ComputePts.cpp" />
-    <ClCompile Include="ComputeSphere.cpp" />
+    <ClCompile Include="PC_FitSphere.cpp" />
     <ClCompile Include="ContourOpr.cpp" />
     <ClCompile Include="DrawShape.cpp" />
     <ClCompile Include="FFT.cpp" />
@@ -184,7 +184,6 @@
     <ClCompile Include="JC_Calibrate.cpp" />
     <ClCompile Include="LBPfeatures.cpp" />
     <ClCompile Include="LocalDeforableModel.cpp" />
-    <ClCompile Include="MathOpr.cpp" />
     <ClCompile Include="OpenCV_Utils.cpp" />
     <ClCompile Include="PointCloudOpr.cpp" />
     <ClCompile Include="PPFMatch.cpp" />
@@ -194,17 +193,19 @@
     <ClCompile Include="TestAlg.cpp" />
     <ClCompile Include="PC_Filter.cpp" />
     <ClCompile Include="PC_Seg.cpp" />
+    <ClCompile Include="TestFitShape.cpp" />
     <ClCompile Include="WaveLet.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Compute3DCircle.h" />
-    <ClInclude Include="Compute3DLine.h" />
-    <ClInclude Include="ComputeCircle.h" />
-    <ClInclude Include="ComputeEllipse.h" />
-    <ClInclude Include="ComputeLine.h" />
-    <ClInclude Include="ComputePlane.h" />
+    <ClInclude Include="ComputeModels.h" />
+    <ClInclude Include="PC_FitCircle.h" />
+    <ClInclude Include="PC_FitLine.h" />
+    <ClInclude Include="Img_FitCircle.h" />
+    <ClInclude Include="Img_FitEllipse.h" />
+    <ClInclude Include="Img_FitLine.h" />
+    <ClInclude Include="PC_FitPlane.h" />
     <ClInclude Include="ComputePts.h" />
-    <ClInclude Include="ComputeSphere.h" />
+    <ClInclude Include="PC_FitSphere.h" />
     <ClInclude Include="ContourOpr.h" />
     <ClInclude Include="DrawShape.h" />
     <ClInclude Include="FFT.h" />
@@ -227,6 +228,7 @@
     <ClInclude Include="ShapeMatch.h" />
     <ClInclude Include="ShapeModelBase.h" />
     <ClInclude Include="SiftMatch.h" />
+    <ClInclude Include="TestFitShape.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="WaveLet.h" />
   </ItemGroup>

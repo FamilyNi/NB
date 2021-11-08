@@ -39,4 +39,11 @@ void ImgF_FreqFilter(Mat& srcImg, Mat& dstImg, double lr, double hr, int passMod
 */
 void ImgF_HomoFilter(Mat& srcImg, Mat& dstImg, double radius, double L, double H, double c);
 
+/*各项异性平滑：
+	lamda：[in]控制平滑程度
+	step_t：[in]时间步长
+	iter_k：[in]迭代次数
+*/
+void Img_AnisotropicFilter(Mat& srcImg, Mat& dstImg, double lamda, double step_t, int iter_k);
+
 void FilterTest();
