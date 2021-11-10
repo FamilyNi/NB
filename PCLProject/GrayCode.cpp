@@ -1,5 +1,5 @@
 #include "GrayCode.h"
-#include "MathOpr.h"
+#include "include/BaseOprFile/MathOpr.h"
 
 //十进制转二进制============================================================
 void DecToBin(const int dec_num, vector<bool>& bin)

@@ -1,28 +1,13 @@
 ﻿// PCLProject.cpp : 此文件包含 "main" 函数。程序执行将在此处开始并结束。
 //
 
-#include "utils.h"
-#include "PC_Filter.h"
-#include "PC_Seg.h"
-#include "JC_Calibrate.h"
-#include "PPFMatch.h"
-#include "GrayCode.h"
-#include "WaveLet.h"
-#include "LocalDeforableModel.h"
-#include "DrawShape.h"
-#include "ContourOpr.h"
-#include "LBPfeatures.h"
-#include "ImageEnhance.h"
-#include "ImageFilter.h"
-#include "PC_FitPlane.h"
-#include "PC_FitLine.h"
-#include "PC_FitSphere.h"
-
+#include "include/BaseOprFile/utils.h"
+#include "include/FitShapeFile/PC_FitCircle.h"
 
 int main(int argc, char *argv[])
 {
-	PC_FitSphereTest();
-	LocalDeforModelTest();
+	PC_FitCircleTest();
+	//LocalDeforModelTest();
 	//PC_XYZ::Ptr planePC(new PC_XYZ);
 	//cv::Vec6d plane;
 	//plane[0] = 13;

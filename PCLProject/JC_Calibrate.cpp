@@ -1,8 +1,8 @@
 #include "JC_Calibrate.h"
-#include "PC_Filter.h"
-#include "PC_Seg.h"
 #include <pcl/segmentation/region_growing.h>
-#include "FileOpr.h"
+#include "include/BaseOprFile/FileOpr.h"
+#include "include/PointCloudFile/PC_Filter.h"
+#include "include/PointCloudFile/PC_Seg.h"
 
 //读取世界坐标========================================================================
 void ReadWorldCoord(const string& filename, vector<vector<cv::Point3f>>& worldPts)
