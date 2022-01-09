@@ -176,7 +176,6 @@ void Img_HysteresisSeg(Mat& srcImg, Mat& dstImg, double thresVal1, double thresV
 	uchar* pDst = dstImg.data;
 	int idxes[8][2] = { {-1,-1}, {0,-1}, {1,-1}, {1,0}, {1,1}, {0,1}, {-1,1}, {-1,0} };
 
-
 	for (int y = 0; y < row; ++y)
 	{
 		pSrc += col; pMask += col; pDst += col;

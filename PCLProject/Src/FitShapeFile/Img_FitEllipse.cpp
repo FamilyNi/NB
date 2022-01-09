@@ -34,8 +34,8 @@ void Img_EllipseNormalization(vector<double>& ellipse_, Ellipse2D& normEllipse)
 //======================================================================================
 
 //点到椭圆的距离--超简单版，不建议采用==================================================
-template <typename T1>
-void Img_PtsToEllipseDist(T1& pt, Ellipse2D& ellipse, double& dist)
+template <typename T>
+void Img_PtsToEllipseDist(const T& pt, Ellipse2D& ellipse, double& dist)
 {
 	double cosVal = std::cos(-ellipse.angle);
 	double sinVal = std::sin(-ellipse.angle);
@@ -59,7 +59,6 @@ void Img_PtsToEllipseDist(T1& pt, Ellipse2D& ellipse, double& dist)
 //======================================================================================
 
 //随机一致采样算法计算椭圆圆============================================================
-//template <typename T1, typename T2>
 void Img_RANSACFitEllipse(NB_Array2D pts, Ellipse2D& ellipse, vector<int>& inliners, double thres)
 {
 	if (pts.size() < 6)
@@ -211,7 +210,6 @@ void Img_HuberEllipseWeights(NB_Array2D pts, Ellipse2D& ellipse, vector<double>&
 //======================================================================================
 
 //Tukey计算权重=========================================================================
-
 void Img_TukeyEllipseWeights(NB_Array2D pts, Ellipse2D& ellipse, vector<double>& weights)
 {
 	vector<double> dists(pts.size());
@@ -270,7 +268,7 @@ void Img_FitEllipse(NB_Array2D pts, Ellipse2D& ellipse, int k, NB_MODEL_FIT_METH
 //椭圆拟合测试================================================================================
 void Img_FitEllipseTest()
 {
-	string imgPath = "C:/Users/Administrator/Desktop/testimage/椭圆.bmp";
+	string imgPath = "F:/nbcode/image/testimage/椭圆.bmp";
 	cv::Mat srcImg = cv::imread(imgPath, 0);
 	cv::Mat binImg;
 	cv::threshold(srcImg, binImg, 10, 255, ThresholdTypes::THRESH_BINARY_INV);

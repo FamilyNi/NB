@@ -128,19 +128,34 @@ typedef struct Line3D
 class NB_Array2D
 {
 public:
+	enum DataFlag {
+		Pt2i = 0,
+		Pt2f = 1,
+		Pt2d = 2,
+	};
+
+public:
 	template<typename _Tp> NB_Array2D(const _Tp& vec)
 	{
 		m_Size = vec.size();
-		m_vData.resize(m_Size);
-		//这个地方弄成传指针，而不是拷贝数据（差评）
-		for (int i = 0; i < m_Size; ++i)
-		{
-			m_vData[i].x = vec[i].x; m_vData[i].y = vec[i].y;
-		}
+		if (m_Size == 0)
+			return;
+		m_pData = (void*)vec.data();
+		if (typeid(Point2i) == typeid(vec[0]))
+			m_Flags = Pt2i;
+		else if (typeid(Point2f) == typeid(vec[0]))
+			m_Flags = Pt2f;
+		else if (typeid(Point2d) == typeid(vec[0]))
+			m_Flags = Pt2d;
 	}
-	Point2d& operator[](int n)
+	const Point2d operator[](int n)
 	{
-		return m_vData[n];
+		if (m_Flags == Pt2i)
+			return (Point2d)((Point2i*)m_pData)[n];
+		else if (m_Flags == Pt2f)
+			return (Point2d)((Point2f*)m_pData)[n];
+		else if (m_Flags == Pt2d)
+			return ((Point2d*)m_pData)[n];
 	}
 	int size()
 	{
@@ -148,8 +163,9 @@ public:
 	}
 
 private:
-	vector<Point2d> m_vData;
+	void* m_pData;
 	int m_Size;
+	DataFlag m_Flags;
 };
 
 class NB_Array3D

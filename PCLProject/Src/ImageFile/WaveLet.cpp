@@ -97,8 +97,8 @@ void WaveLetTransformer::Set_I_Filter(const string& name)
 void WaveLetTransformer::R_Decompose(const cv::Mat& src, cv::Mat& dst_R_L, cv::Mat& dst_R_H)
 {
 	cv::Mat dstLowR_, dstHighR_;
-	cv::filter2D(src, dstLowR_, -1, m_LowFilter); //低通滤波---可加速，但需要自己写，麻烦
-	cv::filter2D(src, dstHighR_, -1, m_HighFilter); //高通滤波---可加速，但需要自己写，麻烦
+	cv::filter2D(src, dstLowR_, -1, m_LowFilter);
+	cv::filter2D(src, dstHighR_, -1, m_HighFilter); 
 	GetOddC(dstLowR_, dst_R_L);
 	GetOddC(dstHighR_, dst_R_H);
 }
@@ -213,6 +213,7 @@ void WaveLetTransformer::WaveletDT(const cv::Mat& srcImg)
 		CMat4.copyTo(m_Decompose(cv::Rect(c, r, c, r)));
 		src = CMat1;		
 	}
+	cv::Mat t = m_Decompose;
 }
 
 //列方向插值
@@ -262,8 +263,8 @@ void WaveLetTransformer::IWaveletDT(cv::Mat& outMatImg)
 
 void WaveLetTest()
 {
-	WaveLetTransformer wlf("sym2", 3);
-	cv::Mat image = cv::imread("F:/nbcode/1.jpg", 0);
+	WaveLetTransformer wlf("sym2", 1);
+	cv::Mat image = cv::imread("F:/nbcode/PCLProject/1.jpg", 0);
 	wlf.WaveletDT(image);
 	cv::Mat outImg;
 	wlf.IWaveletDT(outImg);

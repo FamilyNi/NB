@@ -43,6 +43,12 @@
     <Filter Include="头文件\FitShapeFile">
       <UniqueIdentifier>{abf4fcd3-4da3-4ff9-a999-79a91a0c1378}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件\BarCode">
+      <UniqueIdentifier>{590f1a68-9813-42df-8cfd-81db4debda88}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\BarCode">
+      <UniqueIdentifier>{9925c6a9-0a8c-4567-936e-11d6b6831323}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="JC_Calibrate.cpp">
@@ -131,6 +137,9 @@
     </ClCompile>
     <ClCompile Include="Src\PointCloudFile\PPFMatch.cpp">
       <Filter>源文件\PointCloudFile</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\BarCode\BarCodeLocation.cpp">
+      <Filter>源文件\BarCode</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -232,6 +241,9 @@
     </ClInclude>
     <ClInclude Include="JC_Calibrate.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\BarCode\BarCodeLocation.h">
+      <Filter>头文件\BarCode</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -194,10 +194,10 @@ void Img_AnisotropicFilter(Mat& srcImg, Mat& dstImg, double lamda, double step_t
 
 void FilterTest()
 {
-	string imgPath = "C:/Users/Administrator/Desktop/testimage/halconimg_2.bmp";
-	Mat srcImg = imread(imgPath, 1);
+	string imgPath = "F:/nbcode/image/fft.tif";
+	Mat srcImg = imread(imgPath, 0);
 
 	Mat dstImg;
-	Img_AnisotropicFilter(srcImg, dstImg, 3, 1.0, 3);
+	ImgF_FreqFilter(srcImg, dstImg, 20, 2, 0, IMGF_GAUSSIAN);
 	Mat t = dstImg.clone();
 }

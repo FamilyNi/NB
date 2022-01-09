@@ -57,7 +57,6 @@ void PC_RANSACFitLine(NB_Array3D pts, Line3D& line, vector<int>& inliners, doubl
 //================================================================================================
 
 //最小二乘法拟合空间直线==========================================================================
-//template <typename T1, typename T2>
 void PC_OLSFit3DLine(NB_Array3D pts, vector<double>& weights, Line3D& line)
 {
 	double w_sum = 0.0, w_x_sum = 0.0, w_y_sum = 0.0, w_z_sum = 0.0;
@@ -99,7 +98,6 @@ void PC_OLSFit3DLine(NB_Array3D pts, vector<double>& weights, Line3D& line)
 //================================================================================================
 
 //Huber计算权重===================================================================================
-//template <typename T1, typename T2>
 void PC_Huber3DLineWeights(NB_Array3D pts, Line3D& line, vector<double>& weights)
 {
 	double tao = 1.345;
@@ -120,7 +118,6 @@ void PC_Huber3DLineWeights(NB_Array3D pts, Line3D& line, vector<double>& weights
 //================================================================================================
 
 //Tukey计算权重==================================================================================
-//template <typename T1, typename T2>
 void PC_Tukey3DLineWeights(NB_Array3D pts, Line3D& line, vector<double>& weights)
 {
 	vector<double> dists(pts.size(), 0.0);
@@ -147,7 +144,6 @@ void PC_Tukey3DLineWeights(NB_Array3D pts, Line3D& line, vector<double>& weights
 //================================================================================================
 
 //空间直线拟合====================================================================================
-//template <typename T1, typename T2>
 void PC_Fit3DLine(NB_Array3D pts, Line3D& line, int k, NB_MODEL_FIT_METHOD method)
 {
 	vector<double> weights(pts.size(), 1);

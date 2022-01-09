@@ -293,3 +293,21 @@ shape_match/SubPixel.cpp
 shape_match/SubPixel.h
 shape_match/units.cpp
 shape_match/utils.h
+image/fft.tif
+image/BarcodeTestData/1 (1).csv
+image/testimage/2013_SGP_Consolidation.pdf
+image/testimage/e8d38cc2-04c3-11e9-80df-00163e08bb86.pdf
+image/testimage/halconimg_l1.tif
+image/testimage/halconimg_l2.tif
+image/testimage/LeastSquaresFitting.pdf
+image/testimage/test.pcd
+image/testimage/US20090185715A1.pdf
+image/testimage/八分之一噪声圆.ply
+image/testimage/数据说明.txt
+image/testimage/相机1.ply
+image/testimage/噪声平面.ply
+image/testimage/噪声球.ply
+image/testimage/噪声圆.ply
+image/testimage/噪声直线.ply
+*.yml
+*.rar

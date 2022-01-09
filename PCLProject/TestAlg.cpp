@@ -2,11 +2,22 @@
 //
 
 #include "include/BaseOprFile/utils.h"
-#include "include/FitShapeFile/PC_FitCircle.h"
+#include "include/FitShapeFile/Img_FitEllipse.h"
+#include "include/FitShapeFile/ComputeModels.h"
+#include "include/BarCode/BarCodeLocation.h"
+#include "include/ImageFile/WaveLet.h"
+#include "include/2DCode/Code2D.h"
+#include "include/ImageFile/ImageFilter.h"
 
 int main(int argc, char *argv[])
 {
-	PC_FitCircleTest();
+	BarCodeTest();
+
+	//内存使用率
+	MEMORYSTATUS ms;
+	::GlobalMemoryStatus(&ms);
+	cout << ms.dwMemoryLoad;
+	WaveLetTest();
 	//LocalDeforModelTest();
 	//PC_XYZ::Ptr planePC(new PC_XYZ);
 	//cv::Vec6d plane;

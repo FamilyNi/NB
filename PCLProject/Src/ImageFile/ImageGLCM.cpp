@@ -21,11 +21,11 @@ void Img_ComputeGLCM(Mat &srcImg, Mat &MatGLCM, int grayLevel, GLCM_ORIT angle)
 	case GLCM_HORIZATION:
 		Img_GLCM_0(image, MatGLCM);
 		break;
-	case GLCM_VERTICAL:
-		Img_GLCM_90(image, MatGLCM);
-		break;
 	case GLCM_ANGLE45:
 		Img_GLCM_45(image, MatGLCM);
+		break;
+	case GLCM_VERTICAL:
+		Img_GLCM_90(image, MatGLCM);
 		break;
 	case GLCM_ANGLE135:
 		Img_GLCM_135(image, MatGLCM);

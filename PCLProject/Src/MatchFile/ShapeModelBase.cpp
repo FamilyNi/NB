@@ -90,7 +90,7 @@ void ShapeNMS(vector<vector<MatchRes>> &MatchReses, vector<MatchRes> &nmsRes, in
 
 	std::stable_sort(totalNum.begin(), totalNum.end());
 	size_t res_num = totalNum.size();
-	vector<bool>  isLabel(res_num, false);
+	vector<bool> isLabel(res_num, false);
 	vector<MatchRes> nmsRes_;
 	for (size_t i = 0; i < res_num; ++i)
 	{
