@@ -212,9 +212,16 @@ void BarCodeDectet::RegionGrowing(int w_size)
 				continue;
 			if (edges_num < rotRect.size.area() * float(w_size * w_size) * 0.5f)
 				continue;
-
-			rotRect.size.width *= static_cast<float>(w_size) * 1.1;
-			rotRect.size.height *= static_cast<float>(w_size) * 1.1;
+			if (rotRect.size.width > rotRect.size.height)
+			{
+				rotRect.size.width *= static_cast<float>(w_size) * 1.2;
+				rotRect.size.height *= static_cast<float>(w_size);
+			}
+			else
+			{
+				rotRect.size.width *= static_cast<float>(w_size);
+				rotRect.size.height *= static_cast<float>(w_size) * 1.2;
+			}
 			rotRect.center.x = (rotRect.center.x + 0.5f) * static_cast<float>(w_size);
 			rotRect.center.y = (rotRect.center.y + 0.5f) * static_cast<float>(w_size);
 			m_LocationBoxes.push_back(rotRect);
